@@ -53,18 +53,18 @@ jobs:
           ./scripts/feeds install -a
 
       - name: 注入 N5000 板级支持
-        run: python3 board/apply.py openwrt
+        run: python3 n5000-custom/board/apply.py openwrt
 
       - name: 应用定制配置
         run: |
-          cp configs/n5000-custom.config openwrt/.config
+          cp n5000-custom/configs/n5000-custom.config openwrt/.config
           cd openwrt
           make defconfig
 
       - name: 注入自定义文件（Docker / Swap / 去标识 / 仪表盘）
         run: |
           mkdir -p openwrt/files
-          cp -a files/. openwrt/files/
+          cp -a n5000-custom/files/. openwrt/files/
           chmod +x openwrt/files/etc/init.d/* \
                    openwrt/files/etc/uci-defaults/* \
                    openwrt/files/etc/hotplug.d/block/20-n5000-docker \
