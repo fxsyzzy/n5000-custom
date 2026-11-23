@@ -38,13 +38,27 @@ jobs:
           cd openwrt
           git log -1 --format='%H %s'
 
-      - name: 添加第三方 feed（Argon / Carbon / PassWall）
+      - name: 集成主题包（Argon / Carbon）
+        run: |
+          set -e
+          git clone --depth 1 https://github.com/jerrykuku/luci-theme-argon.git /tmp/argon
+          mkdir -p openwrt/package/luci-theme-argon
+          cp -a /tmp/argon/. openwrt/package/luci-theme-argon/
+          rm -rf openwrt/package/luci-theme-argon/.git
+          if [ -d /tmp/argon/compat/luci-app-argon-config ]; then
+            cp -a /tmp/argon/compat/luci-app-argon-config openwrt/package/
+          fi
+          git clone --depth 1 https://github.com/mrjoechen/luci-theme-carbon.git /tmp/carbon
+          mkdir -p openwrt/package/luci-theme-carbon
+          cp -a /tmp/carbon/. openwrt/package/luci-theme-carbon/
+          rm -rf openwrt/package/luci-theme-carbon/.git
+          ls openwrt/package/luci-theme-argon/Makefile openwrt/package/luci-theme-carbon/Makefile
+
+      - name: 添加第三方 feed（PassWall）
         run: |
           cd openwrt
           {
             echo ""
-            echo "src-git argon https://github.com/jerrykuku/luci-theme-argon.git;master"
-            echo "src-git carbon https://github.com/mrjoechen/luci-theme-carbon.git;main"
             echo "src-git passwall https://github.com/Openwrt-Passwall/openwrt-passwall.git;main"
             echo "src-git passwall_packages https://github.com/Openwrt-Passwall/openwrt-passwall-packages.git;main"
           } >> feeds.conf.default
@@ -52,7 +66,7 @@ jobs:
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
-      - name: 注入 N5000 板级支持
+      - name: 注入 N5000 板级支持（DTS / 设备定义 / 板级脚本）
         run: python3 n5000-custom/board/apply.py openwrt
 
       - name: 应用定制配置
@@ -61,7 +75,7 @@ jobs:
           cd openwrt
           make defconfig
 
-      - name: 注入自定义文件（Docker / Swap / 去标识 / 仪表盘）
+      - name: 注入自定义文件（Docker / Swap / 去标识）
         run: |
           mkdir -p openwrt/files
           cp -a n5000-custom/files/. openwrt/files/
@@ -96,6 +110,7 @@ jobs:
           cp -v openwrt/bin/targets/mediatek/filogic/*nradio_n5000.manifest out/ || true
           cp -v openwrt/bin/targets/mediatek/filogic/profiles.json out/ || true
           cd out
+          ls -lh
           sha256sum * > sha256sums.txt
           cat sha256sums.txt
 
@@ -106,7 +121,7 @@ jobs:
           name: n5000-custom-firmware
           path: out/
 
-      - name: 上传编译日志
+      - name: 上传编译日志（失败时排查用）
         if: always()
         uses: actions/upload-artifact@v4
         with:
