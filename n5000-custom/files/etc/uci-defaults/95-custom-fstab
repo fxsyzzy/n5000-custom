@@ -1,0 +1,17 @@
+#!/bin/sh
+# 把 USB 磁盘第一个分区 (/dev/sda1, ext4) 固定挂载到 /mnt/sda1
+[ "$(board_name)" = "nradio,n5000" ] || exit 0
+[ -f /etc/config/fstab ] || exit 0
+
+if uci -q show fstab | grep -q "target='/mnt/sda1'"; then
+	exit 0
+fi
+
+uci add fstab mount >/dev/null 2>&1 || exit 0
+uci set fstab.@mount[-1].device='/dev/sda1'
+uci set fstab.@mount[-1].target='/mnt/sda1'
+uci set fstab.@mount[-1].fstype='ext4'
+uci set fstab.@mount[-1].options='rw,noatime'
+uci set fstab.@mount[-1].enabled='1'
+uci commit fstab
+exit 0

@@ -1,0 +1,103 @@
+#!/bin/sh
+. /lib/functions.sh
+[ "$(board_name)" = "nradio,n5000" ] || exit 0
+
+# 1. USB 5G modem (Quectel RM520N-GL etc.) in ECM/RNDIS mode: the modem
+#    auto-dials and runs its own DHCP server on usb0. N5000 has no built-in
+#    modem; cellular uplink comes from a USB dongle.
+if ! uci -q get network.wwan >/dev/null; then
+	uci set network.wwan=interface
+	uci set network.wwan.proto='dhcp'
+	uci set network.wwan.device='usb0'
+	uci set network.wwan.metric='20'
+	uci set network.wwan.label='5G USB Modem'
+	uci commit network
+	i=0
+	while uci -q get firewall.@zone[$i] >/dev/null; do
+		if [ "$(uci -q get firewall.@zone[$i].name)" = "wan" ]; then
+			cur_nets=" $(uci -q get firewall.@zone[$i].network) "
+			case "$cur_nets" in *" wwan "*) ;; *) uci add_list firewall.@zone[$i].network="wwan" ;; esac
+			break
+		fi
+		i=$((i + 1))
+	done
+	uci commit firewall
+fi
+
+# 2. Human-readable interface labels for the LuCI Interfaces page.
+uci set network.wan.label='有线 WAN（2.5G，内部 PHY）'
+uci set network.wan6.label='有线 WAN IPv6'
+uci commit network
+
+# 3. Configure odhcpd hybrid RA/DHCPv6 so wired WAN6 PD (and single-/64
+#    upstreams) both provide working end-to-end IPv6 to LAN clients.
+if uci -q get dhcp.lan >/dev/null; then
+	uci set dhcp.lan.ra='hybrid'
+	uci set dhcp.lan.dhcpv6='hybrid'
+	uci set dhcp.lan.ra_default='1'
+fi
+if ! uci -q get dhcp.wan6 >/dev/null; then
+	uci set dhcp.wan6=dhcp
+	uci set dhcp.wan6.interface='wan6'
+	uci set dhcp.wan6.ignore='1'
+fi
+uci set dhcp.wan6.master='1'
+uci set dhcp.wan6.ra='hybrid'
+uci set dhcp.wan6.dhcpv6='hybrid'
+uci commit dhcp
+
+# 4. Tune zram-swap (lzo-rle has minimal per-CPU workspace overhead; leaving
+#    zram_size_mb unset lets /etc/init.d/zram auto-size to 50% of MemTotal,
+#    i.e. ~493 MiB on N5000's 1 GiB DDR).
+if uci -q get system.@system[0] >/dev/null; then
+	[ -n "$(uci -q get system.@system[0].zram_comp_algo)" ] || \
+		uci set system.@system[0].zram_comp_algo='lzo-rle'
+	[ -n "$(uci -q get system.@system[0].zram_priority)" ] || \
+		uci set system.@system[0].zram_priority='100'
+	uci commit system
+fi
+
+# 5. Populate default wireless config (if radios are already probed), country=CN,
+#    and unicast per-radio macaddr_base.
+if ! { [ -e /etc/config/wireless ] && uci -q show wireless | grep -q '=wifi-device$'; }; then
+	[ -x /sbin/wifi ] && /sbin/wifi config >/dev/null 2>&1 || true
+fi
+[ -f /etc/hotplug.d/ieee80211/15-nradio-n5000-wifi-mac ] && \
+	ACTION=add /bin/sh /etc/hotplug.d/ieee80211/15-nradio-n5000-wifi-mac
+
+# 6. Fixed IPv4 upstream DNS (the 5G modem network prefers AAAA-only answers
+#    which breaks IPv4-only clients and the router itself).
+uci -q delete dhcp.@dnsmasq[0].server
+uci add_list dhcp.@dnsmasq[0].server='223.5.5.5'
+uci add_list dhcp.@dnsmasq[0].server='119.29.29.29'
+uci set dhcp.@dnsmasq[0].noresolv='1'
+uci commit dhcp
+
+# 7. Software flow offloading for LAN->WAN forwarding.
+uci set firewall.@defaults[0].flow_offloading='1'
+uci commit firewall
+
+# 8. Local timezone + CN NTP servers.
+if uci -q get system.@system[0] >/dev/null; then
+	uci set system.@system[0].timezone='CST-8'
+	uci set system.@system[0].zonename='Asia/Shanghai'
+	uci -q delete system.ntp.server
+	uci add_list system.ntp.server='ntp.aliyun.com'
+	uci add_list system.ntp.server='ntp1.ntp.edu.cn'
+	uci add_list system.ntp.server='time.windows.com'
+	uci set system.ntp.enabled='1'
+	uci commit system
+fi
+
+
+# 10. Larger dnsmasq cache and log ring (RAM is plentiful, 1 GiB).
+uci set dhcp.@dnsmasq[0].cachesize='1000'
+uci commit dhcp
+uci set system.@system[0].log_size='256'
+uci commit system
+
+# 11. Uplink preference: wired WAN (metric 10) beats USB 5G wwan (metric 20).
+uci set network.wan.metric='10'
+uci commit network
+
+exit 0

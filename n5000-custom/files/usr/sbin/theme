@@ -1,0 +1,22 @@
+#!/bin/sh
+# 主题切换：theme argon | carbon
+# argon    = 简洁美观
+# carbon   = 暗色玻璃（黑客感，界面内可切深色）
+
+case "$1" in
+	argon)
+		uci set luci.main.mediaurlbase='/luci-static/argon'
+		;;
+	carbon)
+		uci set luci.main.mediaurlbase='/luci-static/carbon'
+		;;
+	*)
+		echo "用法: theme argon|carbon"
+		exit 1
+		;;
+esac
+
+uci commit luci
+/etc/init.d/uhttpd restart >/dev/null 2>&1
+echo "主题已切换为: $1"
+echo "刷新页面生效（浏览器强制刷新 Ctrl+F5）"

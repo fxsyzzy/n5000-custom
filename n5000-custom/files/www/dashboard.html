@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>N5000 Dashboard</title>
+<style>
+  :root{
+    --bg:#070b10; --card:#0f1620; --line:#1d2a3a; --text:#e6f1ff; --dim:#7f8fa6;
+    --green:#33ff9e; --cyan:#38d9ff; --orange:#ffb020; --red:#ff5c5c;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--text);
+    font-family:"Consolas","JetBrains Mono",ui-monospace,"Microsoft YaHei",monospace;overflow:hidden}
+  .wrap{height:100vh;display:flex;flex-direction:column;padding:20px 24px;gap:14px}
+  header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+  header h1{font-size:24px;margin:0;font-weight:700;letter-spacing:1px;color:var(--green);
+    text-shadow:0 0 12px rgba(51,255,158,.35)}
+  header .sub{color:var(--dim);font-size:14px}
+  .clock{font-size:20px;color:var(--dim);font-variant-numeric:tabular-nums;margin-left:auto}
+  header a{color:var(--cyan);text-decoration:none;font-size:13px}
+  #lang{background:transparent;border:1px solid var(--line);color:var(--green);font-family:inherit;
+    font-size:13px;padding:3px 10px;border-radius:4px;cursor:pointer}
+  #lang:hover{border-color:var(--green)}
+  .grid{flex:1;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(3,1fr);gap:14px;min-height:0}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;
+    display:flex;flex-direction:column;gap:8px;position:relative;overflow:hidden;min-height:0}
+  .card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--green);opacity:.5}
+  .card.wide{grid-column:span 2}
+  .label{color:var(--dim);font-size:12.5px;letter-spacing:1px;text-transform:uppercase}
+  .big{font-size:38px;font-weight:700;line-height:1.05;font-variant-numeric:tabular-nums}
+  .unit{font-size:14px;color:var(--dim);font-weight:500;margin-left:6px}
+  .row{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .chip{font-size:13px;padding:2px 10px;border-radius:4px;border:1px solid var(--line);color:var(--dim)}
+  .ok{color:var(--green)} .warn{color:var(--orange)} .bad{color:var(--red)} .info{color:var(--cyan)}
+  .bar{height:6px;border-radius:3px;background:#16202c;overflow:hidden;margin-top:auto}
+  .bar > i{display:block;height:100%;width:0;background:var(--green);transition:width .4s}
+  .mini{font-size:12.5px;color:var(--dim);line-height:1.5}
+  .val{font-size:20px;font-weight:600;font-variant-numeric:tabular-nums}
+  canvas.spark{width:100%;height:100%;min-height:70px;display:block}
+  .spark-wrap{flex:1;min-height:80px;position:relative}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
+  .err{position:fixed;left:50%;top:10px;transform:translateX(-50%);background:#3a1520;color:#ffb3b3;
+    border:1px solid #6b2233;padding:8px 16px;border-radius:6px;font-size:13px;display:none}
+</style>
+</head>
+<body>
+<div class="err" id="err">连接断开</div>
+<div class="wrap">
+  <header>
+    <h1>N5000</h1>
+    <span class="sub" id="sub">OpenWrt</span>
+    <span class="clock" id="clock">--:--:--</span>
+    <button id="lang" title="切换语言 / Switch language">EN</button>
+    <a href="/cgi-bin/luci/" data-i18n="luci">进入 LuCI 管理 →</a>
+  </header>
+
+  <div class="grid">
+    <div class="card">
+      <div class="label" data-i18n="uptime">运行时间</div>
+      <div class="big" id="uptime">--</div>
+      <div class="mini" id="booted">--</div>
+    </div>
+
+    <div class="card">
+      <div class="label" data-i18n="load">CPU 负载</div>
+      <div class="row"><div class="big" id="load1">--</div><span class="unit" data-i18n="min1">1 分钟</span></div>
+      <div class="mini" id="loadavg">--</div>
+      <div class="bar"><i id="loadbar" style="background:var(--cyan)"></i></div>
+    </div>
+
+    <div class="card">
+      <div class="label" data-i18n="temp">CPU 温度</div>
+      <div class="row"><div class="big" id="temp">--</div><span class="unit">°C</span></div>
+      <div class="mini" id="tempnote">--</div>
+    </div>
+
+    <div class="card">
+      <div class="label" data-i18n="mem">内存</div>
+      <div class="row"><div class="big" id="mem">--</div><span class="unit">%</span></div>
+      <div class="mini" id="memnote">--</div>
+      <div class="bar"><i id="membar"></i></div>
+    </div>
+
+    <div class="card wide">
+      <div class="label"><span data-i18n="wan">WAN 实时流量</span> · <span id="wanip">--</span></div>
+      <div class="row" style="gap:24px">
+        <div><span class="dot" style="background:var(--green)"></span><b class="val" id="down">0.00</b><span class="unit" data-i18n="down">Mbps 下行</span></div>
+        <div><span class="dot" style="background:var(--cyan)"></span><b class="val" id="up">0.00</b><span class="unit" data-i18n="up">Mbps 上行</span></div>
+        <div class="mini" id="total" style="margin-left:auto">--</div>
+      </div>
+      <div class="spark-wrap"><canvas class="spark" id="spark"></canvas></div>
+    </div>
+
+    <div class="card">
+      <div class="label" data-i18n="tf">TF 卡存储</div>
+      <div class="row"><div class="big" id="tf">--</div><span class="unit">%</span></div>
+      <div class="mini" id="tfnote">--</div>
+      <div class="bar"><i id="tfbar"></i></div>
+    </div>
+
+    <div class="card wide">
+      <div class="label" data-i18n="wifi">WiFi（MT7992）</div>
+      <div class="row">
+        <div class="big" id="clients">--</div><span class="unit" data-i18n="online">台设备在线</span>
+        <span class="chip" id="ssid">SSID --</span>
+      </div>
+      <div class="mini" id="laninfo">--</div>
+    </div>
+
+    <div class="card">
+      <div class="label">PassWall</div>
+      <div class="row"><div class="big" id="pw" style="font-size:28px">--</div></div>
+      <div class="mini" id="pwnote">--</div>
+    </div>
+
+    <div class="card">
+      <div class="label">Docker</div>
+      <div class="row"><div class="big" id="docker" style="font-size:28px">--</div></div>
+      <div class="mini" id="dockernote">--</div>
+    </div>
+
+    <div class="card">
+      <div class="label" data-i18n="modem">5G 模组</div>
+      <div class="row"><div class="big" id="modem" style="font-size:28px">--</div></div>
+      <div class="mini" id="modemnote">--</div>
+    </div>
+
+    <div class="card">
+      <div class="label" data-i18n="health">TF 卡健康</div>
+      <div class="row"><div class="big" id="errs" style="font-size:28px">--</div></div>
+      <div class="mini" id="errsnote">--</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+
+  var T = {
+    zh: {
+      luci: "进入 LuCI 管理 →", uptime: "运行时间", load: "CPU 负载", min1: "1 分钟",
+      temp: "CPU 温度", mem: "内存", wan: "WAN 实时流量", down: "Mbps 下行", up: "Mbps 上行",
+      tf: "TF 卡存储", wifi: "WiFi（MT7992）", online: "台设备在线", modem: "5G 模组",
+      health: "TF 卡健康",
+      booted: "开机于 ", used: "已用 ", swap: "Swap ", total: "累计 ↓", lan: "LAN ",
+      running: "运行中", stopped: "未运行", enabled_on: "已启用 · 代理已接管流量", disabled: "未启用",
+      containers: "容器 ", containers_unit: " 个 · 数据目录 /mnt/sda1/docker",
+      no_usb: "未连接 USB 盘或未启动", connected: "已连接", notfound: "未检测到",
+      modem_off: "USB 口无 5G 模组", modem_ip: "USB 5G 模组 IP ",
+      err_bad: "内核检测到 I/O 错误，请检查 TF 卡", err_ok: "无 I/O 错误 · ",
+      temp_ok: "温度正常", temp_warn: "温度正常偏高", temp_bad: "温度偏高",
+      units: ["天", "小时", "分"], day: " 天 ", hour: " 小时 ", minute: " 分 ",
+      disconn: "与路由器连接断开，正在重试…", d5: "5 分钟 ", d15: " · 15 分钟 "
+    },
+    en: {
+      luci: "Open LuCI →", uptime: "Uptime", load: "CPU Load", min1: "1 min",
+      temp: "CPU Temp", mem: "Memory", wan: "WAN Traffic", down: "Mbps Down", up: "Mbps Up",
+      tf: "TF Card Storage", wifi: "WiFi (MT7992)", online: "clients online", modem: "5G Modem",
+      health: "TF Health",
+      booted: "Booted ", used: "Used ", swap: "Swap ", total: "Total ↓", lan: "LAN ",
+      running: "Running", stopped: "Stopped", enabled_on: "Enabled · proxying traffic", disabled: "Disabled",
+      containers: "Containers ", containers_unit: " · data dir /mnt/sda1/docker",
+      no_usb: "No USB disk / not started", connected: "Connected", notfound: "Not detected",
+      modem_off: "No 5G modem on USB", modem_ip: "5G modem IP ",
+      err_bad: "Kernel I/O errors detected, check TF card", err_ok: "No I/O errors · ",
+      temp_ok: "Normal", temp_warn: "Warm", temp_bad: "Hot",
+      units: ["d", "h", "m"], day: "d ", hour: "h ", minute: "m ",
+      disconn: "Disconnected from router, retrying…", d5: "5m ", d15: " · 15m "
+    }
+  };
+
+  var lang = localStorage.getItem('n5000-lang') || (navigator.language && navigator.language.indexOf('zh') === 0 ? 'zh' : 'en');
+  var prev = null, samples = [], MAX = 90, errTimer = 0, lastData = null;
+
+  function t(k){ return T[lang][k] !== undefined ? T[lang][k] : T.zh[k]; }
+
+  function applyLang(){
+    document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+    $('lang').textContent = lang === 'zh' ? 'EN' : '中';
+    document.querySelectorAll('[data-i18n]').forEach(function(el){
+      el.textContent = t(el.getAttribute('data-i18n'));
+    });
+    $('err').textContent = t('disconn');
+    if (lastData) render(lastData);
+  }
+
+  function fmtUptime(s){
+    s = Math.max(0, Math.floor(s));
+    var d = Math.floor(s/86400), h = Math.floor(s%86400/3600), m = Math.floor(s%3600/60);
+    if (lang === 'zh') {
+      if (d > 0) return d + t('day') + h + t('hour');
+      if (h > 0) return h + t('hour') + m + t('minute');
+      return m + t('minute');
+    }
+    if (d > 0) return d + 'd ' + h + 'h';
+    if (h > 0) return h + 'h ' + m + 'm';
+    return m + 'm';
+  }
+  function fmtGB(kb){ return (kb/1048576).toFixed(1); }
+  function fmtTraffic(bytes){
+    if (bytes > 1099511627776) return (bytes/1099511627776).toFixed(2) + " TB";
+    if (bytes > 1073741824) return (bytes/1073741824).toFixed(2) + " GB";
+    if (bytes > 1048576) return (bytes/1048576).toFixed(1) + " MB";
+    return (bytes/1024).toFixed(0) + " KB";
+  }
+  function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+
+  function drawSpark(){
+    var c = $("spark"); if (!c) return;
+    var dpr = window.devicePixelRatio || 1;
+    var w = c.clientWidth, h = c.clientHeight;
+    if (!w || !h) return;
+    if (c.width !== Math.round(w*dpr) || c.height !== Math.round(h*dpr)) {
+      c.width = Math.round(w*dpr); c.height = Math.round(h*dpr);
+    }
+    var ctx = c.getContext("2d");
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.clearRect(0,0,w,h);
+    ctx.strokeStyle = "rgba(51,255,158,0.08)"; ctx.lineWidth = 1;
+    for (var i=1;i<4;i++){ var y = h*i/4; ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+    if (samples.length < 2) return;
+    var maxV = 1;
+    samples.forEach(function(s){ maxV = Math.max(maxV, s.down, s.up); });
+    maxV = maxV * 1.2;
+    function line(key, color, fill){
+      ctx.beginPath();
+      samples.forEach(function(s, idx){
+        var x = idx / (MAX-1) * w;
+        var y = h - (s[key]/maxV)*h*0.92 - 2;
+        if (idx === 0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      });
+      ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
+      if (fill){
+        ctx.lineTo((samples.length-1)/(MAX-1)*w, h);
+        ctx.lineTo(0, h); ctx.closePath();
+        var g = ctx.createLinearGradient(0,0,0,h);
+        g.addColorStop(0, fill); g.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = g; ctx.fill();
+      }
+    }
+    line("down", "#33ff9e", "rgba(51,255,158,0.25)");
+    line("up", "#38d9ff", null);
+  }
+
+  function render(d){
+    lastData = d;
+    $("sub").textContent = d.host || "OpenWrt";
+    $("uptime").textContent = fmtUptime(d.uptime);
+    $("booted").textContent = t('booted') + new Date((d.ts - d.uptime)*1000).toLocaleString(lang === 'zh' ? "zh-CN" : "en-US", {hour12:false});
+
+    $("load1").textContent = Number(d.load[0]).toFixed(2);
+    $("loadavg").textContent = t('d5') + Number(d.load[1]).toFixed(2) + t('d15') + Number(d.load[2]).toFixed(2);
+    var lp = clamp(d.load[0]/2*100, 2, 100);
+    $("loadbar").style.width = lp + "%";
+    $("loadbar").style.background = d.load[0] > 1.5 ? "var(--red)" : d.load[0] > 0.8 ? "var(--orange)" : "var(--cyan)";
+
+    var tv = d.temp/1000;
+    $("temp").textContent = tv.toFixed(1);
+    $("temp").className = "big " + (tv >= 80 ? "bad" : tv >= 65 ? "warn" : "ok");
+    $("tempnote").textContent = tv >= 80 ? t('temp_bad') : tv >= 65 ? t('temp_warn') : t('temp_ok');
+
+    var memUsed = d.mem_total - d.mem_avail;
+    var mp = d.mem_total ? memUsed/d.mem_total*100 : 0;
+    $("mem").textContent = mp.toFixed(0);
+    $("mem").className = "big " + (mp >= 85 ? "bad" : mp >= 70 ? "warn" : "ok");
+    var swapUsed = Math.max(0, d.swap_total - d.swap_free);
+    $("memnote").textContent = t('used') + fmtGB(memUsed) + " / " + fmtGB(d.mem_total) + " GB · " + t('swap') + (swapUsed/1024).toFixed(1) + " GB";
+    $("membar").style.width = mp + "%";
+    $("membar").style.background = mp >= 85 ? "var(--red)" : mp >= 70 ? "var(--orange)" : "var(--green)";
+
+    var tp = d.tf_total ? d.tf_used/d.tf_total*100 : 0;
+    $("tf").textContent = tp.toFixed(0);
+    $("tf").className = "big " + (tp >= 90 ? "bad" : tp >= 75 ? "warn" : "ok");
+    $("tfnote").textContent = t('used') + fmtGB(d.tf_used) + " / " + fmtGB(d.tf_total) + " GB";
+    $("tfbar").style.width = tp + "%";
+    $("tfbar").style.background = tp >= 90 ? "var(--red)" : tp >= 75 ? "var(--orange)" : "var(--green)";
+
+    $("wanip").textContent = d.wan_ip || "--";
+    var down = 0, up = 0;
+    if (prev && d.ts > prev.ts) {
+      var dt = d.ts - prev.ts;
+      down = Math.max(0, (d.wan_rx - prev.rx) * 8 / dt / 1e6);
+      up   = Math.max(0, (d.wan_tx - prev.tx) * 8 / dt / 1e6);
+    }
+    prev = { ts: d.ts, rx: d.wan_rx, tx: d.wan_tx };
+    $("down").textContent = down.toFixed(2);
+    $("up").textContent = up.toFixed(2);
+    $("total").textContent = t('total') + fmtTraffic(d.wan_rx) + " ↑" + fmtTraffic(d.wan_tx);
+
+    samples.push({down: down, up: up});
+    if (samples.length > MAX) samples.shift();
+    drawSpark();
+
+    $("clients").textContent = d.clients;
+    $("ssid").textContent = "SSID " + d.ssid;
+    $("laninfo").textContent = t('lan') + (d.lan_ip || "--") + " · " + t('total') + fmtTraffic(d.lan_rx) + " ↑" + fmtTraffic(d.lan_tx);
+
+    $("pw").textContent = d.pw ? t('running') : t('stopped');
+    $("pw").className = "big " + (d.pw ? "ok" : "bad");
+    $("pwnote").textContent = Number(d.pw_enabled) === 1 ? t('enabled_on') : t('disabled');
+
+    $("docker").textContent = d.docker ? t('running') : t('stopped');
+    $("docker").className = "big " + (d.docker ? "ok" : "bad");
+    $("dockernote").textContent = d.docker ? (t('containers') + d.docker_count + t('containers_unit')) : t('no_usb');
+
+    $("modem").textContent = d.modem ? t('connected') : t('notfound');
+    $("modem").className = "big " + (d.modem ? "ok" : "warn");
+    $("modemnote").textContent = d.modem ? (t('modem_ip') + d.modem_ip) : t('modem_off');
+
+    $("errs").textContent = d.errs;
+    $("errs").className = "big " + (d.errs > 0 ? "bad" : "ok");
+    $("errsnote").textContent = d.errs > 0 ? t('err_bad') : (t('err_ok') + (d.tf_model || "TF"));
+  }
+
+  function setClock(){
+    var d = new Date();
+    $("clock").textContent = String(d.getHours()).padStart(2,"0") + ":" +
+      String(d.getMinutes()).padStart(2,"0") + ":" + String(d.getSeconds()).padStart(2,"0");
+  }
+  setInterval(setClock, 1000); setClock();
+
+  $("lang").addEventListener('click', function(){
+    lang = lang === 'zh' ? 'en' : 'zh';
+    localStorage.setItem('n5000-lang', lang);
+    applyLang();
+  });
+
+  function poll(){
+    fetch("/cgi-bin/rstatus?t=" + Date.now(), {cache:"no-store"})
+      .then(function(r){ if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function(d){ $("err").style.display = "none"; errTimer = 0; render(d); })
+      .catch(function(){ errTimer++; if (errTimer >= 2) $("err").style.display = "block"; });
+  }
+  applyLang();
+  poll();
+  setInterval(poll, 2000);
+  window.addEventListener("resize", drawSpark);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+#!/bin/sh
+# USB 盘插入/挂载后：补建 Docker 目录、启用 Swap，并重启 dockerd
+[ "$ACTION" = "add" ] || exit 0
+case "$DEVNAME" in
+	sda1|sda) ;;
+	*) exit 0 ;;
+esac
+
+sleep 2
+/etc/init.d/n5000-usb-setup restart >/dev/null 2>&1
+/etc/init.d/dockerd restart >/dev/null 2>&1
+exit 0
