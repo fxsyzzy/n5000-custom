@@ -13,7 +13,7 @@ jobs:
     timeout-minutes: 20
 
     steps:
-      - name: Download firmware artifact (run 45359624743 (v4))
+      - name: Download v4 firmware artifact
         run: |
           curl -sSL -H "Authorization: Bearer ${{ github.token }}" \
             -o fw.zip \
@@ -25,59 +25,40 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq squashfs-tools device-tree-compiler > /dev/null
-          unsquashfs -version | head -1
 
-      - name: Unpack tar and examine
+      - name: Unpack firmware
         run: |
           set -e
           cd fw
           BIN=$(ls *sysupgrade.bin)
-          echo "=== bin: $BIN ==="
-          tar -tf "$BIN"
+          echo "BIN=$BIN"
           tar -xf "$BIN"
           cd sysupgrade-nradio_n5000
-          echo "=== kernel magic ==="
-          xxd -l 32 kernel
-          echo "=== root magic ==="
-          xxd -l 16 root
-          echo "=== kernel FIT ==="
-          dtc -I dtb -O dts kernel 2>/dev/null > /tmp/kernel.dts || true
-          grep -E "description|compatible|model|bootargs|config" /tmp/kernel.dts | head -40
-          echo "=== FIT structure ==="
-          dtc -I dtb -O dts kernel 2>/dev/null | grep -E "^\s+(images|configurations|fdt|kernel)" | head -20
+          echo "=== FIT summary ==="
+          dtc -I dtb -O dts kernel 2>/dev/null | grep -E "description|config-1|fdt-1|kernel-1" | head -20
 
-      - name: Rootfs checks
+      - name: Rootfs verification
         run: |
           set -e
           cd fw/sysupgrade-nradio_n5000
-          echo "=== total files ==="
+          echo "=== file count ==="
           unsquashfs -l root | wc -l
+          unsquashfs -cat root etc/board.d/02_network > /tmp/netcheck 2>/dev/null || true
+          echo "=== 02_network assertions ==="
+          grep -q 'ucidef_set_interfaces_lan_wan "eth0" "eth1"' /tmp/netcheck && echo "PASS: lan/wan block" || echo "FAIL: lan/wan block"
+          grep -q '. /lib/functions/nradio-n5000.sh' /tmp/netcheck && echo "PASS: mac block" || echo "FAIL: mac block"
+          grep -q 'openembed,som7981' /tmp/netcheck && echo "PASS: openembed intact" || echo "FAIL: openembed missing"
+          echo "n5000 blocks: $(grep -c 'nradio,n5000)' /tmp/netcheck || true)"
+          wc -c /tmp/netcheck
           echo "=== preinit ==="
-          unsquashfs -cat root lib/preinit/35_nradio_tf_overlay || echo "MISSING 35_nradio_tf_overlay"
-          echo "=== board.d/02_network 断言 ==="
-NETFILE=/tmp/netcheck
-unsquashfs -cat root etc/board.d/02_network > $NETFILE 2>/dev/null || true
-grep -q 'ucidef_set_interfaces_lan_wan "eth0" "eth1"' $NETFILE && echo "PASS: lan/wan block" || echo "FAIL: lan/wan block"
-grep -q '. /lib/functions/nradio-n5000.sh' $NETFILE && echo "PASS: mac block" || echo "FAIL: mac block"
-grep -q 'openembed,som7981' $NETFILE && echo "PASS: openembed intact" || echo "FAIL: openembed missing"
-echo "n5000 blocks: $(grep -c 'nradio,n5000)' $NETFILE)"
-wc -c $NETFILE
-echo "=== board.d/02_network n5000 ==="
-          unsquashfs -cat root etc/board.d/02_network 2>/dev/null | grep -A6 "nradio,n5000" || echo "MISSING board.d n5000"
-          echo "=== etc/config/network ==="
-          unsquashfs -cat root etc/config/network 2>/dev/null | head -60 || echo "MISSING network config"
-          echo "=== uci-defaults list ==="
-          unsquashfs -l root etc/uci-defaults | head -30
-          echo "=== firmware dir ==="
-          unsquashfs -l root lib/firmware 2>/dev/null | grep -iE "mt79|airoha|en8811| mediatek" | head -30
-          echo "=== modules.d / wifi ==="
-          unsquashfs -l root etc/modules.d 2>/dev/null | head -20
-          echo "=== dashboard/theme files ==="
-          unsquashfs -l root www 2>/dev/null | grep -iE "dashboard|rstatus|index" | head -10
-          echo "=== nradio-n5000.sh ==="
-          unsquashfs -cat root lib/functions/nradio-n5000.sh 2>/dev/null | head -40 || echo "MISSING nradio-n5000.sh"
-          echo "=== platform.sh n5000 upgrade ==="
-          unsquashfs -cat root lib/upgrade/platform.sh 2>/dev/null | grep -A8 "nradio,n5000" | head -30 || echo "MISSING platform upgrade"
-          echo "=== check failsafe guard requirements ==="
-          unsquashfs -cat root lib/preinit/35_nradio_tf_overlay 2>/dev/null | grep -E "factory-firmware|rootfs_data|FAILSAFE" || true
-
+          unsquashfs -l root lib/preinit 2>/dev/null | grep -c "35_nradio_tf_overlay" || echo "MISSING preinit"
+          echo "=== uci-defaults count ==="
+          unsquashfs -l root etc/uci-defaults 2>/dev/null | grep -c "99-zz-custom-branding" || echo "MISSING branding"
+          echo "=== dashboard files ==="
+          unsquashfs -l root www 2>/dev/null | grep -E "dashboard.html|rstatus" | head -5
+          echo "=== themes/passwall/docker in manifest ==="
+          for p in luci-theme-argon luci-theme-carbon luci-app-passwall luci-app-dockerman luci-app-adblock; do
+            unsquashfs -l root usr/lib/opkg/info 2>/dev/null | grep -q "$p.control" && echo "PASS: $p" || echo "FAIL: $p"
+          done
+          echo "=== wifi SSID defaults ==="
+          unsquashfs -cat root etc/board.d/06-nradio-n5000-wifi 2>/dev/null | grep -iE "ssid|NRadio|OpenWrt" | head -5 || true
