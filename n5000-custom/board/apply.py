@@ -106,17 +106,27 @@ TARGET_DEVICES += nradio_n5000
         "\t\tlabel_mac=$lan_mac\n"
         "\t\t;;\n"
     )
-    existing_mac_re = re.compile(
-        r"\tnradio,n5000\)\n.*?\t\t;;\n(?=\tnradio,c8-668gl\))",
-        re.S,
-    )
-    if existing_mac_re.search(net_text):
-        net_text = existing_mac_re.sub(mac_block, net_text, count=1)
-    else:
+    # NOTE: insert the MAC block right before the c8-668gl entry.  Do NOT use a
+    # greedy/spanning regex here: the interface block inserted above also starts
+    # with "nradio,n5000)" and a regex like
+    #   \tnradio,n5000\)\n.*?\t\t;;\n(?=\tnradio,c8-668gl\))
+    # would swallow every board definition in between (this exact bug left the
+    # N5000 image without LAN/WAN interfaces and broke first-boot networking).
+    if ". /lib/functions/nradio-n5000.sh" not in net_text:
         mac_anchor = "\tnradio,c8-668gl)\n"
         if mac_anchor not in net_text:
             sys.exit("ERROR: mac anchor missing in 02_network")
         net_text = net_text.replace(mac_anchor, mac_block + mac_anchor, 1)
+
+    # Sanity checks: both N5000 blocks must be present and unrelated board
+    # entries must not have been destroyed by the patching.
+    for needle in (
+        'ucidef_set_interfaces_lan_wan "eth0" "eth1"',
+        ". /lib/functions/nradio-n5000.sh",
+        "openembed,som7981",
+    ):
+        if needle not in net_text:
+            sys.exit(f"ERROR: 02_network patch lost required content: {needle!r}")
     net_path.write_text(net_text)
 
     # 4b. Update 11_fix_wifi_mac (override template 00:0c:43:* & multicast EEPROM MACs)
