@@ -13,11 +13,11 @@ jobs:
     timeout-minutes: 20
 
     steps:
-      - name: Download firmware artifact (run 45155934520)
+      - name: Download firmware artifact (run 45359624743 (v4))
         run: |
           curl -sSL -H "Authorization: Bearer ${{ github.token }}" \
             -o fw.zip \
-            "https://api.github.com/repos/${{ github.repository }}/actions/artifacts/14823295755/zip"
+            "https://api.github.com/repos/${{ github.repository }}/actions/artifacts/14917305286/zip"
           unzip -q fw.zip -d fw
           ls -l fw
 
@@ -54,7 +54,15 @@ jobs:
           unsquashfs -l root | wc -l
           echo "=== preinit ==="
           unsquashfs -cat root lib/preinit/35_nradio_tf_overlay || echo "MISSING 35_nradio_tf_overlay"
-          echo "=== board.d/02_network n5000 ==="
+          echo "=== board.d/02_network 断言 ==="
+NETFILE=/tmp/netcheck
+unsquashfs -cat root etc/board.d/02_network > $NETFILE 2>/dev/null || true
+grep -q 'ucidef_set_interfaces_lan_wan "eth0" "eth1"' $NETFILE && echo "PASS: lan/wan block" || echo "FAIL: lan/wan block"
+grep -q '. /lib/functions/nradio-n5000.sh' $NETFILE && echo "PASS: mac block" || echo "FAIL: mac block"
+grep -q 'openembed,som7981' $NETFILE && echo "PASS: openembed intact" || echo "FAIL: openembed missing"
+echo "n5000 blocks: $(grep -c 'nradio,n5000)' $NETFILE)"
+wc -c $NETFILE
+echo "=== board.d/02_network n5000 ==="
           unsquashfs -cat root etc/board.d/02_network 2>/dev/null | grep -A6 "nradio,n5000" || echo "MISSING board.d n5000"
           echo "=== etc/config/network ==="
           unsquashfs -cat root etc/config/network 2>/dev/null | head -60 || echo "MISSING network config"
@@ -72,3 +80,4 @@ jobs:
           unsquashfs -cat root lib/upgrade/platform.sh 2>/dev/null | grep -A8 "nradio,n5000" | head -30 || echo "MISSING platform upgrade"
           echo "=== check failsafe guard requirements ==="
           unsquashfs -cat root lib/preinit/35_nradio_tf_overlay 2>/dev/null | grep -E "factory-firmware|rootfs_data|FAILSAFE" || true
+
