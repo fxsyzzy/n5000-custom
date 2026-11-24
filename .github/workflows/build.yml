@@ -69,6 +69,19 @@ jobs:
       - name: 注入 N5000 板级支持（DTS / 设备定义 / 板级脚本）
         run: python3 n5000-custom/board/apply.py openwrt
 
+      - name: 验证板级补丁（防止 02_network 被破坏）
+        run: |
+          set -e
+          NET=openwrt/target/linux/mediatek/filogic/base-files/etc/board.d/02_network
+          grep -q 'ucidef_set_interfaces_lan_wan "eth0" "eth1"' "$NET"
+          grep -q '. /lib/functions/nradio-n5000.sh' "$NET"
+          grep -q 'openembed,som7981' "$NET"
+          grep -q 'nradio,c8-668gl' "$NET"
+          echo "02_network 检查通过：n5000 块数 $(grep -c 'nradio,n5000)' "$NET")"
+          test -f openwrt/target/linux/mediatek/filogic/base-files/lib/preinit/35_nradio_tf_overlay
+          test -f openwrt/target/linux/mediatek/filogic/base-files/etc/board.d/06-nradio-n5000-wifi
+          echo "板级文件检查通过"
+
       - name: 应用定制配置
         run: |
           cp n5000-custom/configs/n5000-custom.config openwrt/.config
