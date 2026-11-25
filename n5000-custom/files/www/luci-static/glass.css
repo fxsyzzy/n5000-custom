@@ -843,3 +843,9 @@ header .cbi-button,header button,header a{border-radius:2px !important}
 /* 禁止任何彩色强调（保险） */
 html[data-argon-mode="light"] .success,html[data-argon-mode="light"] .warning,html[data-argon-mode="light"] .danger{color:#111111 !important}
 html[data-argon-mode="dark"] .success,html[data-argon-mode="dark"] .warning,html[data-argon-mode="dark"] .danger{color:#f5f5f5 !important}
+
+/* ================= 菜单瞬开（去掉 Argon 展开动画延迟） ================= */
+#mainmenu .slide-menu,#mainmenu .nav li,#mainmenu .nav button,#mainmenu .nav a{
+  transition:none !important;
+  animation:none !important;
+}
