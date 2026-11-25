@@ -1,0 +1,66 @@
+#!/bin/sh
+# 流量统计接口：读取 /etc/traffic/*.json（trafficd 写入），返回今日/本月/近 30 天
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+
+DATA_DIR=/etc/traffic
+send_json() { printf 'Content-Type: application/json; charset=utf-8\r\nCache-Control: no-store\r\n\r\n'; }
+read_body() { len="${CONTENT_LENGTH:-0}"; [ "$len" -gt 0 ] 2>/dev/null && head -c "$len"; }
+parse_qs() { printf '%s' "$QUERY_STRING" | tr '&' '\n' | sed -n "s/^$1=//p" | head -n1; }
+
+ACTION=$(parse_qs action)
+[ -z "$ACTION" ] && ACTION=summary
+
+case "$ACTION" in
+summary)
+	send_json
+	TODAY=$(date +%F)
+	MONTH=$(date +%Y-%m)
+	RT=/tmp/trafficd/month.json
+	FILES=$(ls -1 "$DATA_DIR"/*.json 2>/dev/null | grep -v "/$MONTH.json$" | sort | tail -n 3 | tr '\n' ' ')
+	if [ -f "$RT" ]; then
+		FILES="$FILES $RT"
+	elif [ -f "$DATA_DIR/$MONTH.json" ]; then
+		FILES="$FILES $DATA_DIR/$MONTH.json"
+	fi
+	if [ -z "$FILES" ]; then
+		jq -n --arg d "$TODAY" --arg m "$MONTH" '{code:0,today:{date:$d,rx:0,tx:0,total:0,cats:[],sites:[]},month:{month:$m,rx:0,tx:0,total:0,days:0,cats:[],sites:[]},days:[]}'
+		exit 0
+	fi
+	jq -s --arg day "$TODAY" --arg month "$MONTH" '
+		reduce .[] as $m ({rx:0,tx:0,days:{}};
+			.rx += ($m.rx // 0) |
+			.tx += ($m.tx // 0) |
+			.days = (.days + ($m.days // {}))
+		) as $all |
+		($all.days[$day] // {rx:0,tx:0,cats:{},sites:{}}) as $t |
+		([$all.days | to_entries[] | select(.key | startswith($month)) | .value] |
+			{ rx: (map(.rx)|add // 0), tx: (map(.tx)|add // 0),
+			  n: length,
+			  cats: (map(.cats // {}) | reduce .[] as $c ({}; reduce ($c|to_entries[]) as $e (. ; .[$e.key] = ((.[$e.key] // 0) + $e.value)))),
+			  sites: (map(.sites // {}) | reduce .[] as $s ({}; reduce ($s|to_entries[]) as $e (. ; .[$e.key] = ((.[$e.key] // 0) + $e.value))))
+			}) as $m |
+		{
+			code: 0,
+			today: {
+				date: $day,
+				rx: ($t.rx // 0), tx: ($t.tx // 0),
+				total: (($t.rx // 0) + ($t.tx // 0)),
+				cats: (($t.cats // {}) | to_entries | map({cat: .key, bytes: .value}) | sort_by(-.bytes)),
+				sites: (($t.sites // {}) | to_entries | map({domain: .key, bytes: .value}) | sort_by(-.bytes) | .[:30])
+			},
+			month: {
+				month: $month,
+				rx: $m.rx, tx: $m.tx, total: ($m.rx + $m.tx), days: $m.n,
+				cats: ($m.cats | to_entries | map({cat: .key, bytes: .value}) | sort_by(-.bytes)),
+				sites: ($m.sites | to_entries | map({domain: .key, bytes: .value}) | sort_by(-.bytes) | .[:30])
+			},
+			days: ($all.days | to_entries | map({date: .key, rx: (.value.rx // 0), tx: (.value.tx // 0), total: ((.value.rx // 0) + (.value.tx // 0))}) | sort_by(.date) | .[-30:])
+		}
+	' $FILES
+	;;
+*)
+	send_json
+	jq -n '{code:-1,error:"unknown action"}'
+	;;
+esac
