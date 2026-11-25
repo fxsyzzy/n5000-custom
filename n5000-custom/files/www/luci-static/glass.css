@@ -24,3 +24,24 @@ body{
 }
 .cbi-progressbar>div{background:var(--primary,#48A9C5) !important}
 a:hover{color:#83D9DC !important}
+
+/* ---------- 磨砂玻璃（Frosted glass） ---------- */
+.cbi-section,.cbi-section-node,.panel,.well,.card,.modal-content,.login-container,.login-form,.dropdown-menu,.table-container,.cbi-page-actions,.ifacebox,.cbi-dashboard,.cbi-map{
+  background:linear-gradient(180deg,rgba(200,244,249,.07),rgba(13,44,84,.30)) !important;
+  border:1px solid rgba(131,217,220,.22) !important;
+  backdrop-filter:blur(14px) saturate(160%) !important;
+  -webkit-backdrop-filter:blur(14px) saturate(160%) !important;
+}
+.main-left,header,.modal-backdrop{
+  backdrop-filter:blur(16px) saturate(150%) !important;
+  -webkit-backdrop-filter:blur(16px) saturate(150%) !important;
+}
+input,select,textarea,.cbi-input-text,.cbi-input-password,.cbi-input-select,.cbi-input-textarea{
+  background:rgba(13,44,84,.30) !important;
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+}
+@media(max-width:700px){
+  .cbi-section,.cbi-section-node,.panel,.well,.card,.modal-content,.login-container,.login-form,.dropdown-menu,.table-container,.cbi-page-actions,.ifacebox{
+    backdrop-filter:blur(8px) saturate(140%) !important;-webkit-backdrop-filter:blur(8px) saturate(140%) !important;
+  }
+}
