@@ -189,36 +189,6 @@
 
 
 		/* ---------- AI 语录（大肥鱼 × DeepSeek） ---------- */
-		var AI_LINE_KEY = 'n5000-ai-line';
-		function applyLine(text) {
-			if (!text || !bubble) return;
-			bubble.textContent = text;
-			riceHold = Math.max(riceHold, Date.now() + 30000);
-		}
-		function fetchAiLine() {
-			try {
-				var cache = JSON.parse(localStorage.getItem(AI_LINE_KEY) || 'null');
-				if (cache && cache.l && cache.t && (Date.now() - cache.t) < 240000) {
-					applyLine(cache.l);
-					return;
-				}
-			} catch (e) {}
-			if (document.visibilityState === 'hidden') return;
-			fetch('/cgi-bin/aichat?action=line', { cache: 'no-store' })
-				.then(function(r) { return r.json(); })
-				.then(function(j) {
-					if (j && j.code === 0 && j.line) {
-						applyLine(j.line);
-						try { localStorage.setItem(AI_LINE_KEY, JSON.stringify({ t: Date.now(), l: j.line })); } catch (e) {}
-					}
-				}).catch(function() {});
-		}
-		setTimeout(fetchAiLine, 15000);
-		setInterval(fetchAiLine, 300000);
-		document.addEventListener('visibilitychange', function() {
-			if (document.visibilityState === 'visible') fetchAiLine();
-		});
-
 		/* ---------- 状态刷新 ---------- */
 		function refreshStatus() {
 			fetch('/cgi-bin/rstatus?t=' + Date.now(), { cache: 'no-store' })
