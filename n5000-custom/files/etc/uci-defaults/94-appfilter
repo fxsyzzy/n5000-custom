@@ -1,0 +1,13 @@
+#!/bin/sh
+# 应用过滤：开启 dnsmasq 查询日志 + 启动服务
+[ -f /etc/config/appfilter ] || exit 0
+
+# dnsmasq 记录查询（用于识别设备访问了哪些网站/应用）
+uci -q set dhcp.@dnsmasq[0].logqueries='1'
+uci -q set dhcp.@dnsmasq[0].logfacility='/var/log/dnsmasq.log'
+uci -q commit dhcp
+
+[ -x /etc/init.d/appfilter ] && /etc/init.d/appfilter enable >/dev/null 2>&1
+
+exit 0
+
