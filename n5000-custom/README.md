@@ -420,3 +420,24 @@ N5000 面板（登录后默认首页）
   - 流量仪表盘 `/cgi-bin/luci/admin/n5000-traffic`
   - 密码本 `/cgi-bin/luci/admin/n5000-vault`（菜单隐藏）
 - 面板内的快捷入口链接已同步更新
+## 侧边栏菜单（v2.5 最终结构）
+
+```
+N5000              order 0   分组（展开）
+ ├─ N5000 面板     order 1
+ ├─ 收藏夹         order 2
+ ├─ AI 助手        order 3
+ ├─ 应用过滤       order 4
+ ├─ 流量仪表盘     order 5
+ └─ 密码本         order 99（CSS 隐藏，不在菜单显示）
+```
+
+- 落地页：`/cgi-bin/luci/` 自动解析到 **N5000 面板**
+- 地址：
+  - 面板 `/cgi-bin/luci/admin/n5000/panel`
+  - 收藏夹 `/cgi-bin/luci/admin/n5000/favorites`
+  - AI 助手 `/cgi-bin/luci/admin/n5000/ai`
+  - 应用过滤 `/cgi-bin/luci/admin/n5000/appfilter`
+  - 流量仪表盘 `/cgi-bin/luci/admin/n5000/dashboard`
+  - 密码本 `/cgi-bin/luci/admin/n5000/vault`（隐藏）
+- 注意：LuCI 菜单 JSON 用**路径 key**（`admin/n5000/panel`）表示层级，不能嵌套 `children` 字段
