@@ -1,0 +1,120 @@
+#!/bin/sh
+# 收藏夹 API：网站收藏 + 分类（UCI: /etc/config/favorites）
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+
+send_json() { printf 'Content-Type: application/json; charset=utf-8\r\nCache-Control: no-store\r\n\r\n'; }
+fail() { send_json; jq -n --arg e "$1" '{code:-1,error:$e}'; exit 0; }
+read_body() { len="${CONTENT_LENGTH:-0}"; [ "$len" -gt 0 ] 2>/dev/null && head -c "$len"; }
+parse_qs() { printf '%s' "$QUERY_STRING" | tr '&' '\n' | sed -n "s/^$1=//p" | head -n1; }
+jstr() { printf '%s' "$1" | jq -R .; }
+
+uciget() { uci -q get "favorites.$1" 2>/dev/null; }
+
+list_categories() {
+	echo '['
+	first=1
+	for sec in $(uci -q show favorites 2>/dev/null | sed -n 's/^favorites\.\([^.]*\)=category$/\1/p'); do
+		[ "$first" = "1" ] || echo ','
+		first=0
+		jq -n -c --arg id "$sec" --arg name "$(uciget "$sec.name")" \
+			--arg order "$(uciget "$sec.order")" \
+			'{id:$id, name:($name // "未分类"), order:($order // "99")}'
+	done
+	echo ']'
+}
+
+list_sites() {
+	echo '['
+	first=1
+	for sec in $(uci -q show favorites 2>/dev/null | sed -n 's/^favorites\.\([^.]*\)=site$/\1/p'); do
+		[ "$first" = "1" ] || echo ','
+		first=0
+		jq -n -c --arg id "$sec" --arg name "$(uciget "$sec.name")" \
+			--arg url "$(uciget "$sec.url")" --arg cat "$(uciget "$sec.category")" \
+			--arg note "$(uciget "$sec.note")" --arg order "$(uciget "$sec.order")" \
+			'{id:$id, name:($name // ""), url:($url // ""), category:($cat // ""), note:($note // ""), order:($order // "99")}'
+	done
+	echo ']'
+}
+
+ACTION=$(parse_qs action)
+
+case "$ACTION" in
+list)
+	send_json
+	CATS=$(list_categories)
+	SITES=$(list_sites)
+	jq -n --argjson c "$CATS" --argjson s "$SITES" '{code:0, categories:$c, sites:$s}'
+	;;
+save_site)
+	DATA=$(read_body)
+	printf '%s' "$DATA" | jq -e . >/dev/null 2>&1 || { fail "invalid json"; exit 0; }
+	id=$(printf '%s' "$DATA" | jq -r '.id // empty')
+	name=$(printf '%s' "$DATA" | jq -r '.name // empty')
+	url=$(printf '%s' "$DATA" | jq -r '.url // empty')
+	cat=$(printf '%s' "$DATA" | jq -r '.category // empty')
+	note=$(printf '%s' "$DATA" | jq -r '.note // empty')
+	[ -z "$name" ] && { fail "名称不能为空"; exit 0; }
+	[ -z "$url" ] && { fail "网址不能为空"; exit 0; }
+	case "$url" in
+		http://*|https://*|/*) : ;;
+		*) url="http://$url" ;;
+	esac
+	if [ -z "$id" ] || ! uci -q get "favorites.$id" >/dev/null 2>&1; then
+		id="site_$(date +%s)"
+		uci set "favorites.$id=site"
+	fi
+	uci set "favorites.$id.name=$name"
+	uci set "favorites.$id.url=$url"
+	uci set "favorites.$id.category=$cat"
+	uci set "favorites.$id.note=$note"
+	uci commit favorites
+	send_json
+	jq -n --arg id "$id" '{code:0,id:$id}'
+	;;
+del_site)
+	DATA=$(read_body)
+	id=$(printf '%s' "$DATA" | jq -r '.id // empty')
+	[ -n "$id" ] && uci -q delete "favorites.$id"
+	uci commit favorites
+	send_json
+	echo '{"code":0}'
+	;;
+save_cat)
+	DATA=$(read_body)
+	printf '%s' "$DATA" | jq -e . >/dev/null 2>&1 || { fail "invalid json"; exit 0; }
+	id=$(printf '%s' "$DATA" | jq -r '.id // empty')
+	name=$(printf '%s' "$DATA" | jq -r '.name // empty')
+	[ -z "$name" ] && { fail "分类名不能为空"; exit 0; }
+	if [ -z "$id" ] || ! uci -q get "favorites.$id" >/dev/null 2>&1; then
+		id="cat_$(date +%s)"
+		uci set "favorites.$id=category"
+		uci set "favorites.$id.order=99"
+	fi
+	uci set "favorites.$id.name=$name"
+	uci commit favorites
+	send_json
+	jq -n --arg id "$id" '{code:0,id:$id}'
+	;;
+del_cat)
+	DATA=$(read_body)
+	id=$(printf '%s' "$DATA" | jq -r '.id // empty')
+	[ -z "$id" ] && { fail "missing id"; exit 0; }
+	# 该分类下的收藏移到第一个分类（或置空）
+	first=$(uci -q show favorites 2>/dev/null | sed -n 's/^favorites\.\([^.]*\)=category$/\1/p' | grep -v "^$id$" | head -n1)
+	for s in $(uci -q show favorites 2>/dev/null | sed -n 's/^favorites\.\([^.]*\)=site$/\1/p'); do
+		if [ "$(uciget "$s.category")" = "$id" ]; then
+			uci set "favorites.$s.category=$first"
+		fi
+	done
+	uci -q delete "favorites.$id"
+	uci commit favorites
+	send_json
+	echo '{"code":0}'
+	;;
+*)
+	send_json
+	jq -n '{code:-1,error:"unknown action",actions:["list","save_site","del_site","save_cat","del_cat"]}'
+	;;
+esac
