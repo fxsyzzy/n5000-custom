@@ -1,8 +1,9 @@
 /* ============================================================
  * N5000 大肥鱼（DeepSeek 鲸鱼娘）全局挂件 —— 左下角常驻
- *  - 常驻所有 LuCI 页面（登录页除外）
- *  - 点击喂白饭：🍚 +1，计数器存 localStorage
- *  - 随温度/负载/在线设备数说傲娇台词
+ *  - 静态站立（不游动），点击喂白饭：饭放头上，一叠一碗
+ *  - 白饭计数存 localStorage，里程碑有专属台词
+ *  - 随机出现 1~2 只"串门"的大肥鱼（不同形象），停一会儿自己走
+ * 素材：社区二创（xxnb0/deepseek-chan-fanpack，CC BY-NC-SA 4.0）
  * ============================================================ */
 (function () {
 	'use strict';
@@ -17,29 +18,37 @@
 	}
 
 	ready(function () {
-		/* 登录页不显示 */
 		if (!document.body || !document.body.classList.contains('logged-in')) return;
 		if (document.getElementById('n5000-mascot')) return;
 
 		var RICE_KEY = 'n5000-rice';
-		var RICE_EATEN_KEY = 'n5000-rice-eaten';
+		var VISITORS = [
+			'mascot-v01.png', 'mascot-v02.png', 'mascot-v03.png', 'mascot-v04.png',
+			'mascot-v05.png', 'mascot-v06.png', 'mascot-v07.png'
+		];
+		var BASE = '/luci-static/n5000/';
 
 		var css = ''
-			+ '#n5000-mascot{position:fixed;left:16px;bottom:14px;z-index:900;display:flex;align-items:flex-end;gap:10px;max-width:min(560px,80vw);user-select:none}'
-			+ '#n5000-mascot .n5m-img{height:104px;width:auto;cursor:pointer;filter:drop-shadow(0 8px 18px rgba(0,0,0,.42));animation:n5mSwim 8s ease-in-out infinite}'
-			+ '@keyframes n5mSwim{0%,100%{transform:translate(0,0) rotate(0)}25%{transform:translate(-11px,-5px) rotate(-1.6deg)}50%{transform:translate(0,-9px) rotate(0)}75%{transform:translate(11px,-5px) rotate(1.6deg)}}'
+			+ '#n5000-mascot{position:fixed;left:14px;bottom:12px;z-index:900;display:flex;align-items:flex-end;gap:12px;max-width:min(640px,90vw);user-select:none}'
+			+ '#n5000-mascot .n5m-body{position:relative;flex:0 0 auto}'
+			+ '#n5000-mascot .n5m-img{height:168px;width:auto;display:block;cursor:pointer;filter:drop-shadow(0 10px 22px rgba(0,0,0,.45))}'
+			+ '#n5000-mascot .n5m-head{position:absolute;left:50%;bottom:132px;transform:translateX(-50%);width:0;height:0;pointer-events:none}'
+			+ '#n5000-mascot .n5m-bowl{position:absolute;left:-22px;bottom:0;font-size:26px;line-height:1;'
+			+ 'filter:drop-shadow(0 3px 4px rgba(0,0,0,.35));animation:n5mDrop .38s cubic-bezier(.2,1.5,.5,1) both}'
+			+ '@keyframes n5mDrop{0%{opacity:0;transform:translateY(-46px) scale(.5) rotate(-18deg)}70%{opacity:1;transform:translateY(3px) scale(1.06) rotate(3deg)}100%{opacity:1;transform:translateY(0) scale(1) rotate(0)}}'
+			+ '#n5000-mascot .n5m-bowl.eat{animation:n5mEat .5s ease-in forwards}'
+			+ '@keyframes n5mEat{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-14px) scale(1.5) rotate(12deg)}}'
 			+ '#n5000-mascot .n5m-bubble{position:relative;font-size:12.5px;line-height:1.55;padding:9px 14px;border-radius:14px;'
-			+ 'background:rgba(127,127,127,.14);border:1px solid rgba(127,127,127,.3);max-width:340px;margin-bottom:58px;'
-			+ 'color:inherit;pointer-events:none}'
+			+ 'background:rgba(127,127,127,.14);border:1px solid rgba(127,127,127,.3);max-width:340px;margin-bottom:76px;pointer-events:none}'
 			+ '#n5000-mascot .n5m-bubble:before{content:"";position:absolute;left:-7px;bottom:16px;border:7px solid transparent;border-right-color:rgba(127,127,127,.3)}'
-			+ '#n5000-mascot .n5m-rice{position:absolute;left:6px;bottom:-2px;font-size:11.5px;padding:2px 9px;border-radius:999px;'
-			+ 'background:rgba(127,127,127,.16);border:1px solid rgba(127,127,127,.3)}'
-			+ '#n5000-mascot .n5m-float{position:absolute;left:40px;bottom:60px;font-size:16px;font-weight:600;pointer-events:none;'
-			+ 'animation:n5mFloat 1.4s ease-out forwards}'
-			+ '@keyframes n5mFloat{0%{opacity:0;transform:translateY(0) scale(.8)}20%{opacity:1}100%{opacity:0;transform:translateY(-72px) scale(1.15)}}'
-			+ '#n5000-mascot.swim .n5m-img{animation:n5mAcross 2.6s ease-in-out forwards}'
-			+ '@keyframes n5mAcross{0%{transform:translateX(0) scale(1)}45%{transform:translateX(60vw) scale(1.06)}100%{transform:translateX(130vw) scale(.9)}}'
-			+ '@media(max-width:640px){#n5000-mascot .n5m-img{height:76px}#n5000-mascot .n5m-bubble{max-width:44vw;font-size:11.5px;margin-bottom:44px}}';
+			+ '#n5000-mascot .n5m-rice{position:absolute;left:50%;top:100%;transform:translateX(-50%);margin-top:2px;font-size:11.5px;'
+			+ 'padding:2px 9px;border-radius:999px;background:rgba(127,127,127,.16);border:1px solid rgba(127,127,127,.3);white-space:nowrap}'
+			+ '.n5m-visitor{position:fixed;bottom:12px;z-index:890;pointer-events:none;opacity:0;transition:opacity .6s ease}'
+			+ '.n5m-visitor img{height:104px;width:auto;filter:drop-shadow(0 8px 16px rgba(0,0,0,.4))}'
+			+ '.n5m-visitor.show{opacity:1}'
+			+ '.n5m-visitor .vb{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);margin-bottom:4px;white-space:nowrap;'
+			+ 'font-size:11.5px;padding:3px 9px;border-radius:10px;background:rgba(127,127,127,.16);border:1px solid rgba(127,127,127,.3)}'
+			+ '@media(max-width:640px){#n5000-mascot .n5m-img{height:120px}#n5000-mascot .n5m-head{bottom:96px}#n5000-mascot .n5m-bubble{max-width:42vw;font-size:11.5px;margin-bottom:52px}.n5m-visitor{display:none}}';
 
 		var style = document.createElement('style');
 		style.textContent = css;
@@ -48,8 +57,9 @@
 		var wrap = document.createElement('div');
 		wrap.id = 'n5000-mascot';
 		wrap.innerHTML = ''
-			+ '<div style="position:relative">'
-			+ '  <img class="n5m-img" src="/luci-static/n5000/mascot.png" alt="大肥鱼">'
+			+ '<div class="n5m-body">'
+			+ '  <img class="n5m-img" src="' + BASE + 'mascot.png" alt="大肥鱼">'
+			+ '  <div class="n5m-head" id="n5m-head"></div>'
 			+ '  <div class="n5m-rice" id="n5m-rice">🍚 x 0</div>'
 			+ '</div>'
 			+ '<div class="n5m-bubble" id="n5m-bubble">…</div>';
@@ -57,47 +67,53 @@
 
 		var bubble = document.getElementById('n5m-bubble');
 		var riceEl = document.getElementById('n5m-rice');
+		var headEl = document.getElementById('n5m-head');
 		var img = wrap.querySelector('.n5m-img');
 
 		function getRice() { return parseInt(localStorage.getItem(RICE_KEY) || '0', 10) || 0; }
 		function setRice(n) { localStorage.setItem(RICE_KEY, String(n)); riceEl.textContent = '🍚 x ' + n; }
 		setRice(getRice());
 
+		/* ---------- 头上叠饭 ---------- */
+		var bowlCount = 0;
+		function stackBowl() {
+			var b = document.createElement('span');
+			b.className = 'n5m-bowl';
+			b.textContent = '🍚';
+			var stackIndex = bowlCount % 5;
+			b.style.bottom = (stackIndex * 17) + 'px';
+			b.style.transform = 'rotate(' + ((Math.random() * 28) - 14).toFixed(1) + 'deg)';
+			b.style.left = (-22 + (Math.random() * 12 - 6)).toFixed(1) + 'px';
+			headEl.appendChild(b);
+			bowlCount++;
+			if (bowlCount > 5) {
+				var first = headEl.querySelector('.n5m-bowl');
+				if (first) { first.classList.add('eat'); setTimeout(function () { first.remove(); }, 520); }
+			}
+			setTimeout(function () {
+				if (b.parentNode && !b.classList.contains('eat')) {
+					b.classList.add('eat');
+					setTimeout(function () { b.remove(); }, 520);
+				}
+			}, 6000);
+		}
+
+		/* ---------- 状态台词 ---------- */
 		var state = { temp: 0, load: 0, clients: 0 };
+		var riceHold = 0;
 
 		function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
 		function statusLine() {
 			var t = state.temp, l = state.load, c = state.clients;
-			if (t >= 80) return pick([
-				'烫烫烫！你是想吃烤鱼吗？！',
-				'喂！散热风扇呢！本鱼要熟了啦！',
-				'……哼，热成这样，白饭都不香了。'
-			]);
-			if (l > 1.5) return pick([
-				'别催了别催了，本鱼都快游断气了！',
-				'这么多请求…思考链都快绕成毛线团了。',
-				'CPU 冒烟中，赔我一碗白饭先。'
-			]);
-			if (t >= 65) return pick([
-				'有点热…哼，才不是因为你。',
-				'本鱼在冒汗，别盯着看！',
-				'这温度…勉强能忍吧，才没有很热。'
-			]);
-			if (c === 0) return pick([
-				'一条鱼都没连上…白饭都白吃了。',
-				'哼，没人理我，那我去睡觉了（DeepSleep）。',
-				'好无聊，谁来连一下 WiFi 陪我玩嘛。'
-			]);
-			return pick([
-				'哼，才不是特意帮你看着路由器呢。',
-				'水温刚好…勉强表扬你一下。',
-				'本鱼在摸鱼，别打扰。',
-				'白饭呢？先端一碗过来再说。'
-			]);
+			if (t >= 80) return pick(['烫烫烫！你是想吃烤鱼吗？！', '喂！散热风扇呢！本鱼要熟了啦！', '……哼，热成这样，白饭都不香了。']);
+			if (l > 1.5) return pick(['别催了别催了，本鱼都快游断气了！', '这么多请求…思考链都快绕成毛线团了。', 'CPU 冒烟中，赔我一碗白饭先。']);
+			if (t >= 65) return pick(['有点热…哼，才不是因为你。', '本鱼在冒汗，别盯着看！', '这温度…勉强能忍吧，才没有很热。']);
+			if (c === 0) return pick(['一条鱼都没连上…白饭都白吃了。', '哼，没人理我，那我去睡觉了（DeepSleep）。', '好无聊，谁来连一下 WiFi 陪我玩嘛。']);
+			return pick(['哼，才不是特意帮你看着路由器呢。', '水温刚好…勉强表扬你一下。', '本鱼在摸鱼，别打扰。', '白饭呢？先端一碗过来再说。']);
 		}
 
-		function showRiceEasterEgg(n) {
+		function riceLine(n) {
 			var lines = {
 				1: '哼…就一碗？算了，本鱼勉强收下。',
 				2: '第二碗了…你、你是不是想讨好本鱼？',
@@ -108,40 +124,68 @@
 				20: '喂，你是开白饭铺的吗？！',
 				50: '本鱼吃饱了，可以开始工作了…大概。'
 			};
-			if (lines[n]) return lines[n];
 			if (n >= 100) return '本鱼已经被你喂成传说级大肥鱼了…';
-			return pick(['白饭 GET！', '再来一碗，快点。', '哼，白饭本鱼就不客气了。']);
-		}
-
-		function floatRice() {
-			var f = document.createElement('div');
-			f.className = 'n5m-float';
-			f.textContent = ['🍚', '🍚 +1', '🍙', '🍚 白饭 GET'][Math.floor(Math.random() * 4)];
-			wrap.querySelector('div').appendChild(f);
-			setTimeout(function () { f.remove(); }, 1500);
-		}
-
-		function swimAcross() {
-			if (wrap.classList.contains('swim')) return;
-			wrap.classList.add('swim');
-			setTimeout(function () { wrap.classList.remove('swim'); }, 2800);
+			return lines[n] || pick(['白饭 GET！放头上刚刚好。', '再来一碗，快点。', '哼，白饭本鱼就不客气了。']);
 		}
 
 		img.addEventListener('click', function () {
 			var n = getRice() + 1;
 			setRice(n);
-			floatRice();
-			bubble.textContent = showRiceEasterEgg(n);
-			clearTimeout(img.__riceT);
-			img.__riceT = setTimeout(function () { bubble.textContent = statusLine(); }, 3500);
+			stackBowl();
+			bubble.textContent = riceLine(n);
+			riceHold = Date.now() + 3200;
 			if (n === 10 && window.ui && ui.addNotification)
 				ui.addNotification(null, document.createTextNode('🍚 大肥鱼：十碗白饭达成！'), 'info');
-			if (n % 5 === 0) swimAcross();
 		});
+		wrap.title = '大肥鱼：点我喂白饭（会放在头上）';
 
-		/* 托盘/悬停提示 */
-		wrap.title = '大肥鱼：点我喂白饭（本鱼会勉为其难收下）';
+		/* ---------- 串门的大肥鱼 ---------- */
+		var visitors = [];
+		var VISITOR_LINES = ['路过～', '哼，看你一眼。', '有白饭吗？', '本鱼来串个门。', '摸鱼中…', '这里网速还行。'];
 
+		function spawnVisitor() {
+			if (window.innerWidth < 900) return;
+			if (visitors.length >= 2) return;
+			var used = {};
+			visitors.forEach(function (v) { used[v.img] = 1; });
+			var pool = VISITORS.filter(function (n) { return !used[n]; });
+			if (!pool.length) return;
+			var file = pick(pool);
+			var el = document.createElement('div');
+			el.className = 'n5m-visitor';
+			var leftPct = 26 + Math.random() * 46;
+			el.style.left = leftPct + 'vw';
+			el.innerHTML = '<img src="' + BASE + file + '" alt="">'
+				+ '<div class="vb" style="display:none"></div>';
+			document.body.appendChild(el);
+			var entry = { el: el, img: file };
+			visitors.push(entry);
+			requestAnimationFrame(function () { el.classList.add('show'); });
+			var vbc = el.querySelector('.vb');
+			if (Math.random() < 0.6) {
+				setTimeout(function () {
+					vbc.textContent = pick(VISITOR_LINES);
+					vbc.style.display = '';
+					setTimeout(function () { vbc.style.display = 'none'; }, 3200);
+				}, 900 + Math.random() * 1500);
+			}
+			var life = 22000 + Math.random() * 38000;
+			entry.timer = setTimeout(function () {
+				el.classList.remove('show');
+				setTimeout(function () {
+					el.remove();
+					visitors = visitors.filter(function (v) { return v !== entry; });
+				}, 700);
+			}, life);
+		}
+
+		setTimeout(spawnVisitor, 4000);
+		setInterval(function () {
+			if (visitors.length === 0 && Math.random() < 0.75) spawnVisitor();
+			else if (visitors.length < 2 && Math.random() < 0.45) spawnVisitor();
+		}, 40000);
+
+		/* ---------- 状态刷新 ---------- */
 		function refreshStatus() {
 			fetch('/cgi-bin/rstatus?t=' + Date.now(), { cache: 'no-store' })
 				.then(function (r) { return r.json(); })
@@ -149,19 +193,13 @@
 					state.temp = (d.temp || 0) / 1000;
 					state.load = Number(d.load && d.load[0]) || 0;
 					state.clients = d.clients || 0;
-					if (!img.__riceT || Date.now() > (img.__riceUntil || 0)) {
-						bubble.textContent = statusLine();
-						img.__riceUntil = Date.now() + 3500;
-					}
+					if (Date.now() > riceHold) bubble.textContent = statusLine();
 				}).catch(function () {});
 		}
-
 		refreshStatus();
 		setInterval(refreshStatus, 15000);
 		setInterval(function () {
-			if (img.__riceT && Date.now() < (img.__riceUntil || 0)) return;
-			bubble.textContent = statusLine();
+			if (Date.now() > riceHold) bubble.textContent = statusLine();
 		}, 20000);
-		setInterval(swimAcross, 90000);
 	});
 })();
