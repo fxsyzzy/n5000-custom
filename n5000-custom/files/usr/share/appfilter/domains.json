@@ -1,0 +1,128 @@
+{
+  "video": {
+    "name": "视频娱乐",
+    "en": "Video",
+    "domains": [
+      "douyin.com", "douyinpic.com", "douyinvod.com", "amemv.com", "iesdouyin.com",
+      "kuaishou.com", "gifshow.com", "kwai.com", "kwaicdn.com",
+      "bilibili.com", "bilivideo.com", "biliapi.net", "biliapi.com", "hdslb.com",
+      "iqiyi.com", "iqiyipic.com", "qiyi.com", "pptv.com", "youku.com", "ykimg.com",
+      "mgtv.com", "le.com", "letv.com", "sohu.com", "tv.sohu.com", "v.qq.com",
+      "youtube.com", "googlevideo.com", "ytimg.com", "netflix.com", "nflxvideo.net",
+      "disneyplus.com", "twitch.tv", "ttvnw.net", "vimeo.com", "dailymotion.com",
+      "acfun.cn", "huya.com", "douyu.com", "cc.163.com", "zhanqi.tv"
+    ]
+  },
+  "game": {
+    "name": "游戏",
+    "en": "Games",
+    "domains": [
+      "steampowered.com", "steamstatic.com", "steamcontent.com", "steamcommunity.com",
+      "epicgames.com", "unrealengine.com", "ea.com", "origin.com", "ubisoft.com",
+      "battle.net", "blizzard.com", "riotgames.com", "leagueoflegends.com",
+      "mihoyo.com", "hoyoverse.com", "yuanshen.com", "bhsr.com",
+      "tencent.com", "qq.com", "gtimg.cn", "qpic.cn", "pvp.qq.com", "smoba.qq.com",
+      "netease.com", "163.com", "126.net", "mkey.163.com", "cg.163.com",
+      "taptap.com", "taptap.cn", "lilithgames.com", "hypergryph.com",
+      "roblox.com", "minecraft.net", "mojang.com", "xboxlive.com", "playstation.com",
+      "nintendo.net", "garena.com", "kurogame.com", "farlightgames.com"
+    ]
+  },
+  "social": {
+    "name": "社交",
+    "en": "Social",
+    "domains": [
+      "weixin.qq.com", "wechat.com", "wx.qq.com", "weixin.com",
+      "weibo.com", "weibo.cn", "sinaimg.cn", "sina.com.cn",
+      "xiaohongshu.com", "xhscdn.com", "xhs.cn",
+      "facebook.com", "fbcdn.net", "instagram.com", "cdninstagram.com",
+      "twitter.com", "x.com", "t.co", "twimg.com",
+      "tiktok.com", "tiktokcdn.com", "tiktokv.com",
+      "discord.com", "discordapp.com", "discord.gg",
+      "telegram.org", "t.me", "whatsapp.com", "whatsapp.net",
+      "snapchat.com", "line.me", "line-apps.com", "kakao.com",
+      "reddit.com", "redd.it", "pinterest.com", "tumblr.com",
+      "douban.com", "zhihu.com", "zhimg.com", "tieba.baidu.com", "jianshu.com"
+    ]
+  },
+  "office": {
+    "name": "办公",
+    "en": "Office",
+    "domains": [
+      "microsoft.com", "office.com", "office365.com", "live.com", "outlook.com",
+      "sharepoint.com", "onedrive.com", "microsoftonline.com", "msftconnecttest.com",
+      "google.com", "googleapis.com", "gstatic.com", "googledrive.com", "drive.google.com",
+      "docs.google.com", "gmail.com", "googleusercontent.com",
+      "feishu.cn", "larksuite.com", "dingtalk.com", "alipay.com",
+      "wework.cn", "wecom.qq.com", "exmail.qq.com",
+      "notion.so", "notion.site", "slack.com", "zoom.us", "teams.microsoft.com",
+      "atlassian.com", "jira.com", "gitlab.com", "github.com", "githubusercontent.com",
+      "dropbox.com", "box.com", "evernote.com", "yuque.com", "wps.cn", "kdocs.cn"
+    ]
+  },
+  "shopping": {
+    "name": "购物",
+    "en": "Shopping",
+    "domains": [
+      "taobao.com", "tmall.com", "tbcdn.cn", "alicdn.com", "alibaba.com", "1688.com",
+      "jd.com", "360buyimg.com", "jd.id", "pinduoduo.com", "yangkeduo.com", "pddpic.com",
+      "amazon.com", "amazon.cn", "media-amazon.com", "ssll-images-amazon.com",
+      "ebay.com", "aliexpress.com", "walmart.com", "shopee.com", "lazada.com",
+      "vip.com", "suning.com", "dangdang.com", "kaola.com", "meituan.com",
+      "dianping.com", "ele.me", "ctrip.com", "qunar.com", "fliggy.com"
+    ]
+  },
+  "music": {
+    "name": "音乐",
+    "en": "Music",
+    "domains": [
+      "music.163.com", "126.net", "y.qq.com", "qqmusic.qq.com", "kugou.com",
+      "kuwo.cn", "xiami.com", "spotify.com", "scdn.co", "soundcloud.com",
+      "pandora.com", "deezer.com", "tidal.com", "apple.com", "mzstatic.com"
+    ]
+  },
+  "cloud": {
+    "name": "网盘下载",
+    "en": "Cloud/Download",
+    "domains": [
+      "pan.baidu.com", "baidupcs.com", "pcs.baidu.com", "pan.xunlei.com", "xunlei.com",
+      "aliyundrive.com", "alipan.com", "aliyunpan.com", "cloud.189.cn",
+      "115.com", "115cdn.com", "mega.nz", "mediafire.com", "4shared.com",
+      "wetransfer.com", "sendspace.com", "uploaded.net", "rapidgator.net",
+      "qcloud.com", "myqcloud.com", "oss-cn-hangzhou.aliyuncs.com", "aliyuncs.com"
+    ]
+  },
+  "news": {
+    "name": "新闻资讯",
+    "en": "News",
+    "domains": [
+      "toutiao.com", "snssdk.com", "bytedance.com", "pstatp.com", "ixigua.com",
+      "people.com.cn", "xinhuanet.com", "cctv.com", "cri.cn", "chinanews.com",
+      "thepaper.cn", "ifeng.com", "sina.com", "sohu.com", "163.com", "qq.com",
+      "nytimes.com", "bbc.co.uk", "bbc.com", "cnn.com", "reuters.com",
+      "theguardian.com", "wsj.com", "bloomberg.com", "cnbc.com", "forbes.com"
+    ]
+  },
+  "edu": {
+    "name": "教育学习",
+    "en": "Education",
+    "domains": [
+      "xueersi.com", "zuoyebang.com", "yuanfudao.com", "chaoxing.com", "icourse163.org",
+      "mooc.org.cn", "zhihuishu.com", "coursera.org", "udemy.com", "edx.org",
+      "khanacademy.org", "duolingo.com", "quizlet.com", "baidu.com", "baidustatic.com",
+      "wikiwand.com", "wikipedia.org", "wikimedia.org"
+    ]
+  },
+  "system": {
+    "name": "系统更新",
+    "en": "System/Update",
+    "domains": [
+      "apple.com", "icloud.com", "mzstatic.com", "cdn-apple.com",
+      "windowsupdate.com", "update.microsoft.com", "delivery.mp.microsoft.com",
+      "android.com", "googleplay.com", "play.googleapis.com", "dl.google.com",
+      "mi.com", "xiaomi.com", "miui.com", "huawei.com", "hicloud.com",
+      "openwrt.org", "downloads.openwrt.org", "debian.org", "ubuntu.com",
+      "docker.io", "docker.com", "ghcr.io", "alpinelinux.org"
+    ]
+  }
+}
