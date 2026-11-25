@@ -546,3 +546,16 @@ N5000              order 0   分组（展开）
 - 面板主图 `router.svg` 同步改为银灰黑白插画
 - Argon 主题色：`primary=#111111`、`dark_primary=#E5E5E5`
 - 两套主题都保留，面板右上角可切换
+
+## Monochrome 单色极简主题（v3.5，参考 luckymaomi monochrome 规范）
+
+- 参考：https://luckymaomi.github.io/ui/styles/monochrome/
+- 色板仅灰阶：`#111111 / #333333 / #666666 / #999999 / #cccccc / #e5e5e5 / #f5f5f5 / #fafafa / #ffffff`，**禁止任何色相色**
+- 直角：所有卡片/按钮/输入框/胶囊 `border-radius: 2px`（不再有 rounded-full）
+- 细边框：`1px solid #e5e5e5`（暗夜 `#333333`），细线分隔
+- 无渐变、无阴影、无磨砂
+- 字重分层：标题 `font-weight:700`，正文常规，次要文字 `#666`/`#999` 且更细
+- 小型标签/表头统一 **大写 + 字距**（`uppercase` + `letter-spacing`）
+- 按钮：黑底白字（可 hover #333）/ 白底黑字，500ms 颜色过渡
+- 默认为晨光（白底）单色；面板右上角可切暗夜（黑底单色）
+- Argon：`primary=#111111`、`dark_primary=#FAFAFA`、玻璃/模糊全关
