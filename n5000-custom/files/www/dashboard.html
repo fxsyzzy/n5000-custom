@@ -63,6 +63,14 @@ canvas.spark{width:100%;height:100%;min-height:66px;display:block}
 @media(max-width:1100px){.grid{grid-template-columns:repeat(2,1fr);grid-template-rows:auto}.card.wide{grid-column:span 2}}
 @media(max-width:640px){.wrap{padding:12px;gap:12px}.grid{grid-template-columns:1fr;gap:10px}.card.wide{grid-column:span 1}.big{font-size:28px}}
 
+  /* ---------- 大肥鱼 ---------- */
+  .mascot{position:fixed;right:20px;bottom:14px;z-index:60;display:flex;align-items:flex-end;gap:10px;cursor:pointer;user-select:none;max-width:66vw}
+  .mascot img{height:132px;width:auto;filter:drop-shadow(0 10px 20px rgba(0,0,0,.45));animation:swimIdle 8s ease-in-out infinite}
+  @keyframes swimIdle{0%,100%{transform:translate(0,0) rotate(0)}25%{transform:translate(-12px,-6px) rotate(-1.6deg)}50%{transform:translate(0,-10px) rotate(0)}75%{transform:translate(12px,-6px) rotate(1.6deg)}}
+  .mascot .msg{font-size:12px;line-height:1.5;padding:9px 13px;border-radius:14px;color:var(--text);
+    background:rgba(255,255,255,.06);border:1px solid var(--border);max-width:340px}
+  .mascot.swim img{animation:swim 2.6s ease-in-out forwards}
+  @keyframes swim{0%{transform:translateX(0) scale(1)}45%{transform:translateX(-60vw) scale(1.06)}100%{transform:translateX(-130vw) scale(.92)}}
 </style>
 </head>
 <body>
@@ -342,6 +350,16 @@ canvas.spark{width:100%;height:100%;min-height:66px;display:block}
     $("errs").textContent = d.errs;
     $("errs").className = "big sm " + (d.errs > 0 ? "bad" : "ok");
     $("errsnote").textContent = d.errs > 0 ? t('err_bad') : (t('err_ok') + (d.tf_model || "TF"));
+    var mm = document.getElementById('mascotmsg');
+    if (mm) {
+      var tv2 = d.temp/1000, pool;
+      if (tv2 >= 80) pool = ['烫烫烫！本鱼要熟了，快开风扇！','你是故意的吧？想喝鱼汤直说。','哼，热成这样，白饭都馊了！'];
+      else if (Number(d.load[0]) > 1.5) pool = ['别催了别催了，本鱼快游断气了！','思考链太长，CPU 都要冒烟了…','这么忙，加一碗白饭不过分吧？'];
+      else if (tv2 >= 65) pool = ['有点热…才不是因为你。','本鱼在冒汗，别盯着看！','忍一忍，本鱼还能再摸会鱼。'];
+      else if (!d.clients) pool = ['一条鱼都没连…白饭白吃了。','哼，没人陪我玩，睡觉去了。','安静得有点过分，鱼都要长蘑菇了。'];
+      else pool = ['N 条小鱼在游，本鱼在摸鱼。'.replace('N', d.clients),'哼，流量看着还行…勉强夸你一句。','点我干嘛？本鱼在减肥，不游。','今日份白饭什么时候到账？'];
+      mm.textContent = pool[Math.floor(Math.random() * pool.length)];
+    }
   }
 
   function setClock(){
