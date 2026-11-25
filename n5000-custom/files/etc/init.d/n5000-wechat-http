@@ -1,0 +1,32 @@
+#!/bin/sh /etc/rc.common
+# 微信回调专用 uhttpd 实例（只暴露 /cgi-bin/wechat，避免整个 LuCI 暴露到公网）
+# 监听 127.0.0.1:8081，由 Tailscale Funnel 转发
+START=96
+STOP=10
+USE_PROCD=1
+
+prepare() {
+	mkdir -p /www-wechat/cgi-bin
+	cp -f /www/cgi-bin/wechat /www-wechat/cgi-bin/wechat 2>/dev/null
+	chmod 755 /www-wechat/cgi-bin/wechat 2>/dev/null
+	[ -f /www-wechat/index.html ] || cat > /www-wechat/index.html <<'EOF'
+<!DOCTYPE html><html><body style="background:#061428;color:#C8F4F9;font-family:sans-serif;padding:40px">
+<h2>N5000</h2><p>This endpoint is reserved for WeChat callback.</p></body></html>
+EOF
+}
+
+start_service() {
+	prepare
+	procd_open_instance
+	procd_set_param command /usr/sbin/uhttpd -f -h /www-wechat -x /cgi-bin -p 127.0.0.1:8081
+	procd_set_param respawn 3600 5 0
+	procd_close_instance
+}
+
+stop_service() {
+	:
+}
+
+service_triggers() {
+	procd_add_reload_trigger 'aichat'
+}
