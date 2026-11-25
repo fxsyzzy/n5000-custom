@@ -669,3 +669,177 @@ html[data-argon-mode="light"] body{
   color:#111111 !important;
 }
 html[data-argon-mode="light"] .login-page{background:#FFFFFF !important}
+
+/* ================= Monochrome 规范（最终覆盖）：只用灰阶 / 直角 / 细边框 / 无渐变 / 无阴影 ================= */
+:root{
+  --mono-bg:#fafafa; --mono-surface:#f5f5f5; --mono-border:#e5e5e5; --mono-border-strong:#cccccc;
+  --mono-text:#111111; --mono-muted:#666666; --mono-subtle:#999999;
+}
+/* 全局字体分层 + 直角 */
+html[data-argon-mode="dark"] body, html[data-argon-mode="light"] body{
+  background-image:none !important;
+}
+html[data-argon-mode="light"] body{background:#fafafa !important;color:#111111 !important}
+html[data-argon-mode="dark"] body{background:#111111 !important;color:#f5f5f5 !important}
+/* 顶栏/侧边栏：纯色直角细线 */
+#mainmenu.main-left,.main-left,header{background-image:none !important;box-shadow:none !important;border-radius:0 !important;border-color:#e5e5e5 !important}
+html[data-argon-mode="light"] #mainmenu.main-left,html[data-argon-mode="light"] .main-left{background:#ffffff !important;border-right:1px solid #e5e5e5 !important}
+html[data-argon-mode="light"] header{background:#fafafa !important;border-bottom:1px solid #e5e5e5 !important}
+html[data-argon-mode="light"] .main-left a{color:#666666 !important}
+html[data-argon-mode="light"] .main-left a:hover,html[data-argon-mode="light"] .main-left a.active{background:#f0f0f0 !important;color:#111111 !important}
+html[data-argon-mode="dark"] #mainmenu.main-left,html[data-argon-mode="dark"] .main-left{background:#111111 !important;border-right:1px solid #333333 !important}
+html[data-argon-mode="dark"] header{background:#111111 !important;border-bottom:1px solid #333333 !important}
+html[data-argon-mode="dark"] .main-left a{color:#999999 !important}
+html[data-argon-mode="dark"] .main-left a:hover,html[data-argon-mode="dark"] .main-left a.active{background:#1f1f1f !important;color:#fafafa !important}
+/* 卡片/面板：纯色、直角、1px 细边框、无阴影无渐变 */
+html[data-argon-mode="light"] .cbi-section,
+html[data-argon-mode="light"] .cbi-section-node,
+html[data-argon-mode="light"] .panel,
+html[data-argon-mode="light"] .well,
+html[data-argon-mode="light"] .card,
+html[data-argon-mode="light"] .modal-content,
+html[data-argon-mode="light"] .login-container,
+html[data-argon-mode="light"] .login-form,
+html[data-argon-mode="light"] .dropdown-menu,
+html[data-argon-mode="light"] .table-container,
+html[data-argon-mode="light"] .cbi-page-actions,
+html[data-argon-mode="light"] .ifacebox,
+html[data-argon-mode="light"] .cbi-dashboard,
+html[data-argon-mode="light"] .cbi-map,
+html[data-argon-mode="light"] .np-top,
+html[data-argon-mode="light"] .np-panel,
+html[data-argon-mode="light"] .np-card,
+html[data-argon-mode="light"] .np-hero,
+html[data-argon-mode="light"] .db-card,
+html[data-argon-mode="light"] .db-chart,
+html[data-argon-mode="light"] .af-stat,
+html[data-argon-mode="light"] .af-panel,
+html[data-argon-mode="light"] .fav-card,
+html[data-argon-mode="light"] .fav-panel,
+html[data-argon-mode="light"] .n5v-wrap{
+  background:#ffffff !important;
+  background-image:none !important;
+  border:1px solid #e5e5e5 !important;
+  border-radius:2px !important;
+  box-shadow:none !important;
+  color:#111111 !important;
+}
+html[data-argon-mode="dark"] .cbi-section,
+html[data-argon-mode="dark"] .cbi-section-node,
+html[data-argon-mode="dark"] .panel,
+html[data-argon-mode="dark"] .well,
+html[data-argon-mode="dark"] .card,
+html[data-argon-mode="dark"] .modal-content,
+html[data-argon-mode="dark"] .login-container,
+html[data-argon-mode="dark"] .login-form,
+html[data-argon-mode="dark"] .dropdown-menu,
+html[data-argon-mode="dark"] .table-container,
+html[data-argon-mode="dark"] .cbi-page-actions,
+html[data-argon-mode="dark"] .ifacebox,
+html[data-argon-mode="dark"] .cbi-dashboard,
+html[data-argon-mode="dark"] .cbi-map,
+html[data-argon-mode="dark"] .np-top,
+html[data-argon-mode="dark"] .np-panel,
+html[data-argon-mode="dark"] .np-card,
+html[data-argon-mode="dark"] .np-hero,
+html[data-argon-mode="dark"] .db-card,
+html[data-argon-mode="dark"] .db-chart,
+html[data-argon-mode="dark"] .af-stat,
+html[data-argon-mode="dark"] .af-panel,
+html[data-argon-mode="dark"] .fav-card,
+html[data-argon-mode="dark"] .fav-panel,
+html[data-argon-mode="dark"] .n5v-wrap{
+  background:#1a1a1a !important;
+  background-image:none !important;
+  border:1px solid #333333 !important;
+  border-radius:2px !important;
+  box-shadow:none !important;
+  color:#f5f5f5 !important;
+}
+/* 文字层级：正文 font-light 风格，标题加粗 */
+html[data-argon-mode="light"] h1,html[data-argon-mode="light"] h2,html[data-argon-mode="light"] h3,
+html[data-argon-mode="light"] h4{color:#111111 !important;font-weight:700 !important;letter-spacing:-.01em}
+html[data-argon-mode="light"] body{font-weight:400}
+html[data-argon-mode="light"] .np-name{font-weight:700 !important;color:#111111 !important}
+html[data-argon-mode="light"] .np-card .t b,html[data-argon-mode="light"] .np-stat .v,
+html[data-argon-mode="light"] .db-big{color:#111111 !important;font-weight:700 !important}
+html[data-argon-mode="light"] .np-sub,html[data-argon-mode="light"] .np-card .s,
+html[data-argon-mode="light"] .np-stat .l,html[data-argon-mode="light"] .db-label,
+html[data-argon-mode="light"] .db-note,html[data-argon-mode="light"] .help-block{color:#666666 !important;font-weight:300 !important}
+html[data-argon-mode="light"] .np-stat .l,html[data-argon-mode="light"] .db-label,
+html[data-argon-mode="light"] .table>thead>tr>th,html[data-argon-mode="light"] .np-card .t span{
+  text-transform:uppercase !important;letter-spacing:.12em !important;font-size:10.5px !important;color:#999999 !important;
+}
+/* 按钮：黑底白字 / 白底黑字，直角，无渐变 */
+html[data-argon-mode="light"] .cbi-button,html[data-argon-mode="light"] .btn,
+html[data-argon-mode="light"] .fav-btn,html[data-argon-mode="light"] .db-segbtn{
+  background:#ffffff !important;background-image:none !important;border:1px solid #cccccc !important;border-radius:2px !important;
+  color:#111111 !important;font-weight:500 !important;text-transform:uppercase !important;letter-spacing:.1em !important;font-size:11.5px !important;
+  box-shadow:none !important;transition:background-color .5s ease,border-color .5s ease,color .5s ease !important;
+}
+html[data-argon-mode="light"] .cbi-button-save,html[data-argon-mode="light"] .cbi-button-positive,
+html[data-argon-mode="light"] .btn.primary,html[data-argon-mode="light"] .cbi-button-apply,
+html[data-argon-mode="light"] .fav-btn.prim,html[data-argon-mode="light"] .db-segbtn.on{
+  background:#111111 !important;border-color:#111111 !important;color:#fafafa !important;
+}
+html[data-argon-mode="light"] .cbi-button:hover,html[data-argon-mode="light"] .btn:hover,
+html[data-argon-mode="light"] .fav-btn:hover{background:#333333 !important;border-color:#333333 !important;color:#fafafa !important}
+html[data-argon-mode="dark"] .cbi-button,html[data-argon-mode="dark"] .btn,
+html[data-argon-mode="dark"] .fav-btn,html[data-argon-mode="dark"] .db-segbtn{
+  background:#1a1a1a !important;background-image:none !important;border:1px solid #333333 !important;border-radius:2px !important;
+  color:#e5e5e5 !important;font-weight:500 !important;text-transform:uppercase !important;letter-spacing:.1em !important;font-size:11.5px !important;
+  box-shadow:none !important;transition:background-color .5s ease,border-color .5s ease,color .5s ease !important;
+}
+html[data-argon-mode="dark"] .cbi-button-save,html[data-argon-mode="dark"] .cbi-button-positive,
+html[data-argon-mode="dark"] .btn.primary,html[data-argon-mode="dark"] .cbi-button-apply,
+html[data-argon-mode="dark"] .fav-btn.prim,html[data-argon-mode="dark"] .db-segbtn.on{
+  background:#fafafa !important;border-color:#fafafa !important;color:#111111 !important;
+}
+/* 输入框：透明底 + #cccccc 边框 + 聚焦 #111 */
+html[data-argon-mode="light"] input,html[data-argon-mode="light"] select,html[data-argon-mode="light"] textarea,
+html[data-argon-mode="light"] .cbi-input-text,html[data-argon-mode="light"] .fav-search{
+  background:#ffffff !important;background-image:none !important;border:1px solid #cccccc !important;border-radius:2px !important;
+  color:#111111 !important;box-shadow:none !important;
+}
+html[data-argon-mode="light"] input:focus,html[data-argon-mode="light"] select:focus,html[data-argon-mode="light"] textarea:focus{
+  outline:none !important;border-color:#111111 !important;
+}
+html[data-argon-mode="dark"] input,html[data-argon-mode="dark"] select,html[data-argon-mode="dark"] textarea,
+html[data-argon-mode="dark"] .cbi-input-text,html[data-argon-mode="dark"] .fav-search{
+  background:#1a1a1a !important;background-image:none !important;border:1px solid #333333 !important;border-radius:2px !important;
+  color:#f5f5f5 !important;box-shadow:none !important;
+}
+html[data-argon-mode="dark"] input:focus,html[data-argon-mode="dark"] select:focus,html[data-argon-mode="dark"] textarea:focus{
+  outline:none !important;border-color:#fafafa !important;
+}
+/* 状态胶囊/标签：直角、细线、无渐变 */
+html[data-argon-mode="light"] .np-chip{background:#ffffff !important;background-image:none !important;border:1px solid #e5e5e5 !important;border-radius:2px !important;box-shadow:none !important;color:#666666 !important}
+html[data-argon-mode="light"] .np-chip b{color:#111111 !important}
+html[data-argon-mode="dark"] .np-chip{background:#1a1a1a !important;background-image:none !important;border:1px solid #333333 !important;border-radius:2px !important;box-shadow:none !important;color:#999999 !important}
+html[data-argon-mode="dark"] .np-chip b{color:#fafafa !important}
+/* 进度条/图标块：直角灰阶 */
+html[data-argon-mode="light"] .np-bar,html[data-argon-mode="light"] .db-bar{background:#e5e5e5 !important;border-radius:0 !important}
+html[data-argon-mode="light"] .np-bar>i,html[data-argon-mode="light"] .db-bar>i{background:#111111 !important;border-radius:0 !important}
+html[data-argon-mode="dark"] .np-bar,html[data-argon-mode="dark"] .db-bar{background:#333333 !important;border-radius:0 !important}
+html[data-argon-mode="dark"] .np-bar>i,html[data-argon-mode="dark"] .db-bar>i{background:#fafafa !important;border-radius:0 !important}
+html[data-argon-mode="light"] .np-tile{background:#f5f5f5 !important;color:#111111 !important;border:1px solid #e5e5e5 !important;border-radius:2px !important}
+html[data-argon-mode="dark"] .np-tile{background:#262626 !important;color:#fafafa !important;border:1px solid #333333 !important;border-radius:2px !important}
+/* 链接/高亮：灰阶 */
+html[data-argon-mode="light"] a{color:#111111 !important}
+html[data-argon-mode="light"] a:hover{color:#666666 !important;text-decoration:underline}
+html[data-argon-mode="dark"] a{color:#e5e5e5 !important}
+html[data-argon-mode="dark"] a:hover{color:#fafafa !important;text-decoration:underline}
+/* 表格：细线 + 大写表头 */
+html[data-argon-mode="light"] .table>thead>tr>th{color:#999999 !important;border-bottom:1px solid #e5e5e5 !important;font-weight:600}
+html[data-argon-mode="light"] .table>tbody>tr>td{border-top:1px solid #e5e5e5 !important;color:#111111 !important}
+html[data-argon-mode="dark"] .table>thead>tr>th{color:#999999 !important;border-bottom:1px solid #333333 !important}
+html[data-argon-mode="dark"] .table>tbody>tr>td{border-top:1px solid #333333 !important;color:#e5e5e5 !important}
+html[data-argon-mode="light"] tr:hover td{background:#f5f5f5 !important}
+html[data-argon-mode="dark"] tr:hover td{background:#1f1f1f !important}
+/* 顶栏图标/按钮无圆角 */
+header .cbi-button,header button,header a{border-radius:2px !important}
+/* 登录页 */
+.login-page{background:#fafafa !important}
+/* 禁止任何彩色强调（保险） */
+html[data-argon-mode="light"] .success,html[data-argon-mode="light"] .warning,html[data-argon-mode="light"] .danger{color:#111111 !important}
+html[data-argon-mode="dark"] .success,html[data-argon-mode="dark"] .warning,html[data-argon-mode="dark"] .danger{color:#f5f5f5 !important}
