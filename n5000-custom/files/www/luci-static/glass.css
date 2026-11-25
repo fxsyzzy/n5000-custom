@@ -9,7 +9,6 @@
 ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:8px}
 ::-webkit-scrollbar-track{background:transparent}
 /* 让图表/进度条颜色跟随 Argon 主色 */
-.cbi-progressbar>div{background:var(--primary, #6fe3c4) !important}
 /* 登录页略提圆角，与仪表盘统一 */
 .login-page .login-container,.login-page .login-form{border-radius:16px !important}
 
@@ -22,7 +21,6 @@ html[data-argon-mode="dark"] body{
     linear-gradient(180deg,#061428 0%,#0D2C54 55%,#071a30 100%) !important;
   background-attachment:scroll !important;
 }
-.cbi-progressbar>div{background:var(--primary,#48A9C5) !important}
 a:hover{color:#83D9DC !important}
 
 /* ---------- 磨砂玻璃（Frosted glass） ---------- */
@@ -162,3 +160,40 @@ html[data-argon-mode="light"] .af-search,
 html[data-argon-mode="light"] .fav-search{background:rgba(255,255,255,.7) !important;color:#0D2C54 !important}
 /* 晨光模式下的磨砂减弱（浅色背景上降低性能开销） */
 html[data-argon-mode="light"] *{--n5-light:1}
+
+/* ---------- 浅色模式补齐（按钮/输入/应用图标/气泡） ---------- */
+html[data-argon-mode="light"] .fav-btn,
+html[data-argon-mode="light"] .ai-badge,
+html[data-argon-mode="light"] .af-toolbar .btn,
+html[data-argon-mode="light"] .af-panel .btn,
+html[data-argon-mode="light"] .ai-toolbar .btn{
+  background:rgba(255,255,255,.7) !important;border-color:rgba(30,91,140,.22) !important;color:#0D2C54 !important;
+}
+html[data-argon-mode="light"] .fav-btn.prim,
+html[data-argon-mode="light"] .ai-send,
+html[data-argon-mode="light"] .cbi-button-save{
+  background:#48A9C5 !important;border-color:transparent !important;color:#04121a !important;
+}
+html[data-argon-mode="light"] .fav-search,
+html[data-argon-mode="light"] .ai-input,
+html[data-argon-mode="light"] .af-panel input,
+html[data-argon-mode="light"] .af-panel select,
+html[data-argon-mode="light"] .fav-panel input,
+html[data-argon-mode="light"] .fav-panel select{
+  background:rgba(255,255,255,.78) !important;color:#0D2C54 !important;border-color:rgba(30,91,140,.24) !important;
+}
+html[data-argon-mode="light"] .np-tile{background:rgba(72,169,197,.22) !important;color:#0D2C54 !important}
+html[data-argon-mode="light"] .np-tile img{filter:none}
+html[data-argon-mode="light"] .ai-chat{border-color:rgba(30,91,140,.2) !important}
+html[data-argon-mode="light"] .ai-bubble{background:rgba(255,255,255,.78) !important}
+html[data-argon-mode="light"] .ai-msg.user .ai-bubble{background:rgba(72,169,197,.22) !important}
+html[data-argon-mode="light"] .db-note,
+html[data-argon-mode="light"] .db-label,
+html[data-argon-mode="light"] .af-hint,
+html[data-argon-mode="light"] .af-label{color:rgba(13,44,84,.55) !important}
+html[data-argon-mode="light"] #n5000-mascot .n5m-bubble{
+  background:rgba(255,255,255,.92) !important;color:#0D2C54 !important;
+  border:1px solid rgba(30,91,140,.18) !important;box-shadow:0 6px 18px rgba(30,91,140,.12) !important;
+}
+html[data-argon-mode="light"] #n5000-mascot .n5m-rice{color:rgba(13,44,84,.6) !important}
+html[data-argon-mode="light"] ::-webkit-scrollbar-thumb{background:rgba(30,91,140,.25) !important}
