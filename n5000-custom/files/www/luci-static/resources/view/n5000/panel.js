@@ -48,13 +48,6 @@ var N5CSS = [
 	'.n5-ok{color:#35c48a}.n5-warn{color:#e6a23c}.n5-bad{color:#e05a5a}',
 	'.n5-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}',
 	'@media(max-width:1000px){.n5-grid{grid-template-columns:repeat(2,1fr)}.n5-cols{grid-template-columns:1fr}}',
-	'.n5-head{display:flex;align-items:center;gap:14px;margin-bottom:10px;flex-wrap:wrap}',
-	'.n5-head h2{margin:0}',
-	'.n5-fish{width:84px;height:60px;flex:0 0 auto}',
-	'.n5-bubble{max-width:420px;font-size:12.5px;line-height:1.5;padding:8px 14px;border-radius:14px;background:rgba(127,127,127,.12);border:1px solid rgba(127,127,127,.25);position:relative}',
-	'.n5-bubble:before{content:";position:absolute;left:-7px;top:18px;border:7px solid transparent;border-right-color:rgba(127,127,127,.25)}',
-	'.n5-fishimg{animation:n5bob 3.2s ease-in-out infinite}',
-	'@keyframes n5bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}',
 	'@media(max-width:600px){.n5-grid{grid-template-columns:1fr 1fr}}'
 ].join('\n');
 
