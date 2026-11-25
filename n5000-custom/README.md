@@ -566,3 +566,11 @@ N5000              order 0   分组（展开）
 - 组成：顶部方形机身轮廓、前面板饰条（内嵌矩形）、右侧 USB-C / USB-A / 双 RJ45 接口、LED 点、WiFi 波纹线
 - 暗夜模式下线稿自动反色（CSS invert），保持黑底白线
 - 面板排版同步极简化：型号全大写 + 字距、副标题大写小字、规格标签大写细边框、上下细分隔线
+
+## 流畅度优化（v3.7）
+
+- `rstatus` 重写为低 fork 版本：冷启动 0.5s → **0.15s**，缓存命中 **0.01s**（面板/仪表盘轮询 10s，基本全命中）
+  - 用 shell 内建读取 /proc、单次 awk、一次 ip 调用替代大量子进程
+  - SSID / Docker 容器数 / 内核错误改为 60 秒缓存
+- Argon 侧边栏展开动画改为瞬间：`glass.css` 里禁用 `#mainmenu` 的 transition/animation（不再改主题 JS）
+- 之前误操作 `sed -i` 截断过 `menu-argon.js`，已从 `/rom` 恢复（教训：叠加层大文件不要 sed -i，改为写 /tmp 再 cp）
