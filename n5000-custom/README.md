@@ -119,15 +119,6 @@ files/                         # 注入固件的自定义文件
 - 板级支持来源于 [veildawn/nradio-n5000](https://github.com/veildawn/nradio-n5000)（DTS 逆向自原厂 NROS-2.3.9），上游 OpenWrt 官方尚未合并 N5000 设备。
 - 刷机有风险，请保留原厂系统分区（双系统机制可回退）。
 
-## AI 助手（网页聊天）
-
-- 打开 `http://192.168.88.1/aichat.html`（仪表盘右上角 AI 按钮也可进入）
-- 首次使用：点「设置」→ 填 API 地址和 Key
-  - DeepSeek：`https://api.deepseek.com`，Key 在 https://platform.deepseek.com 申请，模型填 `deepseek-chat`
-  - 其它 OpenAI 兼容服务同理
-- 支持：多轮对话、中英界面、路由器状态上下文、工具调用（重启路由器 / 重启 WiFi / 改 WiFi 密码）
-- 配置保存在路由器的 `/etc/config/aichat`，不会上传到任何服务器
-
 ## 微信机器人（公众号）
 
 > 微信个人号没有官方机器人接口；这里用**微信公众号**做合法接入。
@@ -137,8 +128,8 @@ files/                         # 注入固件的自定义文件
    - URL：`http://你的公网地址/cgi-bin/wechat`
    - Token：自己随便填一个字符串（比如 `n5000ai123`）
    - 消息加解密方式：明文模式
-3. 回到本固件 `http://192.168.88.1/aichat.html` → 设置 → 微信机器人：
-   - 填同样的 Token → 保存
+3. SSH 登录路由器配置（网页管理页已移除）：
+   - 执行：`uci set aichat.wechat.token=你的Token && uci set aichat.wechat.enabled=1 && uci commit aichat`
 4. 微信里给公众号发消息即可对话，还支持快捷指令：
    - `状态` / `status`：直接返回路由器状态
    - `重启` / `reboot`：重启路由器
@@ -221,3 +212,4 @@ files/                         # 注入固件的自定义文件
 - 纯域名/DNS 级识别：直连 IP 的游戏对局流量无法识别（需 DPI）
 - 共享 CDN IP 可能被归到某个域名（统计为参考值）
 - 已建立的连接要重连后才会被拦截
+
