@@ -1,0 +1,160 @@
+#!/bin/sh
+# 本地密码本后端（AES-256 加密，主密码不落盘，仅会话期内存于 /tmp）
+# 文件：/etc/vault.enc（600）
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+
+VAULT=/etc/vault.enc
+SESSDIR=/tmp/vault-sess
+ITER=100000
+mkdir -p "$SESSDIR"
+
+send_json() { printf 'Content-Type: application/json; charset=utf-8\r\nCache-Control: no-store\r\n\r\n'; }
+fail() { send_json; jq -n --arg e "$1" '{code:-1,error:$e}'; exit 0; }
+read_body() { len="${CONTENT_LENGTH:-0}"; [ "$len" -gt 0 ] 2>/dev/null && head -c "$len"; }
+parse_qs() { printf '%s' "$QUERY_STRING" | tr '&' '\n' | sed -n "s/^$1=//p" | head -n1; }
+
+new_token() { tr -dc 'a-f0-9' < /dev/urandom | head -c 32; }
+
+token_file() { printf '%s/%s' "$SESSDIR" "$1"; }
+
+token_valid() {
+	t="$1"
+	[ -n "$t" ] || return 1
+	f=$(token_file "$t")
+	[ -f "$f" ] || return 1
+	ts=$(sed -n '2p' "$f" 2>/dev/null)
+	[ -z "$ts" ] && ts=0
+	now=$(date +%s)
+	age=$(( now - ts ))
+	if [ "$age" -le 900 ]; then
+		printf '%s\n%s\n' "$(sed -n '1p' "$f")" "$now" > "$f"
+		return 0
+	fi
+	rm -f "$f"
+	return 1
+}
+
+master_of() { sed -n '1p' "$(token_file "$1")" 2>/dev/null; }
+
+encrypt() {
+	# $1=明文文件 $2=输出 $3=主密码
+	printf '%s' "$3" | openssl enc -aes-256-cbc -pbkdf2 -iter "$ITER" -salt -md sha256 -pass stdin -in "$1" -out "$2" 2>/dev/null
+}
+
+decrypt() {
+	# $1=密文 $2=输出 $3=主密码
+	printf '%s' "$3" | openssl enc -d -aes-256-cbc -pbkdf2 -iter "$ITER" -salt -md sha256 -pass stdin -in "$1" -out "$2" 2>/dev/null
+}
+
+ACTION=$(parse_qs action)
+
+case "$ACTION" in
+status)
+	send_json
+	init=false; [ -f "$VAULT" ] && init=true
+	tok=$(parse_qs token)
+	unlocked=false
+	token_valid "$tok" && unlocked=true
+	jq -n --argjson i "$init" --argjson u "$unlocked" '{code:0,initialized:$i,unlocked:$u}'
+	;;
+init)
+	DATA=$(read_body)
+	M=$(printf '%s' "$DATA" | jq -r '.master // empty' 2>/dev/null)
+	[ -n "$M" ] || fail "请设置主密码"
+	[ ${#M} -lt 6 ] && fail "主密码至少 6 位"
+	[ -f "$VAULT" ] && fail "密码本已存在"
+	tmp="/tmp/vault-init.$$"
+	printf '{"canary":"n5000-vault","entries":[]}' > "$tmp"
+	chmod 600 "$tmp"
+	encrypt "$tmp" "$VAULT.tmp" "$M" || { rm -f "$tmp"; fail "加密失败"; }
+	rm -f "$tmp"
+	mv -f "$VAULT.tmp" "$VAULT"
+	chmod 600 "$VAULT"
+	tok=$(new_token)
+	printf '%s\n%s\n' "$M" "$(date +%s)" > "$(token_file "$tok")"
+	chmod 600 "$(token_file "$tok")"
+	send_json
+	jq -n --arg t "$tok" '{code:0,token:$t,entries:[]}'
+	;;
+unlock)
+	DATA=$(read_body)
+	M=$(printf '%s' "$DATA" | jq -r '.master // empty' 2>/dev/null)
+	[ -f "$VAULT" ] || fail "密码本还未初始化"
+	[ -n "$M" ] || fail "请输入主密码"
+	out="/tmp/vault-open.$$"
+	decrypt "$VAULT" "$out" "$M"
+	canary=$(jq -r '.canary // empty' "$out" 2>/dev/null)
+	if [ "$canary" != "n5000-vault" ]; then
+		rm -f "$out"
+		fail "主密码错误"
+	fi
+	entries=$(jq -c '.entries // []' "$out" 2>/dev/null)
+	rm -f "$out"
+	tok=$(new_token)
+	printf '%s\n%s\n' "$M" "$(date +%s)" > "$(token_file "$tok")"
+	chmod 600 "$(token_file "$tok")"
+	send_json
+	jq -n --arg t "$tok" --argjson e "${entries:-[]}" '{code:0,token:$t,entries:$e}'
+	;;
+load)
+	DATA=$(read_body)
+	TOK=$(printf '%s' "$DATA" | jq -r '.token // empty' 2>/dev/null)
+	[ -z "$TOK" ] && TOK=$(parse_qs token)
+	token_valid "$TOK" || fail "会话已过期，请重新解锁"
+	M=$(master_of "$TOK")
+	out="/tmp/vault-load.$$"
+	decrypt "$VAULT" "$out" "$M" || fail "解密失败"
+	entries=$(jq -c '.entries // []' "$out" 2>/dev/null)
+	rm -f "$out"
+	send_json
+	jq -n --argjson e "${entries:-[]}" '{code:0,entries:$e}'
+	;;
+save)
+	DATA=$(read_body)
+	TOK=$(printf '%s' "$DATA" | jq -r '.token // empty' 2>/dev/null)
+	token_valid "$TOK" || fail "会话已过期，请重新解锁"
+	M=$(master_of "$TOK")
+	[ -n "$M" ] || fail "会话异常"
+	ENTRIES=$(printf '%s' "$DATA" | jq -c '.entries // []' 2>/dev/null)
+	printf '%s' "$ENTRIES" | jq -e 'type=="array"' >/dev/null 2>&1 || fail "数据格式错误"
+	tmp="/tmp/vault-save.$$"
+	jq -n --argjson e "$ENTRIES" '{canary:"n5000-vault",entries:$e}' > "$tmp"
+	chmod 600 "$tmp"
+	encrypt "$tmp" "$VAULT.tmp" "$M" || { rm -f "$tmp"; fail "加密失败"; }
+	rm -f "$tmp"
+	mv -f "$VAULT.tmp" "$VAULT"
+	chmod 600 "$VAULT"
+	send_json
+	jq -n '{code:0}'
+	;;
+lock)
+	DATA=$(read_body)
+	TOK=$(printf '%s' "$DATA" | jq -r '.token // empty' 2>/dev/null)
+	[ -n "$TOK" ] && rm -f "$(token_file "$TOK")"
+	send_json
+	jq -n '{code:0}'
+	;;
+changemaster)
+	DATA=$(read_body)
+	TOK=$(printf '%s' "$DATA" | jq -r '.token // empty' 2>/dev/null)
+	token_valid "$TOK" || fail "会话已过期"
+	NM=$(printf '%s' "$DATA" | jq -r '.new // empty' 2>/dev/null)
+	[ ${#NM} -ge 6 ] || fail "新主密码至少 6 位"
+	M=$(master_of "$TOK")
+	out="/tmp/vault-cm.$$"
+	decrypt "$VAULT" "$out" "$M" || fail "解密失败"
+	encrypt "$out" "$VAULT.tmp" "$NM" || { rm -f "$out"; fail "加密失败"; }
+	rm -f "$out"
+	mv -f "$VAULT.tmp" "$VAULT"
+	chmod 600 "$VAULT"
+	printf '%s\n%s\n' "$NM" "$(date +%s)" > "$(token_file "$TOK")"
+	chmod 600 "$(token_file "$TOK")"
+	send_json
+	jq -n '{code:0}'
+	;;
+*)
+	send_json
+	jq -n '{code:-1,error:"unknown action",actions:["status","init","unlock","save","lock","changemaster"]}'
+	;;
+esac
