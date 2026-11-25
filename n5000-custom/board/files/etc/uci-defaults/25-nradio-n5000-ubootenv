@@ -4,7 +4,7 @@
 # Runs before 30_uboot-envtools and strictly verifies U-Boot CRC32 + known env
 # variables before writing /etc/fw_env.config (protecting boot_system/mtdparts).
 
-[ -e /etc/config/ubootenv ] && exit 0
+[ -e /etc/config/ubootenv ] && [ -e /etc/fw_env.config ] && exit 0
 [ -f /lib/uboot-envtools.sh ] || exit 0
 command -v fw_printenv >/dev/null 2>&1 || exit 0
 
@@ -49,3 +49,4 @@ config_load ubootenv
 config_foreach ubootenv_add_app_config
 
 exit 0
+
