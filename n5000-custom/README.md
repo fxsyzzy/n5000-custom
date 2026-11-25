@@ -458,3 +458,17 @@ N5000              order 0   分组（展开）
 - 覆盖 LuCI 原生弱对比区域：`small / help-block / cbi-value-description / cbi-section-descr / text-muted / 表头 th / 表格正文`
 - 侧边栏链接、顶栏状态、按钮状态色（success/warning/danger）两种模式分别加深/提亮
 - 自定义页面（面板/仪表盘/应用过滤/收藏夹/AI）的次要文字与数值统一提到可读阈值
+
+## 流量统计（按天/按月 + 用途分类）（v2.8）
+
+- 新增守护进程 `/usr/sbin/trafficd`（开机自启）：
+  - 每 60 秒采集 WAN 收发字节增量 + appfilter 各分类/域名增量
+  - 按天累计写入 `/etc/traffic/<年-月>.json`（每 2 分钟落盘，保留最近 4 个月）
+  - 数据：`days.<日期>.{rx,tx,cats,sites}`
+- 新增接口 `/cgi-bin/traffic?action=summary`：返回今日、本月（含天数）、近 30 天每日流量，以及分类/网站明细
+- 仪表盘（N5000 → 流量仪表盘）新增「流量统计」区块：
+  - 今日/本月切换
+  - 流量合计 / 下载 / 上传 / 统计天数
+  - 流量用在哪：分类占比 + 网站 Top 10
+  - 近 30 天每日流量柱状图
+- 说明：分类/网站统计来自应用过滤的域名识别（conntrack），含 LAN 侧流量，数值与 WAN 总流量不完全相等，用于看「用途占比」
