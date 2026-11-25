@@ -331,3 +331,16 @@ N5000 面板（登录后默认首页）
 6. 微信里给公众号发“帮助”验证
 
 > 说明：微信个人号没有官方机器人接口，第三方协议机器人有封号风险；公众号是合规方案。
+
+### 微信接入（已接通版）
+
+- 公网回调（Tailscale Funnel，免费、无需域名）：
+  **https://n5000.tail05e50c.ts.net/cgi-bin/wechat**
+- 公众号后台配置：
+  - URL：`https://n5000.tail05e50c.ts.net/cgi-bin/wechat`
+  - Token：`n5000wx2026`（可用 `uci set aichat.wechat.token=...` 修改，两处要一致）
+  - 消息加解密方式：**明文模式**
+- 安全：Funnel 只暴露 127.0.0.1:8081 上的微信专用 uhttpd 实例（`/etc/init.d/n5000-wechat-http`），LuCI 后台不会暴露到公网。
+- 持久化：tailscaled 的 Funnel 配置在服务重启后保留；刷机后执行
+  `echo 'tskey-auth-...' > /etc/tailscale/authkey && /usr/sbin/n5000-tunnel-up` 即可恢复。
+- 相关文件：`/etc/init.d/n5000-wechat-http`（专用回调服务）、`/usr/sbin/n5000-tunnel-up`（一键恢复 Tailscale+Funnel）、`/etc/uci-defaults/91-tailscale-wechat`。
