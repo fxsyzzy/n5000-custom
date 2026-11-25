@@ -35,7 +35,11 @@ var AFCSS = [
 	'.af-days label{display:flex;align-items:center;gap:4px;padding:4px 8px;border:1px solid rgba(127,127,127,.3);border-radius:6px;cursor:pointer}',
 	'.af-hint{font-size:11.5px;opacity:.6;margin-top:6px;line-height:1.45}',
 	'.af-modal .cbi-value{display:block}',
-	'@media(max-width:1000px){.af-stats{grid-template-columns:repeat(2,1fr)}.af-cols{grid-template-columns:1fr}}'
+	'@media(max-width:1000px){.af-stats{grid-template-columns:repeat(2,1fr)}.af-cols{grid-template-columns:1fr}}',
+	'.af-mascot{display:flex;align-items:flex-end;gap:12px;margin:2px 0 10px}',
+	'.af-mascot img{height:88px;width:auto;filter:drop-shadow(0 6px 14px rgba(0,0,0,.32));animation:afBob 3.4s ease-in-out infinite}',
+	'@keyframes afBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}',
+	'.af-mascot .m{font-size:12.5px;line-height:1.55;padding:8px 13px;border-radius:14px;background:rgba(127,127,127,.12);border:1px solid rgba(127,127,127,.25);max-width:420px}',
 ].join('\n');
 
 function afMatchCat(domain, cats) {
@@ -74,6 +78,10 @@ return view.extend({
 
 		var root = E('div', { 'class': 'af-wrap' }, [
 			E('style', {}, [AFCSS]),
+			E('div', { 'class': 'af-mascot' }, [
+				E('img', { 'src': '/luci-static/n5000/mascot.png', 'alt': '大肥鱼' }),
+				E('div', { 'class': 'm', 'id': 'af-mascotmsg' }, [' '])
+			]),
 		E('div', { 'class': 'af-toolbar' }, [
 				E('button', { 'class': 'btn cbi-button', 'id': 'af-toggle', click: function() { self.toggleBlock(); } },
 					['启用/停用拦截']),
@@ -129,7 +137,10 @@ return view.extend({
 			document.getElementById('af-devs').textContent = devs.length;
 			document.getElementById('af-sites').textContent = siteCount;
 			document.getElementById('af-rules').textContent = rules.length;
-			var tb = document.getElementById('af-toggle');
+			var afM = document.getElementById('af-mascotmsg');
+			if (afM) afM.textContent = (rules.length
+				? '大肥鱼正守着 ' + rules.length + ' 条管控规则，坏网站都会被它吃掉'
+				: '大肥鱼在闲着，还没有管控规则');			var tb = document.getElementById('af-toggle');
 			if (tb) {
 				tb.textContent = state.block_enabled ? '停用拦截' : '启用拦截';
 				tb.className = 'btn cbi-button' + (state.block_enabled ? ' cbi-button-save' : '');
