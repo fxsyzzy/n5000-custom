@@ -450,3 +450,11 @@ N5000              order 0   分组（展开）
   - 新增 `/luci-static/n5000/menuver.js`：对比 localStorage 里记录的版本，变化时调用 `ui.menu.flushCache()` 并自动刷新一次
   - `93-mascot-inject` 同时注入 menuver.js 和 mascot.js（幂等）
 - 手动强制刷新菜单：任意 LuCI 页面后加 `?n5flushmenu=1`
+
+## 主题可读性增强（v2.7）
+
+- 深色模式：正文提亮至 `#E6F7FB`，次要文字透明度 .55~.62 → **.75~.82**，链接 `#8FE3EC`，输入框文字 `#EAFBFF`
+- 晨光模式：正文 `#0B2A47`，次要文字 `rgba(11,42,71,.7~.72)`，占位符 `rgba(11,42,71,.45)`
+- 覆盖 LuCI 原生弱对比区域：`small / help-block / cbi-value-description / cbi-section-descr / text-muted / 表头 th / 表格正文`
+- 侧边栏链接、顶栏状态、按钮状态色（success/warning/danger）两种模式分别加深/提亮
+- 自定义页面（面板/仪表盘/应用过滤/收藏夹/AI）的次要文字与数值统一提到可读阈值
