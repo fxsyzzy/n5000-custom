@@ -218,3 +218,6 @@ html[data-argon-mode="light"] .main-left{
 /* 侧边栏内部元素半透明，透出磨砂 */
 #mainmenu .nav, #mainmenu .sidenav-header{background:transparent !important}
 #mainmenu .nav > li > a, #mainmenu .nav > li > button{background:transparent !important}
+
+html[data-argon-mode="light"] .np-chip{background:linear-gradient(180deg,rgba(255,255,255,.85),rgba(228,247,250,.7)) !important;border-color:rgba(30,91,140,.2) !important;color:rgba(13,44,84,.58) !important;box-shadow:0 2px 8px rgba(30,91,140,.08) !important}
+html[data-argon-mode="light"] .np-chip b{color:#0D2C54 !important}
