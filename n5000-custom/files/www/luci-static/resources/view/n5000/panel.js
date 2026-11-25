@@ -2,7 +2,7 @@
 'require view';
 'require poll';
 
-function n5fmtBytes(b) {
+function npFmt(b) {
 	b = Number(b) || 0;
 	if (b > 1099511627776) return (b / 1099511627776).toFixed(2) + ' TB';
 	if (b > 1073741824) return (b / 1073741824).toFixed(2) + ' GB';
@@ -10,244 +10,302 @@ function n5fmtBytes(b) {
 	if (b > 1024) return (b / 1024).toFixed(0) + ' KB';
 	return b + ' B';
 }
-
-function n5fmtUptime(s, zh) {
+function npUptime(s) {
 	s = Math.max(0, Math.floor(s || 0));
 	var d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60);
-	if (zh) {
-		if (d > 0) return d + ' 天 ' + h + ' 小时';
-		if (h > 0) return h + ' 小时 ' + m + ' 分';
-		return m + ' 分钟';
-	}
-	if (d > 0) return d + 'd ' + h + 'h';
-	if (h > 0) return h + 'h ' + m + 'm';
-	return m + 'm';
+	if (d > 0) return d + '天 ' + h + '时';
+	if (h > 0) return h + '时 ' + m + '分';
+	return m + '分';
 }
 
-function n5card(label, valueNodes, noteNode) {
-	return E('div', { 'class': 'cbi-section n5-card' }, [
-		E('div', { 'class': 'n5-label' }, [label]),
-		E('div', { 'class': 'n5-value' }, valueNodes),
-		noteNode || E('div', { 'class': 'n5-note' }, [' '])
-	]);
-}
-
-var N5CSS = [
-	'.n5-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}',
-	'.n5-grid .n5-card{display:flex;flex-direction:column;gap:4px;min-height:86px}',
-	'.n5-label{font-size:11px;letter-spacing:.12em;text-transform:uppercase;opacity:.65;font-weight:600}',
-	'.n5-value{font-size:26px;font-weight:600;line-height:1.15;font-variant-numeric:tabular-nums}',
-	'.n5-value small{font-size:12px;font-weight:500;opacity:.7;margin-left:4px}',
-	'.n5-note{font-size:11.5px;opacity:.6;line-height:1.45}',
-	'.n5-bar{height:5px;border-radius:3px;background:rgba(127,127,127,.22);overflow:hidden;margin-top:6px}',
-	'.n5-bar>i{display:block;height:100%;border-radius:3px;background:var(--primary,#48A9C5)}',
-	'.n5-row{display:flex;align-items:center;gap:10px;font-size:12.5px;margin-bottom:7px}',
-	'.n5-row .name{width:110px;flex:0 0 auto;opacity:.75;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
-	'.n5-row .bar{flex:1;margin:0}',
-	'.n5-row .val{width:90px;text-align:right;font-variant-numeric:tabular-nums}',
-	'.n5-ok{color:#35c48a}.n5-warn{color:#e6a23c}.n5-bad{color:#e05a5a}',
-	'.n5-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}',
-	'@media(max-width:1000px){.n5-grid{grid-template-columns:repeat(2,1fr)}.n5-cols{grid-template-columns:1fr}}',
-	'@media(max-width:600px){.n5-grid{grid-template-columns:1fr 1fr}}',
+var NPCSS = [
+	'.np{display:flex;flex-direction:column;gap:12px}',
+	'.np-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;border-radius:14px;',
+	'border:1px solid rgba(131,217,220,.24);background:linear-gradient(180deg,rgba(200,244,249,.07),rgba(13,44,84,.28));',
+	'backdrop-filter:blur(12px) saturate(150%);-webkit-backdrop-filter:blur(12px) saturate(150%)}',
+	'.np-brand{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px}',
+	'.np-signal{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;',
+	'background:var(--primary,#48A9C5);color:#04121a}',
+	'.np-badge{font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid rgba(131,217,220,.3);opacity:.85}',
+	'.np-chips{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}',
+	'.np-chip{font-size:11.5px;padding:4px 10px;border-radius:999px;border:1px solid rgba(131,217,220,.24);',
+	'background:rgba(13,44,84,.35)}',
+	'.np-main{display:grid;grid-template-columns:1fr 330px;gap:12px;align-items:stretch}',
+	'.np-panel{border:1px solid rgba(131,217,220,.24);border-radius:16px;',
+	'background:linear-gradient(180deg,rgba(200,244,249,.06),rgba(13,44,84,.28));',
+	'backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%)}',
+	'.np-hero{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;padding:16px;min-height:440px}',
+	'.np-hero-head{width:100%;display:flex;align-items:center;gap:8px;font-size:12px;opacity:.75}',
+	'.np-art{width:min(420px,86%);height:auto;margin:6px auto 2px;filter:drop-shadow(0 18px 30px rgba(0,0,0,.35))}',
+	'.np-name{font-size:22px;font-weight:700;letter-spacing:.4px;margin-top:2px}',
+	'.np-sub{font-size:12px;opacity:.6;margin-top:4px}',
+	'.np-callouts{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;justify-content:center}',
+	'.np-call{font-size:11.5px;padding:4px 11px;border-radius:999px;border:1px solid rgba(131,217,220,.3);',
+	'background:rgba(13,44,84,.4)}',
+	'.np-rates{width:100%;display:flex;align-items:flex-end;gap:18px;margin-top:auto;padding-top:14px}',
+	'.np-rate{font-size:13px;opacity:.85}',
+	'.np-rate b{font-size:17px;font-weight:700;margin-left:3px}',
+	'.np-spark{flex:1;height:46px;min-width:80px}',
+	'.np-side{display:flex;flex-direction:column;gap:10px}',
+	'.np-card{padding:11px 14px}',
+	'.np-card .t{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;opacity:.8}',
+	'.np-card .t b{font-size:20px;font-weight:700;opacity:1}',
+	'.np-card .s{font-size:11.5px;opacity:.55;margin-top:3px}',
+	'.np-bar{height:4px;border-radius:3px;background:rgba(127,127,127,.25);overflow:hidden;margin-top:7px}',
+	'.np-bar>i{display:block;height:100%;border-radius:3px;background:var(--primary,#48A9C5);width:0;transition:width .4s}',
+	'.np-mini{display:grid;grid-template-columns:1fr 1fr;gap:8px}',
+	'.np-apps{display:flex;gap:8px;margin-top:8px;overflow:hidden}',
+	'.np-app{flex:1;min-width:0;text-align:center}',
+	'.np-tile{width:34px;height:34px;border-radius:10px;margin:0 auto 4px;display:flex;align-items:center;justify-content:center;',
+	'font-size:14px;font-weight:700;color:#04121a}',
+	'.np-app .n{font-size:10.5px;opacity:.8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+	'.np-app .v{font-size:10px;opacity:.5}',
+	'.np-bottom{padding:12px 16px;display:flex;flex-direction:column;gap:10px}',
+	'.np-stats{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}',
+	'.np-stat{display:flex;flex-direction:column;gap:2px}',
+	'.np-stat .l{font-size:10.5px;letter-spacing:.1em;opacity:.55;text-transform:uppercase}',
+	'.np-stat .v{font-size:16px;font-weight:700}',
+	'.np-actions{display:grid;grid-template-columns:repeat(9,1fr);gap:8px;border-top:1px solid rgba(131,217,220,.16);padding-top:10px}',
+	'.np-act{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10.5px;opacity:.8;text-decoration:none;',
+	'color:inherit;padding:6px 2px;border-radius:10px}',
+	'.np-act:hover{background:rgba(72,169,197,.16);opacity:1}',
+	'.np-act .i{font-size:17px;line-height:1}',
+	'.np-ok{color:#35c48a}.np-warn{color:#e6a23c}.np-bad{color:#e05a5a}',
+	'@media(max-width:1100px){.np-main{grid-template-columns:1fr}.np-actions{grid-template-columns:repeat(5,1fr)}.np-stats{grid-template-columns:repeat(3,1fr)}}',
+	'@media(max-width:640px){.np-actions{grid-template-columns:repeat(4,1fr)}.np-stats{grid-template-columns:repeat(2,1fr)}}'
 ].join('\n');
+
+var NP_COLORS = ['#48A9C5', '#83D9DC', '#1E5B8C', '#7FA8FF', '#5ef2c0'];
 
 return view.extend({
 	load: function() {
 		return Promise.all([
-			fetch('/cgi-bin/rstatus?t=' + Date.now(), { cache: 'no-store' })
-				.then(function(r) { return r.json(); }).catch(function() { return null; }),
-			fetch('/cgi-bin/appfilter?action=state', { cache: 'no-store' })
-				.then(function(r) { return r.json(); }).catch(function() { return null; })
+			fetch('/cgi-bin/rstatus?t=' + Date.now(), { cache: 'no-store' }).then(function(r) { return r.json(); }).catch(function() { return null; }),
+			fetch('/cgi-bin/appfilter?action=state', { cache: 'no-store' }).then(function(r) { return r.json(); }).catch(function() { return null; })
 		]);
 	},
 
 	renderInner: function(data) {
-		var d = data[0] || {};
-		var a = data[1] || {};
-		var zh = (L.env.lang || '').indexOf('zh') === 0
-			|| (L.env.lang || '').indexOf('zh-cn') === 0;
-		var _s = function(zhS, enS) { return zh ? zhS : enS; };
+		var self = this;
+		var d = data[0] || {}, af = data[1] || {};
+		var samples = [], prev = null;
 
-		var style = E('style', {}, [N5CSS]);
+		function url(p) { return (typeof L !== 'undefined' && L.url) ? L.url(p) : '/cgi-bin/luci/' + p; }
 
-		/* 第一行：运行时间 / 负载 / 温度 / 内存 */
-		var uptime = E('div', { 'class': 'n5-value', 'id': 'n5-uptime' }, ['--']);
-		var load1 = E('div', { 'class': 'n5-value', 'id': 'n5-load' }, ['--']);
-		var temp = E('div', { 'class': 'n5-value', 'id': 'n5-temp' }, ['--']);
-		var mem = E('div', { 'class': 'n5-value', 'id': 'n5-mem' }, ['--']);
+		function card(id, title, extra) {
+			return E('div', { 'class': 'np-panel np-card' }, [
+				E('div', { 'class': 't' }, [E('span', {}, [title]), E('b', { 'id': id }, ['--'])]),
+				E('div', { 'class': 's', 'id': id + '-s' }, [' ']),
+				E('div', { 'class': 'np-bar' }, [E('i', { 'id': id + '-bar' })])
+			].concat(extra || []));
+		}
 
-		var grid1 = E('div', { 'class': 'n5-grid' }, [
-			n5card(_s('运行时间', 'Uptime'), [uptime], E('div', { 'class': 'n5-note', 'id': 'n5-boot' }, [' '])),
-			n5card(_s('CPU 负载', 'CPU Load'), [load1], E('div', { 'class': 'n5-note', 'id': 'n5-loadavg' }, [' '])),
-			n5card(_s('CPU 温度', 'CPU Temp'), [temp], E('div', { 'class': 'n5-note', 'id': 'n5-tempnote' }, [' '])),
-			n5card(_s('内存', 'Memory'), [mem], E('div', { 'class': 'n5-note', 'id': 'n5-memnote' }, [' ']))
-		]);
-
-		/* 第二行：WAN 流量 / WiFi / TF 存储 / 服务状态 */
-		var wanRow = E('div', { 'class': 'n5-row' }, [
-			E('span', { 'class': 'name' }, [_s('WAN 累计', 'WAN total')]),
-			E('span', { 'class': 'val', 'id': 'n5-wan' }, ['--']),
-			E('span', { 'class': 'val', 'id': 'n5-wanip' }, ['--'])
-		]);
-		var wifiRow = E('div', { 'class': 'n5-row' }, [
-			E('span', { 'class': 'name' }, [_s('WiFi', 'WiFi')]),
-			E('span', { 'class': 'val', 'id': 'n5-ssid' }, ['--']),
-			E('span', { 'class': 'val', 'id': 'n5-clients' }, ['--'])
-		]);
-		var tfRow = E('div', { 'class': 'n5-row' }, [
-			E('span', { 'class': 'name' }, [_s('TF 卡', 'TF card')]),
-			E('span', { 'class': 'val', 'id': 'n5-tf' }, ['--'])
-		]);
-		var svcRow = E('div', { 'class': 'n5-row' }, [
-			E('span', { 'class': 'name' }, [_s('服务', 'Services')]),
-			E('span', { 'class': 'val', 'id': 'n5-svc' }, ['--'])
-		]);
-
-		var grid2 = E('div', { 'class': 'n5-grid' }, [
-			E('div', { 'class': 'cbi-section n5-card' }, [
-				E('div', { 'class': 'n5-label' }, [_s('网络流量', 'Traffic')]), wanRow, wifiRow
+		var spark = E('canvas', { 'class': 'np-spark', 'id': 'np-spark' });
+		var hero = E('div', { 'class': 'np-panel np-hero' }, [
+			E('div', { 'class': 'np-hero-head' }, [
+				E('span', { 'class': 'np-badge' }, ['N5000 路由']),
+				E('span', { 'id': 'np-herostatus' }, ['在线']),
+				E('span', { 'style': 'margin-left:auto', 'id': 'np-heroip' }, [' '])
 			]),
-			E('div', { 'class': 'cbi-section n5-card' }, [
-				E('div', { 'class': 'n5-label' }, [_s('存储', 'Storage')]), tfRow,
-				E('div', { 'class': 'n5-bar' }, [E('i', { 'id': 'n5-tfbar', 'style': 'width:0' })])
+			E('img', { 'class': 'np-art', 'src': '/luci-static/n5000/router.svg', 'alt': 'N5000' }),
+			E('div', { 'class': 'np-name' }, ['NRadio N5000']),
+			E('div', { 'class': 'np-sub' }, ['MT7987A · WiFi 7 · 1GB RAM · OpenWrt']),
+			E('div', { 'class': 'np-callouts' }, [
+				E('span', { 'class': 'np-call' }, ['WAN 2.5G']),
+				E('span', { 'class': 'np-call' }, ['LAN 2.5G · 192.168.88.1']),
+				E('span', { 'class': 'np-call', 'id': 'np-wifi' }, ['WiFi --'])
 			]),
-			E('div', { 'class': 'cbi-section n5-card' }, [
-				E('div', { 'class': 'n5-label' }, [_s('服务状态', 'Service status')]), svcRow
-			]),
-			E('div', { 'class': 'cbi-section n5-card' }, [
-				E('div', { 'class': 'n5-label' }, [_s('设备 / 网站', 'Devices / Sites')]),
-				E('div', { 'class': 'n5-note', 'id': 'n5-appfilter' }, ['--'])
+			E('div', { 'class': 'np-rates' }, [
+				E('span', { 'class': 'np-rate' }, ['↓', E('b', { 'id': 'np-down' }, ['0.00']), ' Mbps']),
+				E('span', { 'class': 'np-rate' }, ['↑', E('b', { 'id': 'np-up' }, ['0.00']), ' Mbps']),
+				spark
 			])
 		]);
 
-		/* 第三行：分类流量 + 网站 Top */
-		var catBox = E('div', { 'class': 'cbi-section', 'id': 'n5-cats' }, [
-			E('h3', {}, [_s('应用分类流量', 'Traffic by category')]),
-			E('div', { 'id': 'n5-catlist' }, [E('em', {}, [_s('暂无数据', 'No data')])])
-		]);
-		var siteBox = E('div', { 'class': 'cbi-section', 'id': 'n5-sites' }, [
-			E('h3', {}, [_s('网站流量 Top', 'Top sites')]),
-			E('div', { 'id': 'n5-sitelist' }, [E('em', {}, [_s('暂无数据', 'No data')])])
-		]);
-
-		var links = E('div', { 'class': 'cbi-section' }, [
-			E('a', { 'class': 'btn cbi-button', 'href': (typeof L !== 'undefined' && L.url) ? L.url('admin/n5000/appfilter') : '/cgi-bin/luci/admin/n5000/appfilter' },
-				[_s('应用过滤 →', 'App filter →')]),
-			' ',
-			E('a', { 'class': 'btn cbi-button', 'href': (typeof L !== 'undefined' && L.url) ? L.url('admin/n5000/dashboard') : '/cgi-bin/luci/admin/n5000/dashboard' },
-				[_s('流量仪表盘 →', 'Traffic dashboard →')])
-		]);
-
-		var root = E('div', {}, [
-			style,
-			E('h2', {}, [_s('N5000 面板', 'N5000 Panel')]),
-			grid1, grid2,
-			E('div', { 'class': 'n5-cols' }, [catBox, siteBox]),
-			links
+		var side = E('div', { 'class': 'np-side' }, [
+			card('np-cpu', 'CPU 占用'),
+			card('np-mem', '内存占用'),
+			card('np-tf', '存储占用'),
+			E('div', { 'class': 'np-panel np-card' }, [
+				E('div', { 'class': 't' }, [E('span', {}, ['网络']), E('span', { 'class': 'np-badge', 'id': 'np-wanstate' }, ['--'])]),
+				E('div', { 'class': 's', 'id': 'np-wan' }, [' ']),
+				E('div', { 'class': 's', 'id': 'np-lan' }, [' '])
+			]),
+			E('div', { 'class': 'np-panel np-card' }, [
+				E('div', { 'class': 't' }, [E('span', {}, ['服务状态'])]),
+				E('div', { 'class': 's', 'id': 'np-svc' }, [' '])
+			]),
+			E('div', { 'class': 'np-panel np-card' }, [
+				E('div', { 'class': 't' }, [E('span', {}, ['活跃应用 TOP5']), E('span', { 'class': 'np-badge', 'id': 'np-apps-total' }, ['--'])]),
+				E('div', { 'class': 'np-apps', 'id': 'np-apps' }, [])
+			])
 		]);
 
-		var self = this;
+		var stats = E('div', { 'class': 'np-stats' }, [
+			E('div', { 'class': 'np-stat' }, [E('div', { 'class': 'l' }, ['处理器']), E('div', { 'class': 'v', 'id': 'np-st-cpu' }, ['--'])]),
+			E('div', { 'class': 'np-stat' }, [E('div', { 'class': 'l' }, ['内存']), E('div', { 'class': 'v', 'id': 'np-st-mem' }, ['--'])]),
+			E('div', { 'class': 'np-stat' }, [E('div', { 'class': 'l' }, ['温度']), E('div', { 'class': 'v', 'id': 'np-st-temp' }, ['--'])]),
+			E('div', { 'class': 'np-stat' }, [E('div', { 'class': 'l' }, ['运行时间']), E('div', { 'class': 'v', 'id': 'np-st-uptime' }, ['--'])]),
+			E('div', { 'class': 'np-stat' }, [E('div', { 'class': 'l' }, ['在线设备']), E('div', { 'class': 'v', 'id': 'np-st-clients' }, ['--'])]),
+			E('div', { 'class': 'np-stat' }, [E('div', { 'class': 'l' }, ['识别网站']), E('div', { 'class': 'v', 'id': 'np-st-sites' }, ['--'])])
+		]);
 
-		function paint(d, a) {
-			if (!d || !d.ts) return;
-			if (!document.getElementById('n5-uptime')) return;
-			var tv = (d.temp || 0) / 1000;
-			var memTotal = d.mem_total || 0, memAvail = d.mem_avail || 0;
+		var actions = E('div', { 'class': 'np-actions' }, [
+			E('a', { 'class': 'np-act', 'href': url('admin/network/wireless') }, [E('span', { 'class': 'i' }, ['📶']), E('span', {}, ['无线设置'])]),
+			E('a', { 'class': 'np-act', 'href': url('admin/n5000/appfilter') }, [E('span', { 'class': 'i' }, ['🧱']), E('span', {}, ['应用过滤'])]),
+			E('a', { 'class': 'np-act', 'href': url('admin/n5000/favorites') }, [E('span', { 'class': 'i' }, ['⭐']), E('span', {}, ['收藏夹'])]),
+			E('a', { 'class': 'np-act', 'href': url('admin/n5000/ai') }, [E('span', { 'class': 'i' }, ['🤖']), E('span', {}, ['AI 助手'])]),
+			E('a', { 'class': 'np-act', 'href': url('admin/n5000/dashboard') }, [E('span', { 'class': 'i' }, ['📈']), E('span', {}, ['流量仪表盘'])]),
+			E('a', { 'class': 'np-act', 'href': url('admin/status/syslog') }, [E('span', { 'class': 'i' }, ['📋']), E('span', {}, ['系统日志'])]),
+			E('a', { 'class': 'np-act', 'href': url('admin/status/overview') }, [E('span', { 'class': 'i' }, ['🗂']), E('span', {}, ['系统概览'])]),
+			E('a', { 'class': 'np-act', 'href': url('admin/system/reboot') }, [E('span', { 'class': 'i' }, ['⟳']), E('span', {}, ['重启设备'])]),
+			E('a', { 'class': 'np-act', 'href': url('admin/system/admin') }, [E('span', { 'class': 'i' }, ['⚙']), E('span', {}, ['系统设置'])])
+		]);
+
+		var root = E('div', { 'class': 'np' }, [
+			E('style', {}, [NPCSS]),
+			E('div', { 'class': 'np-top' }, [
+				E('div', { 'class': 'np-brand' }, [
+					E('span', { 'class': 'np-signal' }, ['📡']),
+					E('span', { 'id': 'np-host' }, [d.host || 'N5000']),
+					E('span', { 'class': 'np-badge', 'id': 'np-link' }, ['--'])
+				]),
+				E('div', { 'class': 'np-chips' }, [
+					E('span', { 'class': 'np-chip', 'id': 'np-chip-temp' }, ['温度 --']),
+					E('span', { 'class': 'np-chip', 'id': 'np-chip-load' }, ['负载 --']),
+					E('span', { 'class': 'np-chip', 'id': 'np-chip-uptime' }, ['运行 --']),
+					E('span', { 'class': 'np-chip', 'id': 'np-chip-wan' }, ['WAN --'])
+				])
+			]),
+			E('div', { 'class': 'np-main' }, [hero, side]),
+			E('div', { 'class': 'np-panel np-bottom' }, [stats, actions])
+		]);
+
+		function drawSpark() {
+			var c = document.getElementById('np-spark');
+			if (!c || !c.getContext) return;
+			var dpr = window.devicePixelRatio || 1;
+			var w = c.clientWidth, h = c.clientHeight;
+			if (!w || !h) return;
+			if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) {
+				c.width = Math.round(w * dpr); c.height = Math.round(h * dpr);
+			}
+			var ctx = c.getContext('2d');
+			ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+			ctx.clearRect(0, 0, w, h);
+			if (samples.length < 2) return;
+			var max = 1;
+			samples.forEach(function(s) { max = Math.max(max, s.down, s.up); });
+			max *= 1.2;
+			function line(key, color) {
+				ctx.beginPath();
+				samples.forEach(function(s, i) {
+					var x = i / (samples.length - 1) * w;
+					var y = h - (s[key] / max) * h * 0.9 - 1;
+					if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+				});
+				ctx.strokeStyle = color; ctx.lineWidth = 1.8; ctx.stroke();
+			}
+			line('down', '#48A9C5');
+			line('up', '#83D9DC');
+		}
+
+		function paint(d2, af2) {
+			if (!d2 || !document.getElementById('np-cpu')) return;
+			var tv = (d2.temp || 0) / 1000;
+			var memTotal = d2.mem_total || 0, memAvail = d2.mem_avail || 0;
 			var memPct = memTotal ? (memTotal - memAvail) / memTotal * 100 : 0;
-			var tfPct = d.tf_total ? (d.tf_used || 0) / d.tf_total * 100 : 0;
-			var swUsed = Math.max(0, (d.swap_total || 0) - (d.swap_free || 0));
+			var tfPct = d2.tf_total ? (d2.tf_used || 0) / d2.tf_total * 100 : 0;
+			var load1 = Number(d2.load && d2.load[0]) || 0;
 
-			document.getElementById('n5-uptime').textContent = n5fmtUptime(d.uptime, zh);
-			document.getElementById('n5-boot').textContent =
-				_s('开机于 ', 'Booted ') + new Date((d.ts - d.uptime) * 1000).toLocaleString();
-			document.getElementById('n5-load').textContent = Number(d.load[0]).toFixed(2);
-			document.getElementById('n5-loadavg').textContent =
-				'5m ' + Number(d.load[1]).toFixed(2) + ' · 15m ' + Number(d.load[2]).toFixed(2);
-			var te = document.getElementById('n5-temp');
-			te.textContent = tv.toFixed(1);
-			te.className = 'n5-value ' + (tv >= 80 ? 'n5-bad' : tv >= 65 ? 'n5-warn' : 'n5-ok');
-			document.getElementById('n5-tempnote').textContent =
-				tv >= 80 ? _s('温度偏高', 'Hot') : tv >= 65 ? _s('正常偏高', 'Warm') : _s('温度正常', 'Normal');
+			var host = document.getElementById('np-host');
+			if (host) host.textContent = d2.host || 'N5000';
+			document.getElementById('np-herostatus').textContent = '在线 · 运行 ' + npUptime(d2.uptime);
+			document.getElementById('np-heroip').textContent = 'WAN ' + (d2.wan_ip || '--');
+			document.getElementById('np-wifi').textContent = 'WiFi ' + (d2.ssid || '--');
+			document.getElementById('np-link').textContent = 'WAN ' + (d2.wan_ip ? '已连接' : '未连接');
+			document.getElementById('np-chip-temp').textContent = '温度 ' + tv.toFixed(1) + '°C';
+			document.getElementById('np-chip-load').textContent = '负载 ' + load1.toFixed(2);
+			document.getElementById('np-chip-uptime').textContent = '运行 ' + npUptime(d2.uptime);
+			document.getElementById('np-chip-wan').textContent = 'WAN ' + (d2.wan_ip || '--');
 
-			var me = document.getElementById('n5-mem');
-			me.textContent = memPct.toFixed(0) + '%';
-			me.className = 'n5-value ' + (memPct >= 85 ? 'n5-bad' : memPct >= 70 ? 'n5-warn' : '');
-			document.getElementById('n5-memnote').textContent =
-				n5fmtBytes((memTotal - memAvail) * 1024) + ' / ' + n5fmtBytes(memTotal * 1024) +
-				' · swap ' + (swUsed / 1024).toFixed(1) + ' GB';
-
-			document.getElementById('n5-wan').textContent =
-				n5fmtBytes(d.wan_rx) + ' ↓ / ' + n5fmtBytes(d.wan_tx) + ' ↑';
-			document.getElementById('n5-wanip').textContent = d.wan_ip || '--';
-			document.getElementById('n5-ssid').textContent = d.ssid || '--';
-			document.getElementById('n5-clients').textContent = (d.clients || 0) + _s(' 台', ' clients');
-			document.getElementById('n5-tf').textContent =
-				n5fmtBytes((d.tf_used || 0) * 1024) + ' / ' + n5fmtBytes((d.tf_total || 0) * 1024) +
-				' (' + tfPct.toFixed(0) + '%)';
-			document.getElementById('n5-tfbar').style.width = Math.min(100, tfPct) + '%';
-
+			/* CPU */
+			var cpuPct = Math.min(100, Math.round(load1 / 2 * 100));
+			document.getElementById('np-cpu').textContent = cpuPct + '%';
+			document.getElementById('np-cpu-s').textContent = '4 核 · 负载 ' + load1.toFixed(2);
+			document.getElementById('np-cpu-bar').style.width = cpuPct + '%';
+			/* 内存 */
+			document.getElementById('np-mem').textContent = memPct.toFixed(0) + '%';
+			document.getElementById('np-mem-s').textContent = npFmt((memTotal - memAvail) * 1024) + ' / ' + npFmt(memTotal * 1024);
+			document.getElementById('np-mem-bar').style.width = Math.min(100, memPct) + '%';
+			/* 存储 */
+			document.getElementById('np-tf').textContent = tfPct.toFixed(0) + '%';
+			document.getElementById('np-tf-s').textContent = npFmt((d2.tf_used || 0) * 1024) + ' / ' + npFmt((d2.tf_total || 0) * 1024);
+			document.getElementById('np-tf-bar').style.width = Math.min(100, tfPct) + '%';
+			/* 网络 */
+			document.getElementById('np-wanstate').textContent = d2.wan_ip ? '已连接' : '未连接';
+			document.getElementById('np-wan').textContent = 'WAN eth1 · ' + (d2.wan_ip || '--') + ' · ' + npFmt(d2.wan_rx) + '↓ ' + npFmt(d2.wan_tx) + '↑';
+			document.getElementById('np-lan').textContent = 'LAN br-lan · ' + (d2.lan_ip || '--') + ' · ' + npFmt(d2.lan_rx) + '↓ ' + npFmt(d2.lan_tx) + '↑';
+			/* 服务 */
 			var svc = [];
-			svc.push((d.pw ? 'PassWall ✓' : 'PassWall ✗'));
-			svc.push((d.docker ? 'Docker ✓' : 'Docker ✗'));
-			svc.push(d.errs > 0 ? _s('TF 错误 ', 'TF errors ') + d.errs : _s('TF 正常', 'TF OK'));
-			document.getElementById('n5-svc').textContent = svc.join(' · ');
+			svc.push('PassWall ' + (d2.pw ? '✓' : '✗'));
+			svc.push('Docker ' + (d2.docker ? '✓' : '✗'));
+			svc.push('TF ' + ((d2.errs || 0) > 0 ? ('✗ ' + d2.errs) : '✓'));
+			document.getElementById('np-svc').textContent = svc.join(' · ');
+			/* 底部 */
+			document.getElementById('np-st-cpu').textContent = cpuPct + '%';
+			document.getElementById('np-st-mem').textContent = memPct.toFixed(0) + '%';
+			var te = document.getElementById('np-st-temp');
+			te.textContent = tv.toFixed(0) + '°C';
+			te.className = 'v ' + (tv >= 80 ? 'np-bad' : tv >= 65 ? 'np-warn' : 'np-ok');
+			document.getElementById('np-st-uptime').textContent = npUptime(d2.uptime);
+			document.getElementById('np-st-clients').textContent = (d2.clients || 0) + ' 台';
 
-			if (a && a.devices) {
-				var devN = a.devices.length;
-				var cats = a.categories || [];
-				var sites = {};
-				a.devices.forEach(function(dev) {
-					(dev.sites || []).forEach(function(s) { sites[s.domain] = (sites[s.domain] || 0) + s.bytes; });
-				});
-				var siteN = Object.keys(sites).length;
-				document.getElementById('n5-appfilter').textContent =
-					devN + _s(' 台设备有流量 · ', ' devices · ') + siteN + _s(' 个网站', ' sites');
-
-				var maxB = 1;
-				cats.forEach(function(c) { maxB = Math.max(maxB, c.bytes || 0); });
-				var catList = cats.slice(0, 8).map(function(c) {
-					return E('div', { 'class': 'n5-row' }, [
-						E('span', { 'class': 'name' }, [n5catName(c.cat)]),
-						E('span', { 'class': 'bar' }, [E('i', { 'style': 'width:' + Math.round((c.bytes || 0) / maxB * 100) + '%' })]),
-						E('span', { 'class': 'val' }, [n5fmtBytes(c.bytes)])
-					]);
-				});
-				var cl = document.getElementById('n5-catlist');
-				cl.innerHTML = '';
-				if (catList.length) catList.forEach(function(x) { cl.appendChild(x); });
-				else cl.appendChild(E('em', {}, [_s('暂无数据', 'No data')]));
-
-				var arr = Object.keys(sites).map(function(k) { return { d: k, b: sites[k] }; })
-					.sort(function(x, y) { return y.b - x.b; }).slice(0, 8);
-				var sl = document.getElementById('n5-sitelist');
-				sl.innerHTML = '';
-				if (arr.length) arr.forEach(function(s) {
-					sl.appendChild(E('div', { 'class': 'n5-row' }, [
-						E('span', { 'class': 'name', 'title': s.d }, [s.d]),
-						E('span', { 'class': 'val' }, [n5fmtBytes(s.b)])
+			/* 活跃应用 TOP5 */
+			var devs = (af2 && af2.devices) || [];
+			var sites = {};
+			devs.forEach(function(dv) { (dv.sites || []).forEach(function(s) { sites[s.domain] = (sites[s.domain] || 0) + s.bytes; }); });
+			var arr = Object.keys(sites).map(function(k) { return { d: k, b: sites[k] }; })
+				.sort(function(a, b) { return b.b - a.b; }).slice(0, 5);
+			var siteN = Object.keys(sites).length;
+			document.getElementById('np-st-sites').textContent = siteN;
+			document.getElementById('np-apps-total').textContent = siteN + ' 个';
+			var box = document.getElementById('np-apps');
+			if (box) {
+				box.innerHTML = '';
+				arr.forEach(function(s, i) {
+					var label = (s.d || '?').replace(/^www\./, '').split('.')[0] || '?';
+					box.appendChild(E('div', { 'class': 'np-app' }, [
+						E('div', { 'class': 'np-tile', 'style': 'background:' + NP_COLORS[i % NP_COLORS.length] }, [label.charAt(0).toUpperCase()]),
+						E('div', { 'class': 'n', 'title': s.d }, [label.slice(0, 8)]),
+						E('div', { 'class': 'v' }, [npFmt(s.b)])
 					]));
 				});
-				else sl.appendChild(E('em', {}, [_s('暂无数据', 'No data')]));
+				if (!arr.length) box.appendChild(E('div', { 'class': 's' }, ['暂无数据']));
 			}
+
+			/* 速率 */
+			var down = 0, up = 0;
+			if (prev && d2.ts > prev.ts) {
+				var dt = d2.ts - prev.ts;
+				down = Math.max(0, (d2.wan_rx - prev.rx) * 8 / dt / 1e6);
+				up = Math.max(0, (d2.wan_tx - prev.tx) * 8 / dt / 1e6);
+			}
+			prev = { ts: d2.ts, rx: d2.wan_rx, tx: d2.wan_tx };
+			document.getElementById('np-down').textContent = down.toFixed(2);
+			document.getElementById('np-up').textContent = up.toFixed(2);
+			samples.push({ down: down, up: up });
+			if (samples.length > 60) samples.shift();
+			drawSpark();
 		}
 
-		function n5catName(k) {
-			var map = {
-				video: _s('视频', 'Video'), game: _s('游戏', 'Games'), social: _s('社交', 'Social'),
-				office: _s('办公', 'Office'), shopping: _s('购物', 'Shopping'), music: _s('音乐', 'Music'),
-				cloud: _s('网盘', 'Cloud'), news: _s('新闻', 'News'), edu: _s('教育', 'Education'),
-				system: _s('系统更新', 'System'), other: _s('其他', 'Other'), unknown: _s('未识别', 'Unknown')
-			};
-			return map[k] || k;
-		}
-
-		setTimeout(function() { paint(d, a); }, 100);
+		setTimeout(function() { paint(d, af); }, 100);
 
 		poll.add(function() {
 			return Promise.all([
 				fetch('/cgi-bin/rstatus?t=' + Date.now(), { cache: 'no-store' }).then(function(r) { return r.json(); }).catch(function() { return null; }),
 				fetch('/cgi-bin/appfilter?action=state', { cache: 'no-store' }).then(function(r) { return r.json(); }).catch(function() { return null; })
-			]).then(function(res) { paint(res[0], res[1]); });
+			]).then(function(res) { paint(res[0] || d, res[1] || af); });
 		}, 5);
 
 		return root;
@@ -258,11 +316,7 @@ return view.extend({
 			return this.renderInner(data);
 		}
 		catch (e) {
-			return E('div', {}, [
-				E('h2', {}, ['N5000 面板']),
-				E('p', {}, ['面板加载失败: ' + (e && e.message ? e.message : e)]),
-				E('a', { 'href': '/dashboard.html', 'class': 'btn cbi-button' }, ['打开独立仪表盘'])
-			]);
+			return E('div', {}, [E('h2', {}, ['N5000 面板']), E('p', {}, ['加载失败: ' + (e && e.message ? e.message : e)])]);
 		}
 	},
 
@@ -270,5 +324,3 @@ return view.extend({
 	handleSave: null,
 	handleReset: null
 });
-
-
