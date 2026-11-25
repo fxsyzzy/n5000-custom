@@ -12,9 +12,9 @@
 			]
 		}
 	},
-	"admin/n5000/favorites": {
+	"admin/n5000-fav": {
 		"title": "收藏夹",
-		"order": 2,
+		"order": 1,
 		"action": {
 			"type": "view",
 			"path": "n5000/favorites"
@@ -25,9 +25,9 @@
 			]
 		}
 	},
-	"admin/n5000/ai": {
+	"admin/n5000-ai": {
 		"title": "AI 助手",
-		"order": 3,
+		"order": 2,
 		"action": {
 			"type": "view",
 			"path": "n5000/ai"
@@ -38,9 +38,9 @@
 			]
 		}
 	},
-	"admin/n5000/appfilter": {
+	"admin/n5000-filter": {
 		"title": "应用过滤",
-		"order": 4,
+		"order": 3,
 		"action": {
 			"type": "view",
 			"path": "n5000/appfilter"
@@ -51,9 +51,9 @@
 			]
 		}
 	},
-	"admin/n5000/dashboard": {
+	"admin/n5000-traffic": {
 		"title": "流量仪表盘",
-		"order": 5,
+		"order": 4,
 		"action": {
 			"type": "view",
 			"path": "n5000/dashboard"
@@ -64,7 +64,7 @@
 			]
 		}
 	},
-	"admin/n5000/vault": {
+	"admin/n5000-vault": {
 		"title": "密码本",
 		"order": 99,
 		"action": {
