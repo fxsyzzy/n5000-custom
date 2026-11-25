@@ -197,3 +197,24 @@ html[data-argon-mode="light"] #n5000-mascot .n5m-bubble{
 }
 html[data-argon-mode="light"] #n5000-mascot .n5m-rice{color:rgba(13,44,84,.6) !important}
 html[data-argon-mode="light"] ::-webkit-scrollbar-thumb{background:rgba(30,91,140,.25) !important}
+
+/* ---------- 侧边栏磨砂玻璃 ---------- */
+html[data-argon-mode="dark"] #mainmenu.main-left,
+html[data-argon-mode="dark"] .main-left{
+  background:linear-gradient(180deg,rgba(10,30,52,.62),rgba(8,24,44,.55)) !important;
+  backdrop-filter:blur(20px) saturate(170%) !important;
+  -webkit-backdrop-filter:blur(20px) saturate(170%) !important;
+  border-right:1px solid rgba(131,217,220,.22) !important;
+  box-shadow:8px 0 28px rgba(0,10,22,.35) !important;
+}
+html[data-argon-mode="light"] #mainmenu.main-left,
+html[data-argon-mode="light"] .main-left{
+  background:linear-gradient(180deg,rgba(255,255,255,.62),rgba(228,247,250,.55)) !important;
+  backdrop-filter:blur(20px) saturate(160%) !important;
+  -webkit-backdrop-filter:blur(20px) saturate(160%) !important;
+  border-right:1px solid rgba(30,91,140,.16) !important;
+  box-shadow:8px 0 24px rgba(30,91,140,.10) !important;
+}
+/* 侧边栏内部元素半透明，透出磨砂 */
+#mainmenu .nav, #mainmenu .sidenav-header{background:transparent !important}
+#mainmenu .nav > li > a, #mainmenu .nav > li > button{background:transparent !important}
