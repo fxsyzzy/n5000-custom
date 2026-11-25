@@ -31,6 +31,8 @@ LTX=$(cat /sys/class/net/$LANDEV/statistics/tx_bytes 2>/dev/null || echo 0)
 SSID=$(iwinfo 2>/dev/null | sed -n 's/.*ESSID: "\([^"]*\)".*/\1/p' | head -n1)
 [ -z "$SSID" ] && SSID="--"
 CLIENTS=0
+DEVICES=$(wc -l < /tmp/dhcp.leases 2>/dev/null || echo 0)
+[ -z "$DEVICES" ] && DEVICES=0
 for dev in $(iw dev 2>/dev/null | awk '/Interface/{print $2}'); do
 	case "$dev" in
 		*-ap*) n=$(iw dev "$dev" station dump 2>/dev/null | grep -c '^Station'); CLIENTS=$((CLIENTS + n)) ;;
@@ -56,10 +58,10 @@ ERRS=$(dmesg 2>/dev/null | grep -ciE 'I/O error|EXT_CSD|mmc.*error|f2fs.*error')
 HOST=$(cat /proc/sys/kernel/hostname 2>/dev/null)
 TS=$(date +%s)
 
-printf '{"host":"%s","uptime":%s,"load":[%s,%s,%s],"mem_total":%s,"mem_avail":%s,"swap_total":%s,"swap_free":%s,"temp":%s,"root_total":%s,"root_used":%s,"root_free":%s,"tf_total":%s,"tf_used":%s,"tf_free":%s,"wan_ip":"%s","wan_rx":%s,"wan_tx":%s,"lan_ip":"%s","lan_rx":%s,"lan_tx":%s,"ssid":"%s","clients":%s,"pw":%s,"pw_enabled":%s,"docker":%s,"docker_count":%s,"modem":%s,"modem_ip":"%s","tf_model":"%s","errs":%s,"ts":%s}\n' \
+printf '{"host":"%s","uptime":%s,"load":[%s,%s,%s],"mem_total":%s,"mem_avail":%s,"swap_total":%s,"swap_free":%s,"temp":%s,"root_total":%s,"root_used":%s,"root_free":%s,"tf_total":%s,"tf_used":%s,"tf_free":%s,"wan_ip":"%s","wan_rx":%s,"wan_tx":%s,"lan_ip":"%s","lan_rx":%s,"lan_tx":%s,"ssid":"%s","clients":%s,"devices":%s,"pw":%s,"pw_enabled":%s,"docker":%s,"docker_count":%s,"modem":%s,"modem_ip":"%s","tf_model":"%s","errs":%s,"ts":%s}\n' \
   "$HOST" "${UP:-0}" "${L1:-0}" "${L5:-0}" "${L15:-0}" \
   "${MEMT:-0}" "${MEMA:-0}" "${SWT:-0}" "${SWF:-0}" "${TEMP:-0}" \
   "${RT:-0}" "${RU:-0}" "${RF:-0}" "${TT:-0}" "${TU:-0}" "${TFREE:-0}" \
   "$WANIP" "${WRX:-0}" "${WTX:-0}" "$LANIP" "${LRX:-0}" "${LTX:-0}" \
-  "$SSID" "${CLIENTS:-0}" "$PW" "${PWEN:-0}" "$DOCKER" "${DCON:-0}" \
+  "$SSID" "${CLIENTS:-0}" "${DEVICES:-0}" "$PW" "${PWEN:-0}" "$DOCKER" "${DCON:-0}" \
   "$MODEM" "$MODEMIP" "$TFMODEL" "${ERRS:-0}" "$TS"
