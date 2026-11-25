@@ -48,7 +48,13 @@ var N5CSS = [
 	'.n5-ok{color:#35c48a}.n5-warn{color:#e6a23c}.n5-bad{color:#e05a5a}',
 	'.n5-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}',
 	'@media(max-width:1000px){.n5-grid{grid-template-columns:repeat(2,1fr)}.n5-cols{grid-template-columns:1fr}}',
-	'@media(max-width:600px){.n5-grid{grid-template-columns:1fr 1fr}}'
+	'@media(max-width:600px){.n5-grid{grid-template-columns:1fr 1fr}}',
+	'.n5-head{display:flex;align-items:flex-end;gap:14px;margin-bottom:8px;flex-wrap:wrap}',
+	'.n5-head h2{margin:0 0 6px}',
+	'.n5-mascot{height:118px;width:auto;flex:0 0 auto;filter:drop-shadow(0 8px 16px rgba(0,0,0,.35));animation:n5bob 3.4s ease-in-out infinite}',
+	'@keyframes n5bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}',
+	'.n5-bubble{max-width:440px;font-size:12.5px;line-height:1.55;padding:9px 14px;border-radius:14px;background:rgba(127,127,127,.12);border:1px solid rgba(127,127,127,.25);position:relative;margin-bottom:6px}',
+	'.n5-bubble:before{content:"";position:absolute;left:-7px;bottom:18px;border:7px solid transparent;border-right-color:rgba(127,127,127,.25)}',
 ].join('\n');
 
 return view.extend({
@@ -140,7 +146,13 @@ return view.extend({
 
 		var root = E('div', {}, [
 			style,
-			E('h2', {}, [_s('N5000 面板', 'N5000 Panel')]),
+			E('div', { 'class': 'n5-head' }, [
+				E('div', {}, [
+					E('h2', {}, [_s('N5000 面板', 'N5000 Panel')]),
+					E('div', { 'class': 'n5-bubble', 'id': 'n5-mascotmsg' }, [' '])
+				]),
+				E('img', { 'class': 'n5-mascot', 'src': '/luci-static/n5000/mascot.png', 'alt': '大肥鱼' })
+			]),
 			grid1, grid2,
 			E('div', { 'class': 'n5-cols' }, [catBox, siteBox]),
 			links
@@ -156,6 +168,17 @@ return view.extend({
 			var memPct = memTotal ? (memTotal - memAvail) / memTotal * 100 : 0;
 			var tfPct = d.tf_total ? (d.tf_used || 0) / d.tf_total * 100 : 0;
 			var swUsed = Math.max(0, (d.swap_total || 0) - (d.swap_free || 0));
+			/* 大肥鱼的碎碎念 */
+			var mm = document.getElementById('n5-mascotmsg');
+			if (mm) {
+				var mtext;
+				if (tv >= 80) mtext = _s('好烫…大肥鱼要烤熟了！', 'Too hot… the mascot is cooking!');
+				else if (Number(d.load[0]) > 1.5) mtext = _s('大肥鱼在拼命游，CPU 快冒烟了', 'Mascot is sprinting, CPU is hot');
+				else if (tv >= 65) mtext = _s('有点热，大肥鱼在冒汗…', 'Warm, the mascot is sweating…');
+				else if ((d.clients || 0) === 0) mtext = _s('好安静，大肥鱼在发呆…', 'So quiet, the mascot is spacing out…');
+				else mtext = _s('水温刚好，' + d.clients + ' 条小鱼在游～', 'Nice water, ' + d.clients + ' little fish online~');
+				mm.textContent = mtext;
+			}
 
 			document.getElementById('n5-uptime').textContent = n5fmtUptime(d.uptime, zh);
 			document.getElementById('n5-boot').textContent =
