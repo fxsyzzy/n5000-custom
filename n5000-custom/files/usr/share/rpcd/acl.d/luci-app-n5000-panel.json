@@ -1,0 +1,11 @@
+{
+	"luci-app-n5000-panel": {
+		"description": "N5000 status panel",
+		"read": {
+			"ubus": {
+				"*": [ "*" ]
+			},
+			"uci": [ "*" ]
+		}
+	}
+}
