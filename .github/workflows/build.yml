@@ -103,6 +103,9 @@ jobs:
                    openwrt/files/usr/sbin/appfilter \
                    openwrt/files/etc/init.d/appfilter \
                    openwrt/files/etc/uci-defaults/94-appfilter \
+                   openwrt/files/etc/uci-defaults/91-tailscale-wechat \
+                   openwrt/files/etc/init.d/n5000-wechat-http \
+                   openwrt/files/usr/sbin/n5000-tunnel-up \
                    openwrt/files/usr/sbin/theme
           find openwrt/files -type f -exec ls -l {} \;
 
@@ -147,6 +150,7 @@ jobs:
         with:
           name: build-log
           path: /tmp/build.log
+
 
 
 
