@@ -1,8 +1,0 @@
-#!/bin/sh
-# 首次启动：启用微信回调服务 + Tailscale 服务
-[ -x /etc/init.d/n5000-wechat-http ] && /etc/init.d/n5000-wechat-http enable >/dev/null 2>&1
-[ -x /etc/init.d/tailscale ] && /etc/init.d/tailscale enable >/dev/null 2>&1
-uci -q set aichat.wechat.token='n5000wx2026'
-uci -q set aichat.wechat.enabled='1'
-uci -q commit aichat
-exit 0
