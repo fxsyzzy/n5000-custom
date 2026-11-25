@@ -86,14 +86,12 @@
   @media(max-width:600px){.wrap{padding:12px}.stats{grid-template-columns:1fr 1fr}.cats{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
-<body>
+<body class="logged-in">
 <div class="wrap">
   <header>
     <h1>应用过滤 <span class="sub">/ Traffic &amp; App Filter</span></h1>
     <span class="sub"><span class="dot" id="liveDot"></span><span id="upText">--</span></span>
     <span class="spacer"></span>
-    <img src="/luci-static/n5000/mascot.png" alt="大肥鱼" style="height:78px;width:auto;animation:float 3.4s ease-in-out infinite">
-    <style>@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}</style>
 
     <button class="hbtn" id="btnBlock" title="启用/停用拦截">拦截: --</button>
     <button class="hbtn" id="btnReset">清空统计</button>
@@ -338,5 +336,6 @@
   setInterval(load,5000);
 })();
 </script>
+<script src="/luci-static/n5000/mascot.js"></script>
 </body>
 </html>
