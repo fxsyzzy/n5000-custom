@@ -1,0 +1,101 @@
+#!/bin/sh
+# 流量统计守护：按天累计 WAN 流量 + 应用分类/网站流量，写入 /etc/traffic/<月>.json
+# 数据来源：/sys/class/net/<wan>/statistics/* 与 appfilter state（累计值差分）
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+
+DATA_DIR=/etc/traffic
+RUN_DIR=/tmp/trafficd
+WANIF="${WANIF:-eth1}"
+INTERVAL=${INTERVAL:-60}
+FLUSH_EVERY=${FLUSH_EVERY:-2}
+
+mkdir -p "$DATA_DIR" "$RUN_DIR"
+
+log() { echo "$(date '+%F %T') trafficd: $*" >> /tmp/trafficd.log; [ -f /tmp/trafficd.log ] && tail -n 300 /tmp/trafficd.log > /tmp/trafficd.log.tmp && mv /tmp/trafficd.log.tmp /tmp/trafficd.log; }
+
+wan_rx() { cat "/sys/class/net/$WANIF/statistics/rx_bytes" 2>/dev/null || echo 0; }
+wan_tx() { cat "/sys/class/net/$WANIF/statistics/tx_bytes" 2>/dev/null || echo 0; }
+
+# 从 appfilter 状态聚合当前累计的 sites/cats
+fetch_cur() {
+	ST=$(curl -s --max-time 8 "http://127.0.0.1/cgi-bin/appfilter?action=state" 2>/dev/null)
+	[ -z "$ST" ] && return 1
+	printf '%s' "$ST" | jq -c '{
+		sites: ([.devices[]?.sites[]?] | group_by(.domain) | map({domain: .[0].domain, bytes: (map(.bytes)|add)})) ,
+		cats:  ([.devices[]?.cats[]?]  | group_by(.cat)    | map({cat:    .[0].cat,    bytes: (map(.bytes)|add)}))
+	}' 2>/dev/null
+}
+
+month_file() { echo "$DATA_DIR/$(date +%Y-%m).json"; }
+
+ensure_month() {
+	mf=$(month_file)
+	if [ ! -f "$mf" ]; then
+		printf '{"month":"%s","rx":0,"tx":0,"days":{}}' "$(date +%Y-%m)" > "$mf.tmp"
+		mv -f "$mf.tmp" "$mf"
+	fi
+}
+
+flush_month() {
+	mf=$(month_file)
+	[ -f "$RUN_DIR/month.json" ] || return 0
+	cp -f "$RUN_DIR/month.json" "$mf.tmp" 2>/dev/null || return 0
+	mv -f "$mf.tmp" "$mf"
+	# 只保留最近 4 个月
+	ls -1 "$DATA_DIR"/*.json 2>/dev/null | sort | head -n -4 | while read -r old; do rm -f "$old"; done
+}
+
+# 初始化/加载当月运行态
+ensure_month
+[ -f "$RUN_DIR/month.json" ] || cp -f "$(month_file)" "$RUN_DIR/month.json" 2>/dev/null
+
+PREV=""
+rxp=0; txp=0; have_prev=0
+cycle=0
+
+while true; do
+	now=$(date +%s)
+	day=$(date +%F)
+	month=$(date +%Y-%m)
+	# 跨月：切换月度文件
+	if [ "$month" != "$(jq -r '.month // ""' "$RUN_DIR/month.json" 2>/dev/null)" ]; then
+		flush_month
+		ensure_month
+		cp -f "$(month_file)" "$RUN_DIR/month.json"
+		PREV=""; have_prev=0
+	fi
+
+	rx=$(wan_rx); tx=$(wan_tx)
+	cur=$(fetch_cur)
+
+	if [ -n "$cur" ] && [ "$have_prev" = 1 ]; then
+		drx=$((rx - rxp)); [ "$drx" -lt 0 ] && drx=0
+		dtx=$((tx - txp)); [ "$dtx" -lt 0 ] && dtx=0
+
+		tmp=$(mktemp)
+		jq -n -c \
+			--argjson cur "$cur" --argjson prev "$PREV" \
+			--argjson drx "$drx" --argjson dtx "$dtx" --arg day "$day" \
+			--slurpfile m "$RUN_DIR/month.json" '
+			($m[0]) as $doc |
+			($prev.sites | map({(.domain): .bytes}) | add // {}) as $pm |
+			($prev.cats  | map({(.cat):    .bytes}) | add // {}) as $pc |
+			([ $cur.sites[] as $s | select($s.bytes > ($pm[$s.domain] // $s.bytes)) | {key: $s.domain, value: ($s.bytes - ($pm[$s.domain] // $s.bytes))} ] | from_entries) as $ds |
+			([ $cur.cats[]  as $c | select($c.bytes > ($pc[$c.cat]    // $c.bytes)) | {key: $c.cat,    value: ($c.bytes - ($pc[$c.cat]    // $c.bytes))} ] | from_entries) as $dc |
+			$doc
+			| .month = ($day[0:7])
+			| .rx += $drx | .tx += $dtx
+			| .days[$day] //= {"rx":0,"tx":0,"cats":{},"sites":{}}
+			| .days[$day].rx += $drx | .days[$day].tx += $dtx
+			| .days[$day].cats = ((.days[$day].cats // {}) | reduce ($dc | to_entries[]) as $e (.; .[$e.key] = ((.[$e.key] // 0) + $e.value)))
+			| .days[$day].sites = ((.days[$day].sites // {}) | reduce ($ds | to_entries[]) as $e (.; .[$e.key] = ((.[$e.key] // 0) + $e.value)))
+			' > "$tmp" 2>/dev/null && mv -f "$tmp" "$RUN_DIR/month.json" || rm -f "$tmp"
+	fi
+
+	PREV="$cur"
+	rxp=$rx; txp=$tx; have_prev=1
+	cycle=$((cycle + 1))
+	[ $((cycle % FLUSH_EVERY)) = 0 ] && flush_month
+	sleep "$INTERVAL"
+done
