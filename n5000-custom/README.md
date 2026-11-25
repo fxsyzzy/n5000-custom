@@ -441,3 +441,12 @@ N5000              order 0   分组（展开）
   - 流量仪表盘 `/cgi-bin/luci/admin/n5000/dashboard`
   - 密码本 `/cgi-bin/luci/admin/n5000/vault`（隐藏）
 - 注意：LuCI 菜单 JSON 用**路径 key**（`admin/n5000/panel`）表示层级，不能嵌套 `children` 字段
+
+## 菜单缓存自动失效（v2.6）
+
+- 问题：LuCI 前端会把菜单 JSON 缓存在浏览器 session 里，改完菜单后用户端一直显示旧结构
+- 方案：
+  - 新增 `/cgi-bin/menuver`：返回 `/usr/share/luci/menu.d/*.json` 的 md5 版本号
+  - 新增 `/luci-static/n5000/menuver.js`：对比 localStorage 里记录的版本，变化时调用 `ui.menu.flushCache()` 并自动刷新一次
+  - `93-mascot-inject` 同时注入 menuver.js 和 mascot.js（幂等）
+- 手动强制刷新菜单：任意 LuCI 页面后加 `?n5flushmenu=1`
