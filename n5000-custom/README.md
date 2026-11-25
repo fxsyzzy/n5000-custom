@@ -292,3 +292,10 @@ N5000 面板（登录后默认首页）
   - `#83D9DC` 生物光青（高亮/次级）
   - `#C8F4F9` 冰蓝高光（文字亮部）
 - 应用于：Argon 主题主色/暗色主色、LuCI 玻璃皮肤背景、N5000 面板、收藏夹、AI 助手、应用过滤、流量仪表盘、独立页面
+
+## 磨砂玻璃效果
+
+- Argon 主题切到深色玻璃模式：`mode=dark`、`blur_dark=14`、`transparency_dark=0.35`
+- `/www/luci-static/glass.css` 增加磨砂规则：主要面板/卡片/弹窗/登录框 `backdrop-filter: blur(14px) saturate(160%)`，侧边栏/顶栏 `blur(16px)`，输入框 `blur(8px)`
+- 移动端自动降级为 `blur(8px)`，避免低性能设备卡顿
+- 独立页面（dashboard.html / appfilter.html）卡片同样加了磨砂
