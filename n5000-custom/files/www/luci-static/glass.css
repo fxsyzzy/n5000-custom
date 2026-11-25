@@ -45,3 +45,6 @@ input,select,textarea,.cbi-input-text,.cbi-input-password,.cbi-input-select,.cbi
     backdrop-filter:blur(8px) saturate(140%) !important;-webkit-backdrop-filter:blur(8px) saturate(140%) !important;
   }
 }
+
+/* ---------- 锁定主题：隐藏 Argon 明暗切换按钮（整套 UI 固定纳美蓝深色玻璃） ---------- */
+#argon-appearance,#argon-appearance-trigger,#argon-appearance-options{display:none !important}
