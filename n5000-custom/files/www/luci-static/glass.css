@@ -41,18 +41,14 @@ small,.help-block,.cbi-value-description,.text-muted,.cbi-section-descr,
   border:1px solid var(--lg-stroke) !important;
   border-radius:18px !important;
   box-shadow:var(--lg-shadow) !important;
-  backdrop-filter:blur(12px) saturate(150%) !important;
-  -webkit-backdrop-filter:blur(12px) saturate(150%) !important;
   color:var(--lg-text) !important;
 }
 tr,.list-group-item,.cbi-value,fieldset{background:transparent !important;border-color:var(--lg-stroke-soft) !important}
-.cbi-value{border-radius:12px !important;box-shadow:none !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;margin-bottom:4px}
 /* ---------- 头部/导航 ---------- */
 .header,.nav{
   background:linear-gradient(135deg,rgba(255,255,255,.11),rgba(255,255,255,.04)) !important;
   border:1px solid var(--lg-stroke) !important;border-radius:999px !important;
   margin:8px 10px !important;padding:6px 12px !important;
-  backdrop-filter:blur(12px) saturate(150%) !important;-webkit-backdrop-filter:blur(12px) !important;
 }
 .nav a,.header a{border-radius:999px !important;color:var(--lg-text) !important}
 .nav a:hover,.nav a.active{background:rgba(255,255,255,.13) !important;color:var(--lg-mint) !important}
@@ -63,7 +59,6 @@ input,select,textarea,.cbi-input-text,.cbi-input-password,
   border:1px solid var(--lg-stroke) !important;border-radius:12px !important;
   color:var(--lg-text) !important;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.16) !important;
-  backdrop-filter:none !important;-webkit-backdrop-filter:none !important;
 }
 input:focus,select:focus,textarea:focus,.cbi-input-text:focus,.cbi-input-password:focus{
   outline:none !important;border-color:rgba(94,242,192,.55) !important;
@@ -76,7 +71,6 @@ input[type=checkbox],input[type=radio]{accent-color:#5ef2c0 !important}
   border-radius:999px !important;border:1px solid var(--lg-stroke) !important;
   background:rgba(255,255,255,.10) !important;color:var(--lg-text) !important;
   box-shadow:0 6px 16px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.22) !important;
-  backdrop-filter:none !important;transition:transform .15s ease, filter .15s ease !important;
 }
 .btn:hover,.cbi-button:hover{transform:translateY(-1px) !important;filter:brightness(1.07) !important}
 .btn-primary,.cbi-button-save,.cbi-button-apply,.cbi-button-action,.cbi-button-positive{
@@ -92,7 +86,6 @@ input[type=checkbox],input[type=radio]{accent-color:#5ef2c0 !important}
 .table>tbody>tr>td{border-top:1px solid var(--lg-stroke-soft) !important;color:var(--lg-text) !important}
 .table-striped>tbody>tr:nth-of-type(odd){background:rgba(255,255,255,.03) !important}
 /* ---------- 标签页 ---------- */
-.cbi-tabmenu{display:flex;gap:6px;padding:5px !important;background:transparent !important;border:none !important;box-shadow:none !important;backdrop-filter:none !important}
 .cbi-tabmenu>li>a{border-radius:999px !important;color:var(--lg-dim) !important;background:transparent !important}
 .cbi-tabmenu>li.cbi-tab>a,.cbi-tabmenu>li>a:hover{background:rgba(255,255,255,.13) !important;color:var(--lg-mint) !important}
 /* ---------- 登录页 ---------- */
@@ -100,7 +93,6 @@ input[type=checkbox],input[type=radio]{accent-color:#5ef2c0 !important}
   background:linear-gradient(150deg,rgba(255,255,255,.13),rgba(255,255,255,.045)) !important;
   border:1px solid var(--lg-stroke) !important;border-radius:24px !important;
   box-shadow:0 24px 60px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.28) !important;
-  backdrop-filter:blur(14px) saturate(150%) !important;
 }
 .login-page .cbi-input-user,.login-page .cbi-input-password{border-radius:12px !important}
 .login-page .btn,.login-page .cbi-button{border-radius:999px !important;min-height:40px}
@@ -108,7 +100,6 @@ input[type=checkbox],input[type=radio]{accent-color:#5ef2c0 !important}
 .modal-backdrop{background:rgba(4,8,14,.5) !important}
 .modal-content{border-radius:20px !important;border:1px solid var(--lg-stroke) !important;
   background:linear-gradient(150deg,rgba(255,255,255,.13),rgba(255,255,255,.045)) !important;
-  backdrop-filter:blur(14px) saturate(150%) !important;
   box-shadow:0 24px 60px rgba(0,0,0,.45) !important}
 .modal-header,.modal-footer{border-color:var(--lg-stroke-soft) !important}
 /* ---------- 杂项 ---------- */
@@ -132,3 +123,10 @@ hr{border-color:var(--lg-stroke-soft) !important}
   --border-color:rgba(255,255,255,.15) !important;
   --text-color:#eef4ff !important;
 }
+
+/* ---------- 性能模式：全局禁用毛玻璃（只保留半透明渐变 + 描边） ---------- */
+*,*::before,*::after{
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+}
+
