@@ -574,3 +574,12 @@ N5000              order 0   分组（展开）
   - SSID / Docker 容器数 / 内核错误改为 60 秒缓存
 - Argon 侧边栏展开动画改为瞬间：`glass.css` 里禁用 `#mainmenu` 的 transition/animation（不再改主题 JS）
 - 之前误操作 `sed -i` 截断过 `menu-argon.js`，已从 `/rom` 恢复（教训：叠加层大文件不要 sed -i，改为写 /tmp 再 cp）
+
+## 菜单缓存自动失效恢复（v3.8）
+
+- 现象：服务端已删除 AI 助手，但浏览器仍显示旧菜单项
+- 原因：LuCI 前端把菜单树缓存在浏览器 session 里
+- 处理：重新注入安全版 `menuver.js`
+  - 菜单文件版本变化时，自动 `ui.menu.flushCache()` 并刷新一次
+  - 仅接受合法 32 位 md5 响应；sessionStorage 守卫防循环刷新
+- 手动兜底：清空 192.168.88.1 的站点数据，或退出登录重新登录
