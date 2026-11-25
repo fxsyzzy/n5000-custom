@@ -510,12 +510,10 @@ html[data-argon-mode="light"] #n5000-mascot .n5m-rice{color:rgba(17,17,17,.6) !i
 
 /* ================= 性能优化：只保留必要模糊（侧边栏/顶栏/弹窗） ================= */
 #mainmenu.main-left,.main-left,header,.modal-backdrop{
-  backdrop-filter:blur(12px) saturate(140%) !important;
-  -webkit-backdrop-filter:blur(12px) saturate(140%) !important;
 }
 @media(max-width:700px){
   #mainmenu.main-left,.main-left,header,.modal-backdrop{
-    backdrop-filter:blur(8px) !important;
-    -webkit-backdrop-filter:blur(8px) !important;
   }
 }
+
+/* ================= 性能模式（无磨砂）：所有 backdrop-filter 已移除 ================= */
