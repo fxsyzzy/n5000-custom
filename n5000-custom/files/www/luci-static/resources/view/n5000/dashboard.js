@@ -163,8 +163,8 @@ return view.extend({
 				ctx.lineWidth = 2;
 				ctx.stroke();
 			};
-			line('down', dbIsLight() ? '#1A1A1A' : '#48A9C5');
-			line('up', dbIsLight() ? '#888888' : '#83D9DC');
+			line('down', dbIsLight() ? '#1A1A1A' : '#F0F0F0');
+			line('up', dbIsLight() ? '#888888' : '#9E9E9E');
 		};
 
 		var paint = function() {
@@ -331,10 +331,10 @@ return view.extend({
 			list.forEach(function(x, i) {
 				var bh = Math.max(1, (x.total || 0) / max * (h - 20));
 				var xx = i * (bw + gap);
-				ctx.fillStyle = dbIsLight() ? ((i === n - 1) ? '#111111' : 'rgba(17,17,17,.35)') : ((i === n - 1) ? '#48A9C5' : 'rgba(72,169,197,.42)');
+				ctx.fillStyle = dbIsLight() ? ((i === n - 1) ? '#111111' : 'rgba(17,17,17,.35)') : ((i === n - 1) ? '#F5F5F5' : 'rgba(255,255,255,.35)');
 				ctx.fillRect(xx, h - bh - 2, bw, bh);
 			});
-			ctx.fillStyle = dbIsLight() ? 'rgba(17,17,17,.55)' : 'rgba(200,244,249,.55)';
+			ctx.fillStyle = dbIsLight() ? 'rgba(17,17,17,.55)' : 'rgba(255,255,255,.55)';
 			ctx.fillText(list[0].date, 0, h - 4);
 			var lastTxt = list[list.length - 1].date;
 			var tw = ctx.measureText(lastTxt).width;
