@@ -1,0 +1,24 @@
+{
+	"admin/n5000": {
+		"title": "N5000 面板",
+		"order": 0,
+		"action": {
+			"type": "view",
+			"path": "n5000/panel"
+		},
+		"depends": {
+			"acl": [ "luci-app-n5000-panel" ]
+		}
+	},
+	"admin/status/n5000-panel": {
+		"title": "N5000 面板",
+		"order": 0,
+		"action": {
+			"type": "view",
+			"path": "n5000/panel"
+		},
+		"depends": {
+			"acl": [ "luci-app-n5000-panel" ]
+		}
+	}
+}
