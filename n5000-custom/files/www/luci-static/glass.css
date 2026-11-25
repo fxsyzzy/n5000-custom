@@ -344,3 +344,181 @@ html[data-argon-mode="dark"] a{color:#8FE3EC !important}
 html[data-argon-mode="dark"] a:hover{color:#C8F4F9 !important}
 html[data-argon-mode="light"] a{color:#1E5B8C !important}
 html[data-argon-mode="light"] a:hover{color:#0D2C54 !important}
+
+/* ================= 黑白晨光（monochrome light theme，最终覆盖） ================= */
+html[data-argon-mode="light"]{
+  --primary:#111111 !important;
+  --primary-bright:#111111 !important;
+  --oc-accent:#111111 !important;
+  --primary-a5:rgba(17,17,17,.05) !important;
+  --primary-a10:rgba(17,17,17,.08) !important;
+  --primary-a20:rgba(17,17,17,.12) !important;
+  --primary-a30:rgba(17,17,17,.18) !important;
+  --primary-a40:rgba(17,17,17,.24) !important;
+  --primary-a50:rgba(17,17,17,.30) !important;
+  --primary-a60:rgba(17,17,17,.36) !important;
+  --accent-shadow-color:rgba(0,0,0,.08) !important;
+}
+html[data-argon-mode="light"] body,
+html[data-argon-mode="light"] .login-page{
+  background:
+    radial-gradient(1000px 600px at 12% -10%, rgba(0,0,0,.05) 0%, transparent 60%),
+    radial-gradient(800px 520px at 90% -6%, rgba(0,0,0,.035) 0%, transparent 55%),
+    linear-gradient(180deg,#FAFAFA 0%,#F1F2F4 55%,#E9EAEC 100%) !important;
+  color:#111111 !important;
+  background-attachment:scroll !important;
+}
+/* 侧边栏 / 顶栏 */
+html[data-argon-mode="light"] #mainmenu.main-left,
+html[data-argon-mode="light"] .main-left{
+  background:linear-gradient(180deg,rgba(255,255,255,.82),rgba(240,240,242,.72)) !important;
+  border-right:1px solid rgba(0,0,0,.10) !important;
+  box-shadow:8px 0 24px rgba(0,0,0,.06) !important;
+}
+html[data-argon-mode="light"] .main-left a,
+html[data-argon-mode="light"] .main-left .nav>li>a{color:#222222 !important}
+html[data-argon-mode="light"] .main-left a:hover{background:rgba(0,0,0,.06) !important;color:#000 !important}
+html[data-argon-mode="light"] .main-left li.active>a,
+html[data-argon-mode="light"] .main-left a.active{background:rgba(0,0,0,.10) !important;color:#000 !important}
+html[data-argon-mode="light"] header{
+  background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(244,244,246,.82)) !important;
+  border-bottom:1px solid rgba(0,0,0,.10) !important;
+}
+html[data-argon-mode="light"] header a,
+html[data-argon-mode="light"] header .brand{color:#111111 !important}
+/* 面板 / 卡片 */
+html[data-argon-mode="light"] .cbi-section,
+html[data-argon-mode="light"] .cbi-section-node,
+html[data-argon-mode="light"] .panel,
+html[data-argon-mode="light"] .well,
+html[data-argon-mode="light"] .card,
+html[data-argon-mode="light"] .modal-content,
+html[data-argon-mode="light"] .login-container,
+html[data-argon-mode="light"] .login-form,
+html[data-argon-mode="light"] .dropdown-menu,
+html[data-argon-mode="light"] .table-container,
+html[data-argon-mode="light"] .cbi-page-actions,
+html[data-argon-mode="light"] .ifacebox,
+html[data-argon-mode="light"] .cbi-dashboard,
+html[data-argon-mode="light"] .cbi-map{
+  background:linear-gradient(180deg,rgba(255,255,255,.88),rgba(247,247,248,.78)) !important;
+  border:1px solid rgba(0,0,0,.10) !important;
+  color:#111111 !important;
+  backdrop-filter:blur(12px) saturate(110%) !important;
+  -webkit-backdrop-filter:blur(12px) saturate(110%) !important;
+}
+/* 文本 */
+html[data-argon-mode="light"] h1,html[data-argon-mode="light"] h2,html[data-argon-mode="light"] h3,
+html[data-argon-mode="light"] h4,html[data-argon-mode="light"] label,html[data-argon-mode="light"] td,
+html[data-argon-mode="light"] th,html[data-argon-mode="light"] .cbi-value-title{color:#111111 !important}
+html[data-argon-mode="light"] small,html[data-argon-mode="light"] .help-block,
+html[data-argon-mode="light"] .cbi-value-description,html[data-argon-mode="light"] .cbi-section-descr,
+html[data-argon-mode="light"] .text-muted,html[data-argon-mode="light"] .table .th,
+html[data-argon-mode="light"] .table>thead>tr>th{color:rgba(17,17,17,.62) !important}
+html[data-argon-mode="light"] a{color:#111111 !important}
+html[data-argon-mode="light"] a:hover{color:#000 !important;text-decoration:underline}
+/* 输入框 */
+html[data-argon-mode="light"] input,html[data-argon-mode="light"] select,html[data-argon-mode="light"] textarea,
+html[data-argon-mode="light"] .cbi-input-text,html[data-argon-mode="light"] .cbi-input-password,
+html[data-argon-mode="light"] .cbi-input-select,html[data-argon-mode="light"] .cbi-input-textarea{
+  background:rgba(255,255,255,.95) !important;border-color:rgba(0,0,0,.16) !important;color:#111111 !important;
+}
+html[data-argon-mode="light"] input::placeholder,html[data-argon-mode="light"] textarea::placeholder{color:rgba(17,17,17,.42) !important}
+/* 按钮 */
+html[data-argon-mode="light"] .cbi-button,
+html[data-argon-mode="light"] .btn,
+html[data-argon-mode="light"] button{
+  background:rgba(255,255,255,.95) !important;border:1px solid rgba(0,0,0,.16) !important;color:#111111 !important;
+}
+html[data-argon-mode="light"] .cbi-button-save,
+html[data-argon-mode="light"] .cbi-button-positive,
+html[data-argon-mode="light"] .btn.primary,
+html[data-argon-mode="light"] .cbi-button-apply{
+  background:#111111 !important;border-color:#111111 !important;color:#ffffff !important;
+}
+html[data-argon-mode="light"] .cbi-button:hover,
+html[data-argon-mode="light"] .btn:hover,html[data-argon-mode="light"] button:hover{
+  background:rgba(0,0,0,.07) !important;border-color:rgba(0,0,0,.28) !important;color:#000 !important;
+}
+html[data-argon-mode="light"] .cbi-button-save:hover,
+html[data-argon-mode="light"] .cbi-button-positive:hover{background:#000 !important;color:#fff !important}
+/* 表格 */
+html[data-argon-mode="light"] .table>tbody>tr>td{color:#1c1c1c !important;border-top-color:rgba(0,0,0,.08) !important}
+html[data-argon-mode="light"] .table>thead>tr>th{border-bottom-color:rgba(0,0,0,.12) !important}
+html[data-argon-mode="light"] tr:hover td{background:rgba(0,0,0,.035) !important}
+/* 自定义页面（面板/仪表盘/应用过滤/收藏夹/AI/密码本） */
+html[data-argon-mode="light"] .np-top,
+html[data-argon-mode="light"] .np-panel,
+html[data-argon-mode="light"] .np-card,
+html[data-argon-mode="light"] .db-card,
+html[data-argon-mode="light"] .db-chart,
+html[data-argon-mode="light"] .af-stat,
+html[data-argon-mode="light"] .fav-card,
+html[data-argon-mode="light"] .fav-panel,
+html[data-argon-mode="light"] .ai-chat,
+html[data-argon-mode="light"] .ai-bubble,
+html[data-argon-mode="light"] .ai-settings,
+html[data-argon-mode="light"] .n5v-wrap{
+  background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(248,248,249,.82)) !important;
+  border-color:rgba(0,0,0,.10) !important;
+  color:#111111 !important;
+  backdrop-filter:blur(10px) saturate(105%) !important;
+  -webkit-backdrop-filter:blur(10px) saturate(105%) !important;
+}
+html[data-argon-mode="light"] .np-name,
+html[data-argon-mode="light"] .np-card .t,
+html[data-argon-mode="light"] .np-card .t b,
+html[data-argon-mode="light"] .np-stat .v,
+html[data-argon-mode="light"] .db-big,
+html[data-argon-mode="light"] .af-big,
+html[data-argon-mode="light"] .fav-name,
+html[data-argon-mode="light"] .ai-bubble,
+html[data-argon-mode="light"] .ai-badge{color:#111111 !important}
+html[data-argon-mode="light"] .np-sub,
+html[data-argon-mode="light"] .np-card .s,
+html[data-argon-mode="light"] .np-stat .l,
+html[data-argon-mode="light"] .np-app .v,
+html[data-argon-mode="light"] .db-label,
+html[data-argon-mode="light"] .db-note,
+html[data-argon-mode="light"] .af-hint,
+html[data-argon-mode="light"] .af-label,
+html[data-argon-mode="light"] .fav-url,
+html[data-argon-mode="light"] .fav-note,
+html[data-argon-mode="light"] .fav-count{color:rgba(17,17,17,.58) !important}
+html[data-argon-mode="light"] .np-chip{
+  background:linear-gradient(180deg,rgba(255,255,255,.95),rgba(244,244,245,.9)) !important;
+  border-color:rgba(0,0,0,.14) !important;color:rgba(17,17,17,.58) !important;
+  box-shadow:0 2px 8px rgba(0,0,0,.06) !important;
+}
+html[data-argon-mode="light"] .np-chip b{color:#111111 !important}
+html[data-argon-mode="light"] .np-chip .dot{box-shadow:none !important}
+html[data-argon-mode="light"] .np-bar{background:rgba(0,0,0,.10) !important}
+html[data-argon-mode="light"] .np-tile{background:rgba(0,0,0,.08) !important;color:#111111 !important}
+html[data-argon-mode="light"] .np-act{color:rgba(17,17,17,.72) !important}
+html[data-argon-mode="light"] .np-act:hover{background:rgba(0,0,0,.06) !important;color:#000 !important}
+html[data-argon-mode="light"] .fav-btn,
+html[data-argon-mode="light"] .ai-badge{background:rgba(255,255,255,.95) !important;border-color:rgba(0,0,0,.16) !important;color:#111111 !important}
+html[data-argon-mode="light"] .fav-btn.prim,
+html[data-argon-mode="light"] .ai-send,
+html[data-argon-mode="light"] .db-segbtn.on{background:#111111 !important;border-color:#111111 !important;color:#fff !important}
+html[data-argon-mode="light"] .fav-search,
+html[data-argon-mode="light"] .ai-input,
+html[data-argon-mode="light"] .af-panel input,
+html[data-argon-mode="light"] .af-panel select,
+html[data-argon-mode="light"] .fav-panel input,
+html[data-argon-mode="light"] .fav-panel select{background:rgba(255,255,255,.95) !important;color:#111111 !important;border-color:rgba(0,0,0,.16) !important}
+html[data-argon-mode="light"] .db-bar{background:rgba(0,0,0,.10) !important}
+html[data-argon-mode="light"] .db-bar>i{background:#111111 !important}
+html[data-argon-mode="light"] .db-seg{background:rgba(0,0,0,.06) !important}
+html[data-argon-mode="light"] .db-segbtn{color:rgba(17,17,17,.7) !important;background:transparent !important;border:0 !important}
+html[data-argon-mode="light"] .db-ok{color:#2f6f4f !important}
+html[data-argon-mode="light"] .db-warn{color:#8a6a00 !important}
+html[data-argon-mode="light"] .db-bad{color:#8b1a1a !important}
+/* 滚动条 */
+html[data-argon-mode="light"] ::-webkit-scrollbar-thumb{background:rgba(0,0,0,.22) !important}
+/* 晨光模式下的大肥鱼气泡 */
+html[data-argon-mode="light"] #n5000-mascot .n5m-bubble{
+  background:rgba(255,255,255,.96) !important;color:#111111 !important;
+  border:1px solid rgba(0,0,0,.12) !important;box-shadow:0 6px 18px rgba(0,0,0,.08) !important;
+}
+html[data-argon-mode="light"] #n5000-mascot .n5m-rice{color:rgba(17,17,17,.6) !important}
