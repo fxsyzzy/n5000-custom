@@ -21,9 +21,20 @@
 			"acl": [ "luci-app-n5000-panel" ]
 		}
 	},
+	"admin/n5000/ai": {
+		"title": "AI 助手",
+		"order": 3,
+		"action": {
+			"type": "view",
+			"path": "n5000/ai"
+		},
+		"depends": {
+			"acl": [ "luci-app-n5000-panel" ]
+		}
+	},
 	"admin/n5000/appfilter": {
 		"title": "应用过滤",
-		"order": 3,
+		"order": 4,
 		"action": {
 			"type": "view",
 			"path": "n5000/appfilter"
@@ -34,7 +45,7 @@
 	},
 	"admin/n5000/dashboard": {
 		"title": "流量仪表盘",
-		"order": 4,
+		"order": 5,
 		"action": {
 			"type": "view",
 			"path": "n5000/dashboard"
