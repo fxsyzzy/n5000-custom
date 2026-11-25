@@ -2,9 +2,9 @@
 # Argon 主题统一配置：深色玻璃模式 + 薄荷绿强调色（与仪表盘一致）
 [ -f /etc/config/argon ] || exit 0
 uci -q set argon.@global[0].mode='dark'
-uci -q set argon.@global[0].primary='#002FA7'
+uci -q set argon.@global[0].primary='#1E5B8C'
 uci -q set argon.@global[0].dark_primary_mode='custom'
-uci -q set argon.@global[0].dark_primary='#4C7DFF'
+uci -q set argon.@global[0].dark_primary='#48A9C5'
 uci -q set argon.@global[0].dark_glass_mode='inherit'
 uci -q set argon.@global[0].blur_dark='12'
 uci -q set argon.@global[0].transparency_dark='0.35'
