@@ -29,9 +29,10 @@
 		var BASE = '/luci-static/n5000/';
 
 		var css = ''
-			+ '#n5000-mascot{position:fixed;left:14px;bottom:88px;z-index:900;display:flex;align-items:flex-end;gap:12px;max-width:min(640px,90vw);user-select:none}'
+			+ '#n5000-mascot{position:fixed;left:14px;bottom:88px;z-index:900;display:flex;align-items:flex-end;gap:12px;max-width:min(640px,90vw);user-select:none;touch-action:none}'
 			+ '#n5000-mascot .n5m-body{position:relative;flex:0 0 auto}'
-			+ '#n5000-mascot .n5m-img{height:168px;width:auto;display:block;cursor:pointer;filter:drop-shadow(0 10px 22px rgba(0,0,0,.45))}'
+			+ '#n5000-mascot .n5m-img{height:168px;width:auto;display:block;cursor:grab;filter:drop-shadow(0 10px 22px rgba(0,0,0,.45))}'
+			+ '#n5000-mascot .n5m-img.dragging{cursor:grabbing}'
 			+ '#n5000-mascot .n5m-head{position:absolute;left:50%;bottom:132px;transform:translateX(-50%);width:0;height:0;pointer-events:none}'
 			+ '#n5000-mascot .n5m-bowl{position:absolute;left:-22px;bottom:0;font-size:26px;line-height:1;'
 			+ 'filter:drop-shadow(0 3px 4px rgba(0,0,0,.35));animation:n5mDrop .38s cubic-bezier(.2,1.5,.5,1) both}'
@@ -128,7 +129,7 @@
 			return lines[n] || pick(['白饭 GET！放头上刚刚好。', '再来一碗，快点。', '哼，白饭本鱼就不客气了。']);
 		}
 
-		img.addEventListener('click', function () {
+		function feedRice() {
 			var n = getRice() + 1;
 			setRice(n);
 			stackBowl();
@@ -136,8 +137,65 @@
 			riceHold = Date.now() + 3200;
 			if (n === 10 && window.ui && ui.addNotification)
 				ui.addNotification(null, document.createTextNode('🍚 大肥鱼：十碗白饭达成！'), 'info');
+		}
+		wrap.title = '大肥鱼：点我喂白饭，按住可以拖到任意位置';
+
+		/* ---------- 鼠标/触摸拖拽 ---------- */
+		var POS_KEY = 'n5000-mascot-pos';
+		function applyPos(p) {
+			if (!p) return;
+			wrap.style.left = p.left + 'px';
+			wrap.style.top = p.top + 'px';
+			wrap.style.bottom = 'auto';
+		}
+		function clampPos(l, t) {
+			var r = wrap.getBoundingClientRect();
+			var maxL = Math.max(4, window.innerWidth - r.width - 4);
+			var maxT = Math.max(4, window.innerHeight - r.height - 4);
+			return { left: Math.max(4, Math.min(l, maxL)), top: Math.max(4, Math.min(t, maxT)) };
+		}
+		try {
+			var savedPos = JSON.parse(localStorage.getItem(POS_KEY) || 'null');
+			if (savedPos && typeof savedPos.left === 'number') applyPos(clampPos(savedPos.left, savedPos.top));
+		} catch (e) {}
+		window.addEventListener('resize', function () {
+			if (wrap.style.top) {
+				var r = wrap.getBoundingClientRect();
+				applyPos(clampPos(r.left, r.top));
+			}
 		});
-		wrap.title = '大肥鱼：点我喂白饭（会放在头上）';
+		var drag = null;
+		wrap.addEventListener('pointerdown', function (e) {
+			if (e.button !== undefined && e.button !== 0) return;
+			var r = wrap.getBoundingClientRect();
+			drag = { id: e.pointerId, sx: e.clientX, sy: e.clientY, ox: r.left, oy: r.top, moved: 0 };
+			try { wrap.setPointerCapture(e.pointerId); } catch (err) {}
+			img.classList.add('dragging');
+			e.preventDefault();
+		});
+		wrap.addEventListener('pointermove', function (e) {
+			if (!drag || e.pointerId !== drag.id) return;
+			var dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
+			drag.moved = Math.max(drag.moved, Math.abs(dx) + Math.abs(dy));
+			var p = clampPos(drag.ox + dx, drag.oy + dy);
+			wrap.style.left = p.left + 'px';
+			wrap.style.top = p.top + 'px';
+			wrap.style.bottom = 'auto';
+		});
+		function endDrag(e) {
+			if (!drag || e.pointerId !== drag.id) return;
+			var wasDrag = drag.moved > 6;
+			drag = null;
+			img.classList.remove('dragging');
+			if (wasDrag) {
+				var r = wrap.getBoundingClientRect();
+				try { localStorage.setItem(POS_KEY, JSON.stringify({ left: Math.round(r.left), top: Math.round(r.top) })); } catch (err) {}
+			} else {
+				feedRice();
+			}
+		}
+		wrap.addEventListener('pointerup', endDrag);
+		wrap.addEventListener('pointercancel', function () { drag = null; img.classList.remove('dragging'); });
 
 		/* ---------- 串门的大肥鱼 ---------- */
 		var visitors = [];
