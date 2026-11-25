@@ -1,35 +1,28 @@
 'use strict';
-/* 菜单缓存自动失效：菜单文件变化时清掉浏览器的菜单缓存并刷新一次 */
+/* 菜单缓存自动失效（安全版）：
+   - 只在拿到合法版本号、且与本机记录不同时，清菜单缓存并刷新一次
+   - 用 sessionStorage 守卫，防止循环刷新 */
 (function() {
 	var KEY = 'n5-menuver';
-
-	function forceReload() {
-		try {
-			if (window.L && L.require) {
-				L.require('ui').then(function(ui) {
-					try { ui.menu.flushCache(); } catch (e) {}
-					location.reload();
-				}).catch(function() { location.reload(); });
-				return;
-			}
-		} catch (e) {}
-		location.reload();
-	}
-
+	var GUARD = 'n5-menuver-guard';
 	try {
-		/* 手动强制刷新入口：?n5flushmenu=1 */
-		if (location.search.indexOf('n5flushmenu=1') >= 0)
-			localStorage.removeItem(KEY);
-
 		fetch('/cgi-bin/menuver?t=' + Date.now(), { cache: 'no-store' })
-			.then(function(r) { return r.text(); })
+			.then(function(r) { return r.ok ? r.text() : Promise.reject(); })
 			.then(function(v) {
 				v = (v || '').trim();
-				if (!v) return;
+				if (!/^[0-9a-f]{32}$/.test(v)) return;
 				var old = localStorage.getItem(KEY);
-				if (old !== v) {
-					localStorage.setItem(KEY, v);
-					forceReload();
+				if (old === v) return;
+				localStorage.setItem(KEY, v);
+				if (sessionStorage.getItem(GUARD) === v) return;
+				sessionStorage.setItem(GUARD, v);
+				if (window.L && L.require) {
+					L.require('ui').then(function(ui) {
+						try { ui.menu.flushCache(); } catch (e) {}
+						location.reload();
+					}).catch(function() { location.reload(); });
+				} else {
+					location.reload();
 				}
 			})
 			.catch(function() {});
