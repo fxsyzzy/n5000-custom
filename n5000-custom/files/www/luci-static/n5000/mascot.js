@@ -231,9 +231,9 @@
 				}).catch(function () {});
 		}
 		refreshStatus();
-		setInterval(refreshStatus, 15000);
+		setInterval(refreshStatus, 30000);
 		setInterval(function () {
 			if (Date.now() > riceHold) bubble.textContent = statusLine();
-		}, 20000);
+		}, 30000);
 	});
 })();
