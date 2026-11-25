@@ -22,6 +22,8 @@
   #lang{background:transparent;border:1px solid var(--line);color:var(--green);font-family:inherit;
     font-size:13px;padding:3px 10px;border-radius:4px;cursor:pointer}
   #lang:hover{border-color:var(--green)}
+  #aiBtn{color:var(--green);text-decoration:none;border:1px solid var(--line);padding:3px 10px;border-radius:4px;font-size:13px}
+  #aiBtn:hover{border-color:var(--green)}
   .grid{flex:1;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(3,1fr);gap:14px;min-height:0}
   .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;
     display:flex;flex-direction:column;gap:8px;position:relative;overflow:hidden;min-height:0}
@@ -52,6 +54,7 @@
     <span class="sub" id="sub">OpenWrt</span>
     <span class="clock" id="clock">--:--:--</span>
     <button id="lang" title="切换语言 / Switch language">EN</button>
+    <a href="/aichat.html" id="aiBtn" title="AI 助手 / AI Assistant">AI</a>
     <a href="/cgi-bin/luci/" data-i18n="luci">进入 LuCI 管理 →</a>
   </header>
 
@@ -341,3 +344,4 @@
 </script>
 </body>
 </html>
+
