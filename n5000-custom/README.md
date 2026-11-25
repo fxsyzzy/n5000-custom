@@ -235,3 +235,10 @@ N5000 面板（登录后默认首页）
 - 应用过滤与流量仪表盘均已改为 LuCI 原生视图（非 iframe）
 - 原独立页面 `/appfilter.html`、`/dashboard.html` 仍保留，可继续直接访问
 - 实现文件：`www/luci-static/resources/view/n5000/{panel,appfilter,dashboard}.js` + `menu.d/luci-app-n5000-panel.json`
+
+## 专属吉祥物：大肥鱼
+
+- 主题吉祥物「大肥鱼」（蓝发鲸鱼尾 Q 版角色，透明背景 PNG）
+- 出现在：N5000 面板顶部（随水温/负载变化的碎碎念）、流量仪表盘右下角（点击会游走）、应用过滤页（报告当前管控规则数）
+- 页面 favicon 使用大肥鱼头像
+- 资源：`/www/luci-static/n5000/mascot.png`（全身）、`mascot-icon.png`（头像 192px）、`mascot-64.png`（favicon）
