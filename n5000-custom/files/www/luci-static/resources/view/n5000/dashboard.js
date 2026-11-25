@@ -41,7 +41,13 @@ var DBCSS = [
 	'.db-row .nm{width:110px;flex:0 0 auto;opacity:.75;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
 	'.db-row .bar{flex:1;margin:0}',
 	'.db-row .vl{width:90px;text-align:right;font-variant-numeric:tabular-nums}',
-	'@media(max-width:1000px){.db-grid{grid-template-columns:repeat(2,1fr)}.db-cols{grid-template-columns:1fr}}'
+	'@media(max-width:1000px){.db-grid{grid-template-columns:repeat(2,1fr)}.db-cols{grid-template-columns:1fr}}',
+	'.db-mascot{position:fixed;right:20px;bottom:14px;z-index:600;display:flex;align-items:flex-end;gap:10px;cursor:pointer;user-select:none;max-width:66vw}',
+	'.db-mascot img{height:132px;width:auto;filter:drop-shadow(0 8px 18px rgba(0,0,0,.4));animation:dbBob 3.4s ease-in-out infinite}',
+	'@keyframes dbBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}',
+	'.db-mascot .msg{font-size:12px;line-height:1.5;padding:9px 13px;border-radius:14px;background:rgba(127,127,127,.14);border:1px solid rgba(127,127,127,.28);max-width:340px}',
+	'.db-mascot.swim img{animation:dbSwim 2.6s ease-in-out forwards}',
+	'@keyframes dbSwim{0%{transform:translateX(0) scale(1)}45%{transform:translateX(-60vw) scale(1.06)}100%{transform:translateX(-130vw) scale(.92)}}',
 ].join('\n');
 
 return view.extend({
@@ -93,6 +99,15 @@ return view.extend({
 				E('div', { 'class': 'cbi-section' }, [E('h3', {}, ['网站 Top 10']), E('div', { 'id': 'db-sites' }, [' '])])
 			]),
 			E('div', { 'class': 'cbi-section' }, [E('h3', {}, ['设备流量']), E('div', { 'id': 'db-devs' }, [' '])]),
+			E('div', { 'class': 'db-mascot', 'id': 'db-mascot', click: function() {
+				var m = document.getElementById('db-mascot');
+				if (!m || m.classList.contains('swim')) return;
+				m.classList.add('swim');
+				setTimeout(function() { m.classList.remove('swim'); }, 2800);
+			}}, [
+				E('div', { 'class': 'msg', 'id': 'db-mascotmsg' }, [' ']),
+				E('img', { 'src': '/luci-static/n5000/mascot.png', 'alt': '大肥鱼' })
+			])
 
 		]);
 
@@ -175,6 +190,17 @@ return view.extend({
 			document.getElementById('db-svc').appendChild(E('span', { 'class': 'db-big sm' }, [svc.join(' · ')]));
 			document.getElementById('db-svcnone').textContent = '';
 
+			/* 大肥鱼 */
+			var mmEl = document.getElementById('db-mascotmsg');
+			if (mmEl) {
+				var mt;
+				if (tv >= 80) mt = '好烫…大肥鱼要烤熟了！';
+				else if (Number(d.load[0]) > 1.5) mt = '大肥鱼在拼命游…';
+				else if (tv >= 65) mt = '有点热，大肥鱼在冒汗…';
+				else if ((d.clients || 0) === 0) mt = '好安静，大肥鱼在发呆…';
+				else mt = '水温刚好，' + d.clients + ' 条小鱼在游（点我试试）';
+				mmEl.textContent = mt;
+			}
 			/* 速率 */
 			var down = 0, up = 0;
 			if (prev && d.ts > prev.ts) {
