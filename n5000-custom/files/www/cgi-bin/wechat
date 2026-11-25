@@ -43,12 +43,20 @@ parse_qs() {
 	printf '%s' "$QUERY_STRING" | tr '&' '\n' | sed -n "s/^$1=//p" | head -n1
 }
 
+# 记录微信服务器请求（排查用，存在内存里）
+log_req() {
+	echo "$(date '+%m-%d %H:%M:%S') $REQUEST_METHOD $1 ua=${HTTP_USER_AGENT:-none} ip=${REMOTE_ADDR:-none}" >> /tmp/wechat-requests.log
+	# 最多保留 200 行
+	[ -f /tmp/wechat-requests.log ] && tail -n 200 /tmp/wechat-requests.log > /tmp/wechat-requests.tmp 2>/dev/null && mv /tmp/wechat-requests.tmp /tmp/wechat-requests.log 2>/dev/null
+}
+
 WX_TOKEN=$(uciget wechat.token)
 WX_ENABLED=$(uciget wechat.enabled)
 WX_TIMEOUT=$(uciget wechat.reply_timeout); [ -z "$WX_TIMEOUT" ] && WX_TIMEOUT=4
 
 # ---------- GET: server URL verification ----------
 if [ "$REQUEST_METHOD" = "GET" ]; then
+	log_req "verify"
 	WX_SIGN=$(parse_qs signature)
 	WX_TIMESTAMP=$(parse_qs timestamp)
 	WX_NONCE=$(parse_qs nonce)
@@ -72,6 +80,7 @@ FROM=$(printf '%s' "$XML" | sed -n 's:.*<FromUserName><!\[CDATA\[\([^]]*\)\]\]><
 TO=$(printf '%s' "$XML" | sed -n 's:.*<ToUserName><!\[CDATA\[\([^]]*\)\]\]></ToUserName>.*:\1:p')
 CONTENT=$(printf '%s' "$XML" | sed -n 's:.*<Content><!\[CDATA\[\(.*\)\]\]></Content>.*:\1:p')
 
+log_req "msg:${MSG_TYPE:-?}:from=${FROM:-?}"
 [ -z "$FROM" ] && reply_empty
 [ -z "$TO" ] && TO="n5000"
 
@@ -119,6 +128,14 @@ case "$CMD" in
 		reply_text "$FROM" "$TO" "WiFi 密码已修改为：$NEWPW"
 	fi
 	;;
+晨光|亮色|浅色)
+	uci -q set argon.@global[0].mode='light'; uci -q commit argon
+	reply_text "$FROM" "$TO" "已切换到晨光模式（刷新 LuCI 生效）。"
+	;;
+暗夜|深色)
+	uci -q set argon.@global[0].mode='dark'; uci -q commit argon
+	reply_text "$FROM" "$TO" "已切换到暗夜模式（刷新 LuCI 生效）。"
+	;;
 帮助|help|指令|菜单)
 		reply_text "$FROM" "$TO" "可用指令：
 状态 —— 查看路由器状态
@@ -128,6 +145,7 @@ case "$CMD" in
 重启wifi —— 重启 WiFi
 改密码 新密码 —— 修改 WiFi 密码（至少8位）
 改ssid 新名称 —— 修改 WiFi 名称（自动加 -2G/-5G）
+晨光/暗夜 —— 切换主题
 docker状态 —— Docker 状态
 重启docker —— 重启 Docker
 其他任何问题会交给 AI 回答（需要先配置 DeepSeek Key）。"
