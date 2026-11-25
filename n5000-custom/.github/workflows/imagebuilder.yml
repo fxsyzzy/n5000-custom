@@ -1,0 +1,54 @@
+name: N5000 ImageBuilder Build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq build-essential python3 curl unzip zstd xz-utils \
+            file rsync libncurses-dev gawk gettext swig time > /dev/null
+
+      - name: Download ImageBuilder
+        run: |
+          curl -fL --retry 3 -o ib.tar.zst \
+            https://downloads.openwrt.org/snapshots/targets/mediatek/filogic/openwrt-imagebuilder-mediatek-filogic.Linux-x86_64.tar.zst
+          mkdir -p ib
+          tar --use-compress-program=unzstd -xf ib.tar.zst -C ib --strip-components=1
+
+      - name: Inject N5000 board support
+        run: python3 n5000-custom/board/inject_imagebuilder.py ib
+
+      - name: Build image
+        run: |
+          cd ib
+          make image PROFILE=nradio_n5000 FILES=files-n5000 \
+            PACKAGES="kmod-usb-net-cdc-ether luci luci-ssl luci-i18n-base-zh-cn luci-i18n-firewall-zh-cn luci-i18n-package-manager-zh-cn iw-full pciutils usbutils picocom"
+
+      - name: Collect artifacts
+        run: |
+          mkdir -p out
+          cp -v ib/bin/targets/mediatek/filogic/*nradio_n5000*sysupgrade.bin out/ || true
+          cp -v ib/bin/targets/mediatek/filogic/profiles.json out/ || true
+          cd out
+          ls -lh
+          sha256sum * > sha256sums.txt
+          cat sha256sums.txt
+
+      - name: Upload firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: n5000-imagebuilder-firmware
+          path: out/
