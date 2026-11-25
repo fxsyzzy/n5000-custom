@@ -1,0 +1,66 @@
+#!/bin/sh
+# 应用过滤 / 流量统计 API
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+
+send_json() { printf 'Content-Type: application/json; charset=utf-8\r\nCache-Control: no-store\r\n\r\n'; }
+fail() { send_json; jq -n --arg e "$1" '{code:-1,error:$e}'; exit 0; }
+read_body() { len="${CONTENT_LENGTH:-0}"; [ "$len" -gt 0 ] 2>/dev/null && head -c "$len"; }
+parse_qs() { printf '%s' "$QUERY_STRING" | tr '&' '\n' | sed -n "s/^$1=//p" | head -n1; }
+ACTION=$(parse_qs action)
+
+case "$ACTION" in
+state)
+	send_json
+	/usr/sbin/appfilter state
+	;;
+cats)
+	send_json
+	jq 'to_entries | map({key:.key, name:.value.name, en:.value.en})' /usr/share/appfilter/domains.json
+	;;
+save)
+	DATA=$(read_body)
+	printf '%s' "$DATA" | jq -e . >/dev/null 2>&1 || { fail "invalid json"; exit 0; }
+	# global
+	v=$(printf '%s' "$DATA" | jq -r 'if .global.enabled == true then "1" elif .global.enabled == false then "0" else empty end')
+	[ -n "$v" ] && uci set appfilter.global.enabled="$v"
+	v=$(printf '%s' "$DATA" | jq -r 'if .global.block_enabled == true then "1" elif .global.block_enabled == false then "0" else empty end')
+	[ -n "$v" ] && uci set appfilter.global.block_enabled="$v"
+	# 删除旧设备规则
+	for s in $(uci -q show appfilter 2>/dev/null | sed -n 's/^appfilter\.\([^.]*\)=device$/\1/p'); do
+		uci delete "appfilter.$s"
+	done
+	# 新规则
+	printf '%s' "$DATA" | jq -c '.devices[]? // empty' | while IFS= read -r d; do
+		mac=$(printf '%s' "$d" | jq -r '.mac // empty')
+		[ -z "$mac" ] && continue
+		sec="dev_$(printf '%s' "$mac" | tr ':' '_')"
+		uci set "appfilter.$sec=device"
+		uci set "appfilter.$sec.mac=$mac"
+		uci set "appfilter.$sec.name=$(printf '%s' "$d" | jq -r '.name // empty')"
+		uci set "appfilter.$sec.block_cats=$(printf '%s' "$d" | jq -r '.block_cats // empty')"
+		uci set "appfilter.$sec.block_domains=$(printf '%s' "$d" | jq -r '.block_domains // empty')"
+		uci set "appfilter.$sec.schedule_start=$(printf '%s' "$d" | jq -r '.schedule_start // empty')"
+		uci set "appfilter.$sec.schedule_end=$(printf '%s' "$d" | jq -r '.schedule_end // empty')"
+		uci set "appfilter.$sec.schedule_days=$(printf '%s' "$d" | jq -r '.schedule_days // empty')"
+	done
+	uci commit appfilter
+	/usr/sbin/appfilter update >/dev/null 2>&1
+	send_json
+	echo '{"code":0}'
+	;;
+reset)
+	/usr/sbin/appfilter reset >/dev/null 2>&1
+	send_json
+	echo '{"code":0}'
+	;;
+update)
+	/usr/sbin/appfilter update >/dev/null 2>&1
+	send_json
+	echo '{"code":0}'
+	;;
+*)
+	send_json
+	jq -n '{code:-1,error:"unknown action",actions:["state","cats","save","reset","update"]}'
+	;;
+esac
