@@ -221,3 +221,126 @@ html[data-argon-mode="light"] .main-left{
 
 html[data-argon-mode="light"] .np-chip{background:linear-gradient(180deg,rgba(255,255,255,.85),rgba(228,247,250,.7)) !important;border-color:rgba(30,91,140,.2) !important;color:rgba(13,44,84,.58) !important;box-shadow:0 2px 8px rgba(30,91,140,.08) !important}
 html[data-argon-mode="light"] .np-chip b{color:#0D2C54 !important}
+
+/* ================= 可读性增强（深色/晨光通用） ================= */
+/* ---- 深色模式 ---- */
+html[data-argon-mode="dark"] body{ color:#E6F7FB }
+html[data-argon-mode="dark"] small,
+html[data-argon-mode="dark"] .help-block,
+html[data-argon-mode="dark"] .cbi-value-description,
+html[data-argon-mode="dark"] .cbi-section-descr,
+html[data-argon-mode="dark"] .cbi-section h3 .cbi-section-descr,
+html[data-argon-mode="dark"] .ifacebox .ifacebox-body,
+html[data-argon-mode="dark"] .text-muted,
+html[data-argon-mode="dark"] .table .th,
+html[data-argon-mode="dark"] .table>thead>tr>th{
+  color:rgba(214,244,250,.82) !important;
+}
+html[data-argon-mode="dark"] .main-left a,
+html[data-argon-mode="dark"] .main-left .nav>li>a{
+  color:rgba(226,248,252,.88) !important;
+}
+html[data-argon-mode="dark"] header a,
+html[data-argon-mode="dark"] header .brand,
+html[data-argon-mode="dark"] .header-actions,
+html[data-argon-mode="dark"] #indicators,
+html[data-argon-mode="dark"] .main-right>header{
+  color:rgba(230,249,253,.95) !important;
+}
+html[data-argon-mode="dark"] input::placeholder,
+html[data-argon-mode="dark"] textarea::placeholder{
+  color:rgba(200,244,249,.5) !important;
+}
+html[data-argon-mode="dark"] .cbi-input-text,
+html[data-argon-mode="dark"] .cbi-input-password,
+html[data-argon-mode="dark"] .cbi-input-select,
+html[data-argon-mode="dark"] .cbi-input-textarea,
+html[data-argon-mode="dark"] input,
+html[data-argon-mode="dark"] select,
+html[data-argon-mode="dark"] textarea{
+  color:#EAFBFF !important;
+  border-color:rgba(131,217,220,.32) !important;
+}
+/* 状态色在深色下更亮 */
+html[data-argon-mode="dark"] .success, html[data-argon-mode="dark"] .cbi-button-positive{ color:#7FE3B8 !important }
+html[data-argon-mode="dark"] .warning, html[data-argon-mode="dark"] .cbi-button-warning{ color:#FFCE7A !important }
+html[data-argon-mode="dark"] .danger, html[data-argon-mode="dark"] .cbi-button-negative{ color:#FF9BAE !important }
+
+/* ---- 晨光模式 ---- */
+html[data-argon-mode="light"] body{ color:#0B2A47 }
+html[data-argon-mode="light"] small,
+html[data-argon-mode="light"] .help-block,
+html[data-argon-mode="light"] .cbi-value-description,
+html[data-argon-mode="light"] .cbi-section-descr,
+html[data-argon-mode="light"] .text-muted,
+html[data-argon-mode="light"] .table .th,
+html[data-argon-mode="light"] .table>thead>tr>th{
+  color:rgba(11,42,71,.72) !important;
+}
+html[data-argon-mode="light"] .main-left a,
+html[data-argon-mode="light"] .main-left .nav>li>a{
+  color:rgba(11,42,71,.82) !important;
+}
+html[data-argon-mode="light"] input::placeholder,
+html[data-argon-mode="light"] textarea::placeholder{
+  color:rgba(11,42,71,.45) !important;
+}
+html[data-argon-mode="light"] .success{ color:#0E9F6E !important }
+html[data-argon-mode="light"] .warning{ color:#C27803 !important }
+html[data-argon-mode="light"] .danger{ color:#D61F3C !important }
+
+/* ---- 自定义页面：次要文字提亮（两种模式） ---- */
+html[data-argon-mode="dark"] .np-sub,
+html[data-argon-mode="dark"] .np-card .s,
+html[data-argon-mode="dark"] .np-stat .l,
+html[data-argon-mode="dark"] .np-app .v,
+html[data-argon-mode="dark"] .np-chip .k,
+html[data-argon-mode="dark"] .ai-badge,
+html[data-argon-mode="dark"] .db-label,
+html[data-argon-mode="dark"] .db-note,
+html[data-argon-mode="dark"] .af-hint,
+html[data-argon-mode="dark"] .af-label,
+html[data-argon-mode="dark"] .fav-url,
+html[data-argon-mode="dark"] .fav-note,
+html[data-argon-mode="dark"] .fav-count,
+html[data-argon-mode="dark"] .nf-muted,
+html[data-argon-mode="dark"] .ai-note{
+  color:rgba(206,242,249,.75) !important;
+}
+html[data-argon-mode="dark"] .np-card .t b,
+html[data-argon-mode="dark"] .np-stat .v,
+html[data-argon-mode="dark"] .np-name,
+html[data-argon-mode="dark"] .db-big,
+html[data-argon-mode="dark"] .af-big{
+  color:#F0FCFE !important;
+}
+html[data-argon-mode="light"] .np-sub,
+html[data-argon-mode="light"] .np-card .s,
+html[data-argon-mode="light"] .np-stat .l,
+html[data-argon-mode="light"] .np-app .v,
+html[data-argon-mode="light"] .np-chip .k,
+html[data-argon-mode="light"] .ai-badge,
+html[data-argon-mode="light"] .db-label,
+html[data-argon-mode="light"] .db-note,
+html[data-argon-mode="light"] .af-hint,
+html[data-argon-mode="light"] .af-label,
+html[data-argon-mode="light"] .fav-url,
+html[data-argon-mode="light"] .fav-note,
+html[data-argon-mode="light"] .fav-count{
+  color:rgba(11,42,71,.7) !important;
+}
+html[data-argon-mode="light"] .np-card .t b,
+html[data-argon-mode="light"] .np-stat .v,
+html[data-argon-mode="light"] .np-name,
+html[data-argon-mode="light"] .db-big,
+html[data-argon-mode="light"] .af-big{
+  color:#0B2A47 !important;
+}
+/* 表格正文对比度 */
+html[data-argon-mode="dark"] .table>tbody>tr>td{color:rgba(230,249,253,.94) !important}
+html[data-argon-mode="light"] .table>tbody>tr>td{color:#11324F !important}
+/* 链接在两种模式都保持可读 */
+html[data-argon-mode="dark"] a{color:#8FE3EC !important}
+html[data-argon-mode="dark"] a:hover{color:#C8F4F9 !important}
+html[data-argon-mode="light"] a{color:#1E5B8C !important}
+html[data-argon-mode="light"] a:hover{color:#0D2C54 !important}
