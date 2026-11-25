@@ -1,0 +1,26 @@
+#!/bin/sh
+# 主题切换：暗夜纳美蓝 <-> 晨光纳美蓝
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+
+send_json() { printf 'Content-Type: application/json; charset=utf-8\r\nCache-Control: no-store\r\n\r\n'; }
+read_body() { len="${CONTENT_LENGTH:-0}"; [ "$len" -gt 0 ] 2>/dev/null && head -c "$len"; }
+
+MODE=$(printf '%s' "$QUERY_STRING" | sed -n 's/.*to=\([a-z]*\).*/\1/p' | head -n1)
+if [ -z "$MODE" ]; then
+	DATA=$(read_body)
+	MODE=$(printf '%s' "$DATA" | jq -r '.to // empty' 2>/dev/null)
+fi
+
+case "$MODE" in
+light|dark)
+	uci -q set argon.@global[0].mode="$MODE"
+	uci -q commit argon
+	send_json
+	jq -n --arg m "$MODE" '{code:0,mode:$m}'
+	;;
+*)
+	send_json
+	jq -n '{code:-1,error:"to must be light or dark"}'
+	;;
+esac
