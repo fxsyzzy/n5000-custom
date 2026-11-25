@@ -507,3 +507,14 @@ N5000              order 0   分组（展开）
 - 刷机后需要重新配置：WiFi 密码、AI Key、微信（tailscale auth key + `n5000-tunnel-up`）、密码本主密码
 - 刷机方法：NROS Storage Manager「Create Boot Disk」或用现有 OpenWrt `sysupgrade`
 - 首次启动：LAN 192.168.88.1，SSID OpenWrt-2G / OpenWrt-5G
+
+## 性能优化（v3.1，刷机后卡顿修复）
+
+- 原因：Argon 主题自带磨砂 + 自定义 glass.css 再叠加 15 处 `backdrop-filter`，等于每张卡片二次高斯模糊；轮询偏频繁；rstatus 单次 0.45s；未配置的 AdGuard Home / haproxy / dnscrypt / smartdns 默认自启占内存；CPU 定频 2GHz
+- 优化：
+  - 卡片不再叠加模糊，只保留侧边栏/顶栏/弹窗单层 `blur(12px)`；Argon 模糊 14→8
+  - 面板/仪表盘轮询 5s→10s；大肥鱼状态 15/20s→30s
+  - `rstatus` 增加 2 秒内存缓存（0.45s → 0.009s）
+  - 未配置服务禁用自启（AdGuard Home / haproxy / dnscrypt-proxy / smartdns），需要时 `uci set ... enabled=1` 或 `/etc/init.d/<svc> enable` 后手动启动
+  - CPU 调频改为 `schedutil`（`/etc/init.d/n5000-perf`）
+- 效果：LuCI 页面响应 ~0.07s，内存占用 201MB→160MB
