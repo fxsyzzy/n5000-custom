@@ -48,6 +48,13 @@ var N5CSS = [
 	'.n5-ok{color:#35c48a}.n5-warn{color:#e6a23c}.n5-bad{color:#e05a5a}',
 	'.n5-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}',
 	'@media(max-width:1000px){.n5-grid{grid-template-columns:repeat(2,1fr)}.n5-cols{grid-template-columns:1fr}}',
+	'.n5-head{display:flex;align-items:center;gap:14px;margin-bottom:10px;flex-wrap:wrap}',
+	'.n5-head h2{margin:0}',
+	'.n5-fish{width:84px;height:60px;flex:0 0 auto}',
+	'.n5-bubble{max-width:420px;font-size:12.5px;line-height:1.5;padding:8px 14px;border-radius:14px;background:rgba(127,127,127,.12);border:1px solid rgba(127,127,127,.25);position:relative}',
+	'.n5-bubble:before{content:";position:absolute;left:-7px;top:18px;border:7px solid transparent;border-right-color:rgba(127,127,127,.25)}',
+	'.n5-fishimg{animation:n5bob 3.2s ease-in-out infinite}',
+	'@keyframes n5bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}',
 	'@media(max-width:600px){.n5-grid{grid-template-columns:1fr 1fr}}'
 ].join('\n');
 
@@ -140,7 +147,11 @@ return view.extend({
 
 		var root = E('div', {}, [
 			style,
-			E('h2', {}, [_s('N5000 面板', 'N5000 Panel')]),
+			E('div', { 'class': 'n5-head' }, [
+				E('h2', {}, [_s('N5000 面板', 'N5000 Panel')]),
+				E('img', { 'class': 'n5-fish n5-fishimg', 'src': '/luci-static/n5000/fish.svg', 'alt': 'fish' }),
+				E('div', { 'class': 'n5-bubble', 'id': 'n5-fishmsg' }, [' '])
+			]),
 			grid1, grid2,
 			E('div', { 'class': 'n5-cols' }, [catBox, siteBox]),
 			links
@@ -156,6 +167,17 @@ return view.extend({
 			var memPct = memTotal ? (memTotal - memAvail) / memTotal * 100 : 0;
 			var tfPct = d.tf_total ? (d.tf_used || 0) / d.tf_total * 100 : 0;
 			var swUsed = Math.max(0, (d.swap_total || 0) - (d.swap_free || 0));
+			/* 大肥鱼的碎碎念 */
+			var fmsg = document.getElementById('n5-fishmsg');
+			if (fmsg) {
+				var fm;
+				if (tv >= 80) fm = _s('鱼要熟了！！快给路由器降温！', 'The fish is cooking! Cool me down!');
+				else if (d.load[0] > 1.5) fm = _s('鱼儿在狂奔，CPU 快冒烟了', 'The fish is sprinting, CPU is hot');
+				else if (tv >= 65) fm = _s('有点热，鱼儿在冒汗…', 'Warm, the fish is sweating…');
+				else if ((d.clients || 0) === 0) fm = _s('水里好安静，一条小鱼都没连上来', 'So quiet, no clients online');
+				else fm = _s('水温舒服，' + d.clients + ' 条小鱼在游', 'Water is nice, ' + d.clients + ' little fish online');
+				fmsg.textContent = fm;
+			}
 
 			document.getElementById('n5-uptime').textContent = n5fmtUptime(d.uptime, zh);
 			document.getElementById('n5-boot').textContent =
