@@ -274,3 +274,11 @@ N5000 面板（登录后默认首页）
   - 按分类分组展示，卡片可一键打开、编辑、删除
   - 顶部搜索框实时过滤
 - 存储：`/etc/config/favorites`（UCI），接口 `/cgi-bin/favorites`，视图 `/www/luci-static/resources/view/n5000/favorites.js`
+
+## AI 助手（LuCI 原生页面）
+
+- 入口：LuCI 菜单「N5000 面板」→「AI 助手」
+- 功能：多轮对话、DeepSeek/OpenAI 兼容接口、可调系统提示词、可选工具调用（重启 / 重启 WiFi / 改 WiFi 密码）
+- 设置页可填 API 地址 / Key / 模型 / 提示词，保存在路由器本地 `/etc/config/aichat`
+- 后端：`/www/cgi-bin/aichat`（聊天/配置/snapshot），视图 `view/n5000/ai.js`
+- 微信机器人后端仍在：`/www/cgi-bin/wechat` + `aichat.wechat.*` 配置（需公众号 + 公网回调才能用）
