@@ -35,18 +35,36 @@ header{background:linear-gradient(180deg,rgba(13,19,28,.96),rgba(10,15,23,.92)) 
   border-bottom:1px solid var(--lg-stroke) !important;
   box-shadow:none !important;border-radius:0 !important;margin:0 !important;padding:0 !important}
 header .brand,header a{color:var(--lg-text) !important}
-/* ---------- 侧边栏：保持 Argon 布局，只换配色 ---------- */
-.main-left{background:linear-gradient(180deg,rgba(13,19,28,.97),rgba(9,13,20,.97)) !important;
-  border-right:1px solid var(--lg-stroke) !important;
-  box-shadow:none !important;border-radius:0 !important;margin:0 !important}
-.main-left .sidenav-header{border-bottom:1px solid var(--lg-stroke) !important;background:transparent !important}
-.main-left .brand{color:var(--lg-text) !important}
-.main-left ul{background:transparent !important;border:none !important;box-shadow:none !important;margin:0 !important;padding:6px 8px !important}
+/* ---------- 侧边栏：玻璃面板（保留 Argon 布局尺寸，只改视觉） ---------- */
+.main-left{
+  background:linear-gradient(180deg,rgba(255,255,255,.075) 0%,rgba(255,255,255,.028) 55%,rgba(255,255,255,.015) 100%) !important;
+  border-right:1px solid var(--lg-stroke-strong) !important;
+  box-shadow:10px 0 34px rgba(0,0,0,.30) !important;
+  border-radius:0 16px 16px 0 !important;
+  margin:0 !important; 
+}
+.main-left .sidenav-header{
+  background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.03)) !important;
+  border-bottom:1px solid var(--lg-stroke) !important;
+}
+.main-left .brand{color:var(--lg-text) !important;letter-spacing:.3px}
+.main-left ul{background:transparent !important;border:none !important;box-shadow:none !important;margin:0 !important;padding:8px 10px !important}
 .main-left li{background:transparent !important;border:none !important}
-.main-left a{color:var(--lg-dim) !important;border-radius:10px !important;padding:8px 10px !important;margin:1px 0 !important;
-  display:block !important;text-decoration:none !important;background:transparent !important;box-shadow:none !important}
-.main-left a:hover{background:rgba(255,255,255,.06) !important;color:var(--lg-text) !important}
-.main-left li.active>a,.main-left a.active{background:rgba(111,227,196,.12) !important;color:var(--lg-mint) !important}
+.main-left a{
+  color:var(--lg-dim) !important;border-radius:10px !important;padding:8px 11px !important;margin:2px 0 !important;
+  display:block !important;text-decoration:none !important;
+  background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.015)) !important;
+  border:1px solid transparent !important;box-shadow:none !important;
+  transition:background .16s ease, border-color .16s ease, color .16s ease !important;
+}
+.main-left a:hover{
+  background:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,.04)) !important;
+  border-color:var(--lg-stroke) !important;color:var(--lg-text) !important;
+}
+.main-left li.active>a,.main-left a.active{
+  background:linear-gradient(120deg,rgba(111,227,196,.20),rgba(111,201,255,.10)) !important;
+  border-color:rgba(111,227,196,.32) !important;color:var(--lg-mint) !important;
+}
 .main-left .sidenav-header .brand{font-weight:600}
 /* 移动端遮罩 */
 .darkMask{background:rgba(4,8,14,.5) !important}
@@ -140,3 +158,5 @@ hr{border-color:var(--lg-stroke) !important}
   --border-color:rgba(255,255,255,.09) !important;
   --text-color:var(--lg-text) !important;
 }
+
+
