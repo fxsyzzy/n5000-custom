@@ -1,0 +1,7 @@
+#!/bin/sh
+# 菜单版本号：菜单文件变化时返回新值，前端据此清缓存并刷新
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+
+printf 'Content-Type: text/plain; charset=utf-8\r\nCache-Control: no-store\r\n\r\n'
+md5sum /usr/share/luci/menu.d/*.json 2>/dev/null | md5sum 2>/dev/null | cut -d' ' -f1
