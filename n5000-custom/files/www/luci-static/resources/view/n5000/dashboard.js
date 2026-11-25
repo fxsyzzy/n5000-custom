@@ -16,6 +16,10 @@ function dbCatName(k) {
 	return m[k] || k;
 }
 
+function dbIsLight() {
+	return document.documentElement.getAttribute('data-argon-mode') === 'light';
+}
+
 function dbUptime(s) {
 	s = Math.max(0, Math.floor(s || 0));
 	var d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60);
@@ -159,8 +163,8 @@ return view.extend({
 				ctx.lineWidth = 2;
 				ctx.stroke();
 			};
-			line('down', 'var(--primary)' === '' ? '#48A9C5' : '#48A9C5');
-			line('up', '#83D9DC');
+			line('down', dbIsLight() ? '#1A1A1A' : '#48A9C5');
+			line('up', dbIsLight() ? '#888888' : '#83D9DC');
 		};
 
 		var paint = function() {
@@ -327,10 +331,10 @@ return view.extend({
 			list.forEach(function(x, i) {
 				var bh = Math.max(1, (x.total || 0) / max * (h - 20));
 				var xx = i * (bw + gap);
-				ctx.fillStyle = (i === n - 1) ? '#48A9C5' : 'rgba(72,169,197,.42)';
+				ctx.fillStyle = dbIsLight() ? ((i === n - 1) ? '#111111' : 'rgba(17,17,17,.35)') : ((i === n - 1) ? '#48A9C5' : 'rgba(72,169,197,.42)');
 				ctx.fillRect(xx, h - bh - 2, bw, bh);
 			});
-			ctx.fillStyle = 'rgba(200,244,249,.55)';
+			ctx.fillStyle = dbIsLight() ? 'rgba(17,17,17,.55)' : 'rgba(200,244,249,.55)';
 			ctx.fillText(list[0].date, 0, h - 4);
 			var lastTxt = list[list.length - 1].date;
 			var tw = ctx.measureText(lastTxt).width;
