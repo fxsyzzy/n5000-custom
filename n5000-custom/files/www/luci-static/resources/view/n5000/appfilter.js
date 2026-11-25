@@ -37,8 +37,8 @@ var AFCSS = [
 	'.af-modal .cbi-value{display:block}',
 	'@media(max-width:1000px){.af-stats{grid-template-columns:repeat(2,1fr)}.af-cols{grid-template-columns:1fr}}',
 	'.af-mascot{display:flex;align-items:flex-end;gap:12px;margin:2px 0 10px}',
-	'.af-mascot img{height:88px;width:auto;filter:drop-shadow(0 6px 14px rgba(0,0,0,.32));animation:afBob 3.4s ease-in-out infinite}',
-	'@keyframes afBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}',
+	'.af-mascot img{height:88px;width:auto;filter:drop-shadow(0 6px 14px rgba(0,0,0,.32));animation:afSwimIdle 7s ease-in-out infinite}',
+	'@keyframes afSwimIdle{0%,100%{transform:translate(0,0) rotate(0)}25%{transform:translate(-10px,-4px) rotate(-1.6deg)}50%{transform:translate(0,-8px) rotate(0)}75%{transform:translate(10px,-4px) rotate(1.6deg)}}',
 	'.af-mascot .m{font-size:12.5px;line-height:1.55;padding:8px 13px;border-radius:14px;background:rgba(127,127,127,.12);border:1px solid rgba(127,127,127,.25);max-width:420px}',
 ].join('\n');
 
@@ -138,9 +138,18 @@ return view.extend({
 			document.getElementById('af-sites').textContent = siteCount;
 			document.getElementById('af-rules').textContent = rules.length;
 			var afM = document.getElementById('af-mascotmsg');
-			if (afM) afM.textContent = (rules.length
-				? '大肥鱼正守着 ' + rules.length + ' 条管控规则，坏网站都会被它吃掉'
-				: '大肥鱼在闲着，还没有管控规则');			var tb = document.getElementById('af-toggle');
+			if (afM) {
+				var ap = rules.length ? [
+					'哼，' + rules.length + ' 条规则都归本鱼管，坏网站见一个吃一个。',
+					'本鱼在守规矩，别想偷偷溜去看坏网站哦。',
+					'规则都盯好了…才不是因为关心你。'
+				] : [
+					'一条规则都没有？那本鱼先摸会儿鱼。',
+					'哼，不设规则，出事了别找本鱼哭。',
+					'闲着也是闲着…白饭什么时候开饭？'
+				];
+				afM.textContent = ap[Math.floor(Math.random() * ap.length)];
+			}			var tb = document.getElementById('af-toggle');
 			if (tb) {
 				tb.textContent = state.block_enabled ? '停用拦截' : '启用拦截';
 				tb.className = 'btn cbi-button' + (state.block_enabled ? ' cbi-button-save' : '');
