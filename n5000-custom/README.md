@@ -144,7 +144,7 @@ files/                         # 注入固件的自定义文件
 
 ## 界面主题：液态玻璃（Liquid Glass）
 
-- 首页仪表盘、AI 助手页已使用液态玻璃风格
+- 首页仪表盘、应用过滤页已使用液态玻璃风格
 - LuCI 后台（Argon / Carbon 主题）通过 `/www/luci-static/glass.css` 全局覆盖为玻璃风
 - 生效机制：`/etc/uci-defaults/97-glass-theme` 首次启动时把 `@import url("/luci-static/glass.css")` 注入主题 CSS，切换主题后同样生效
 - 效果：动态极光背景、磨砂玻璃面板、内高光描边、圆角胶囊控件、渐变按钮
@@ -212,4 +212,5 @@ files/                         # 注入固件的自定义文件
 - 纯域名/DNS 级识别：直连 IP 的游戏对局流量无法识别（需 DPI）
 - 共享 CDN IP 可能被归到某个域名（统计为参考值）
 - 已建立的连接要重连后才会被拦截
+
 
