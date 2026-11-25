@@ -16,7 +16,7 @@ state)
 	;;
 cats)
 	send_json
-	jq 'to_entries | map({key:.key, name:.value.name, en:.value.en})' /usr/share/appfilter/domains.json
+	jq 'to_entries | map({key:.key, name:.value.name, en:.value.en, domains:.value.domains})' /usr/share/appfilter/domains.json
 	;;
 save)
 	DATA=$(read_body)
