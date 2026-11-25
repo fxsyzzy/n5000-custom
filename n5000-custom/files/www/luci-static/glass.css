@@ -1,103 +1,87 @@
 /* ============================================================
-   Liquid Glass skin for LuCI (works on Argon / Carbon / Bootstrap)
-   Loaded by /etc/uci-defaults/97-glass-theme into the active theme.
+   Liquid Glass skin for LuCI (Argon / Carbon) — performance tuned
+   - 只对主要面板做毛玻璃，表格/行/小控件不做模糊
+   - 背景使用静态渐变（不随滚动重绘）
    ============================================================ */
 :root{
   --lg-text:#eef4ff;
   --lg-dim:rgba(226,236,255,.62);
   --lg-mint:#5ef2c0;
   --lg-cyan:#6fd6ff;
-  --lg-violet:#b49bff;
-  --lg-rose:#ff7f9c;
-  --lg-stroke:rgba(255,255,255,.17);
+  --lg-stroke:rgba(255,255,255,.16);
   --lg-stroke-soft:rgba(255,255,255,.09);
-  --lg-glass:linear-gradient(145deg,rgba(255,255,255,.12),rgba(255,255,255,.045));
-  --lg-shadow:0 18px 44px rgba(0,0,0,.36), inset 0 1px 0 rgba(255,255,255,.28), inset 0 -1px 0 rgba(255,255,255,.05);
+  --lg-glass:linear-gradient(145deg,rgba(255,255,255,.11),rgba(255,255,255,.04));
+  --lg-shadow:0 12px 30px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.24);
 }
 html{background:#0a0f18 !important}
 body{
   background:
-    radial-gradient(1200px 800px at 12% 8%, #1b3a5c 0%, transparent 60%),
-    radial-gradient(1000px 700px at 88% 12%, #3a2260 0%, transparent 62%),
-    radial-gradient(1200px 900px at 70% 95%, #0f4a4a 0%, transparent 60%),
-    radial-gradient(900px 700px at 20% 90%, #241a45 0%, transparent 65%),
-    linear-gradient(160deg,#0a0f18 0%,#0b1220 45%,#0a0d16 100%) !important;
-  background-attachment:fixed !important;
+    radial-gradient(1000px 700px at 15% 10%, #1b3a5c 0%, transparent 60%),
+    radial-gradient(900px 650px at 85% 15%, #3a2260 0%, transparent 62%),
+    radial-gradient(1000px 800px at 70% 90%, #0f4a4a 0%, transparent 60%),
+    linear-gradient(160deg,#0a0f18 0%,#0b1220 50%,#0a0d16 100%) !important;
+  background-attachment:scroll !important;
   color:var(--lg-text) !important;
   -webkit-font-smoothing:antialiased;
 }
 /* ---------- 文字色 ---------- */
-body,h1,h2,h3,h4,h5,h6,label,td,th,dt,dd,li,p,span,strong,b,.cbi-value-title,.cbi-value-field,
-.cbi-input-user,.cbi-select,.cbi-input-text,.cbi-input-password,.cbi-input-select,.cbi-input-textarea{
-  color:var(--lg-text) !important;
-}
+body,h1,h2,h3,h4,h5,h6,label,td,th,dt,dd,li,p,span,strong,b,
+.cbi-value-title,.cbi-value-field,.cbi-input-user,.cbi-select,
+.cbi-input-text,.cbi-input-password,.cbi-input-select,.cbi-input-textarea{color:var(--lg-text) !important}
 a,a:link,a:visited{color:var(--lg-cyan) !important}
 a:hover{color:var(--lg-mint) !important}
-small,.help-block,.cbi-value-description,.text-muted,.cbi-section-descr,.cbi-input-desc,
-.label,.cbi-tooltip,.cbi-value-title small{color:var(--lg-dim) !important}
-/* ---------- 玻璃面板 ---------- */
-.main,.header,.nav,.main-left,.main-right,.sidebar,.cbi-map,.cbi-section,.cbi-section-node,
-.cbi-section-table,.cbi-form,.panel,.panel-default,.well,.card,.modal,.modal-dialog,
-.modal-content,.login-page,.login-container,.login-form,.cbi-dialog,.cbi-page-actions,
-.dropdown-menu,.table-container,.cbi-tabmenu,.cbi-tabcontainer,.cbi-value,.cbi-section-node-tabmenu,
-#maincontent,.cbi-dashboard,.cbi-section-node .cbi-value,
-.ifacebox,.cbi-progressbar,.cbi-input-invalid,fieldset{
+small,.help-block,.cbi-value-description,.text-muted,.cbi-section-descr,
+.cbi-input-desc,.label,.cbi-tooltip,.cbi-value-title small{color:var(--lg-dim) !important}
+/* ---------- 玻璃面板（只保留主要容器） ---------- */
+.main,.header,.nav,.cbi-section,.cbi-section-node,.panel,.well,.card,
+.modal-content,.login-page,.login-container,.login-form,
+.dropdown-menu,.table-container,.cbi-page-actions,
+.ifacebox,.cbi-dashboard{
   background:var(--lg-glass) !important;
   border:1px solid var(--lg-stroke) !important;
-  border-radius:20px !important;
+  border-radius:18px !important;
   box-shadow:var(--lg-shadow) !important;
-  backdrop-filter:blur(24px) saturate(170%) !important;
-  -webkit-backdrop-filter:blur(24px) saturate(170%) !important;
+  backdrop-filter:blur(12px) saturate(150%) !important;
+  -webkit-backdrop-filter:blur(12px) saturate(150%) !important;
   color:var(--lg-text) !important;
 }
-/* 表格/列表行不要玻璃 */
-tr,.list-group-item{border-color:var(--lg-stroke-soft) !important;background:transparent !important}
-.cbi-section-node > .cbi-value,.cbi-value{border-radius:14px !important;box-shadow:none !important;background:rgba(255,255,255,.04) !important;margin-bottom:6px}
+tr,.list-group-item,.cbi-value,fieldset{background:transparent !important;border-color:var(--lg-stroke-soft) !important}
+.cbi-value{border-radius:12px !important;box-shadow:none !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;margin-bottom:4px}
 /* ---------- 头部/导航 ---------- */
 .header,.nav{
-  background:linear-gradient(135deg,rgba(255,255,255,.12),rgba(255,255,255,.04)) !important;
-  border:1px solid var(--lg-stroke) !important;
-  border-radius:999px !important;
-  margin:10px 12px !important;
-  padding:8px 14px !important;
-  backdrop-filter:blur(22px) saturate(170%) !important;
-  -webkit-backdrop-filter:blur(22px) saturate(170%) !important;
+  background:linear-gradient(135deg,rgba(255,255,255,.11),rgba(255,255,255,.04)) !important;
+  border:1px solid var(--lg-stroke) !important;border-radius:999px !important;
+  margin:8px 10px !important;padding:6px 12px !important;
+  backdrop-filter:blur(12px) saturate(150%) !important;-webkit-backdrop-filter:blur(12px) !important;
 }
 .nav a,.header a{border-radius:999px !important;color:var(--lg-text) !important}
-.nav a:hover,.nav a.active{background:rgba(255,255,255,.14) !important;color:var(--lg-mint) !important}
+.nav a:hover,.nav a.active{background:rgba(255,255,255,.13) !important;color:var(--lg-mint) !important}
 /* ---------- 表单控件 ---------- */
-input,select,textarea,.cbi-input-text,.cbi-input-password,.cbi-input-select,.cbi-input-textarea,
-.form-control,.cbi-select,.cbi-button,.cbi-input-file{
-  background:linear-gradient(145deg,rgba(255,255,255,.10),rgba(255,255,255,.035)) !important;
-  border:1px solid var(--lg-stroke) !important;
-  border-radius:14px !important;
+input,select,textarea,.cbi-input-text,.cbi-input-password,
+.cbi-input-select,.cbi-input-textarea,.form-control,.cbi-select{
+  background:rgba(255,255,255,.07) !important;
+  border:1px solid var(--lg-stroke) !important;border-radius:12px !important;
   color:var(--lg-text) !important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.20), 0 6px 18px rgba(0,0,0,.20) !important;
-  backdrop-filter:blur(14px) !important;
-  -webkit-backdrop-filter:blur(14px) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.16) !important;
+  backdrop-filter:none !important;-webkit-backdrop-filter:none !important;
 }
 input:focus,select:focus,textarea:focus,.cbi-input-text:focus,.cbi-input-password:focus{
   outline:none !important;border-color:rgba(94,242,192,.55) !important;
-  box-shadow:0 0 0 3px rgba(94,242,192,.14), inset 0 1px 0 rgba(255,255,255,.22) !important;
+  box-shadow:0 0 0 3px rgba(94,242,192,.12), inset 0 1px 0 rgba(255,255,255,.18) !important;
 }
 input[type=checkbox],input[type=radio]{accent-color:#5ef2c0 !important}
 /* ---------- 按钮 ---------- */
-.btn,.cbi-button,.cbi-button-save,.cbi-button-apply,.cbi-button-reset,.cbi-button-remove,
-.cbi-button-action,.cbi-button-link,.btn-default,.btn-primary,.cbi-button-neutral{
-  border-radius:999px !important;
-  border:1px solid var(--lg-stroke) !important;
-  background:linear-gradient(145deg,rgba(255,255,255,.14),rgba(255,255,255,.05)) !important;
-  color:var(--lg-text) !important;
-  box-shadow:0 8px 20px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.28) !important;
-  backdrop-filter:blur(12px) !important;
-  transition:transform .2s ease, filter .2s ease !important;
-  text-shadow:none !important;
+.btn,.cbi-button,.cbi-button-save,.cbi-button-apply,.cbi-button-reset,
+.cbi-button-remove,.cbi-button-action,.cbi-button-link,.btn-default,.btn-primary,.cbi-button-neutral{
+  border-radius:999px !important;border:1px solid var(--lg-stroke) !important;
+  background:rgba(255,255,255,.10) !important;color:var(--lg-text) !important;
+  box-shadow:0 6px 16px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.22) !important;
+  backdrop-filter:none !important;transition:transform .15s ease, filter .15s ease !important;
 }
-.btn:hover,.cbi-button:hover{transform:translateY(-1px) !important;filter:brightness(1.08) !important}
+.btn:hover,.cbi-button:hover{transform:translateY(-1px) !important;filter:brightness(1.07) !important}
 .btn-primary,.cbi-button-save,.cbi-button-apply,.cbi-button-action,.cbi-button-positive{
   background:linear-gradient(120deg,#8bffd9,#5ef2c0 45%,#6fd6ff) !important;
   color:#052018 !important;border:none !important;font-weight:600 !important;
-  box-shadow:0 10px 26px rgba(94,242,192,.26), inset 0 1px 0 rgba(255,255,255,.55) !important;
 }
 .btn-danger,.cbi-button-remove,.cbi-button-negative{
   background:linear-gradient(120deg,#ffb3c4,#ff7f9c) !important;color:#2a0710 !important;border:none !important;
@@ -106,48 +90,45 @@ input[type=checkbox],input[type=radio]{accent-color:#5ef2c0 !important}
 .table,.cbi-section-table{background:transparent !important;border:none !important;box-shadow:none !important}
 .table>thead>tr>th{color:var(--lg-dim) !important;border-bottom:1px solid var(--lg-stroke) !important;background:transparent !important}
 .table>tbody>tr>td{border-top:1px solid var(--lg-stroke-soft) !important;color:var(--lg-text) !important}
-.table-striped>tbody>tr:nth-of-type(odd){background:rgba(255,255,255,.035) !important}
+.table-striped>tbody>tr:nth-of-type(odd){background:rgba(255,255,255,.03) !important}
 /* ---------- 标签页 ---------- */
-.cbi-tabmenu{display:flex;gap:6px;padding:6px !important}
+.cbi-tabmenu{display:flex;gap:6px;padding:5px !important;background:transparent !important;border:none !important;box-shadow:none !important;backdrop-filter:none !important}
 .cbi-tabmenu>li>a{border-radius:999px !important;color:var(--lg-dim) !important;background:transparent !important}
-.cbi-tabmenu>li.cbi-tab>a,.cbi-tabmenu>li>a:hover{
-  background:rgba(255,255,255,.14) !important;color:var(--lg-mint) !important;
-}
+.cbi-tabmenu>li.cbi-tab>a,.cbi-tabmenu>li>a:hover{background:rgba(255,255,255,.13) !important;color:var(--lg-mint) !important}
 /* ---------- 登录页 ---------- */
-.login-page .login-container,.login-page .login-form,.login-page form,.login-page .cbi-map{
-  background:linear-gradient(150deg,rgba(255,255,255,.14),rgba(255,255,255,.05)) !important;
-  border:1px solid var(--lg-stroke) !important;border-radius:26px !important;
-  box-shadow:0 30px 80px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.3) !important;
-  backdrop-filter:blur(30px) saturate(170%) !important;
+.login-page .login-container,.login-page .login-form,.login-page form{
+  background:linear-gradient(150deg,rgba(255,255,255,.13),rgba(255,255,255,.045)) !important;
+  border:1px solid var(--lg-stroke) !important;border-radius:24px !important;
+  box-shadow:0 24px 60px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.28) !important;
+  backdrop-filter:blur(14px) saturate(150%) !important;
 }
-.login-page .cbi-input-user,.login-page .cbi-input-password{border-radius:14px !important}
+.login-page .cbi-input-user,.login-page .cbi-input-password{border-radius:12px !important}
 .login-page .btn,.login-page .cbi-button{border-radius:999px !important;min-height:40px}
 /* ---------- 弹窗 ---------- */
-.modal-backdrop{background:rgba(4,8,14,.55) !important;backdrop-filter:blur(10px) !important}
-.modal-content{border-radius:24px !important;border:1px solid var(--lg-stroke) !important;
-  background:linear-gradient(150deg,rgba(255,255,255,.14),rgba(255,255,255,.05)) !important;
-  backdrop-filter:blur(30px) saturate(170%) !important;
-  box-shadow:0 30px 80px rgba(0,0,0,.5) !important}
+.modal-backdrop{background:rgba(4,8,14,.5) !important}
+.modal-content{border-radius:20px !important;border:1px solid var(--lg-stroke) !important;
+  background:linear-gradient(150deg,rgba(255,255,255,.13),rgba(255,255,255,.045)) !important;
+  backdrop-filter:blur(14px) saturate(150%) !important;
+  box-shadow:0 24px 60px rgba(0,0,0,.45) !important}
 .modal-header,.modal-footer{border-color:var(--lg-stroke-soft) !important}
 /* ---------- 杂项 ---------- */
-.cbi-progressbar{background:rgba(255,255,255,.09) !important;border-radius:999px !important;overflow:hidden !important}
+.cbi-progressbar{background:rgba(255,255,255,.08) !important;border-radius:999px !important;overflow:hidden !important}
 .cbi-progressbar>div{background:linear-gradient(90deg,#5ef2c0,#6fd6ff) !important;border-radius:999px !important}
-.alert{border-radius:16px !important;border:1px solid var(--lg-stroke) !important;
-  background:rgba(255,255,255,.08) !important;color:var(--lg-text) !important}
-.alert-success{border-color:rgba(94,242,192,.4) !important;background:rgba(94,242,192,.12) !important}
-.alert-warning{border-color:rgba(255,196,107,.4) !important;background:rgba(255,196,107,.10) !important}
-.alert-danger{border-color:rgba(255,127,156,.45) !important;background:rgba(255,127,156,.12) !important}
+.alert{border-radius:14px !important;border:1px solid var(--lg-stroke) !important;
+  background:rgba(255,255,255,.07) !important;color:var(--lg-text) !important}
+.alert-success{border-color:rgba(94,242,192,.4) !important;background:rgba(94,242,192,.10) !important}
+.alert-warning{border-color:rgba(255,196,107,.4) !important;background:rgba(255,196,107,.09) !important}
+.alert-danger{border-color:rgba(255,127,156,.45) !important;background:rgba(255,127,156,.10) !important}
 hr{border-color:var(--lg-stroke-soft) !important}
 ::-webkit-scrollbar{width:8px;height:8px}
-::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:8px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:8px}
 ::-webkit-scrollbar-track{background:transparent}
-/* Argon 主题自身的深色变量兜底 */
 :root,[data-darkmode="true"]{
   --background-color-high:#0f1620 !important;
-  --background-color-medium:rgba(255,255,255,.08) !important;
+  --background-color-medium:rgba(255,255,255,.07) !important;
   --bg-white:transparent !important;
-  --bg-light:rgba(255,255,255,.08) !important;
-  --bg-gray:rgba(255,255,255,.06) !important;
-  --border-color:rgba(255,255,255,.16) !important;
+  --bg-light:rgba(255,255,255,.07) !important;
+  --bg-gray:rgba(255,255,255,.05) !important;
+  --border-color:rgba(255,255,255,.15) !important;
   --text-color:#eef4ff !important;
 }
