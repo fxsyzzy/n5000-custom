@@ -344,3 +344,11 @@ N5000 面板（登录后默认首页）
 - 持久化：tailscaled 的 Funnel 配置在服务重启后保留；刷机后执行
   `echo 'tskey-auth-...' > /etc/tailscale/authkey && /usr/sbin/n5000-tunnel-up` 即可恢复。
 - 相关文件：`/etc/init.d/n5000-wechat-http`（专用回调服务）、`/usr/sbin/n5000-tunnel-up`（一键恢复 Tailscale+Funnel）、`/etc/uci-defaults/91-tailscale-wechat`。
+
+## 大肥鱼 × AI 语录
+
+- 大肥鱼的对话气泡会定时（约 5 分钟）向 DeepSeek 要一句「傲娇/吐槽」语录，结合实时路由状态（温度/负载/在线设备）生成
+- 没配 API Key 或关闭开关时自动回退到本地固定语录，不影响使用
+- 开关：LuCI → N5000 面板 → AI 助手 → 设置 →「让大肥鱼用 AI 生成语录」
+- 接口：`/cgi-bin/aichat?action=line`（短回复，max_tokens 60，成本极低）
+- 前端缓存 4 分钟，切换页面不会重复请求
