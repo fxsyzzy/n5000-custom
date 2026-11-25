@@ -52,6 +52,20 @@
   .toast.on{display:block}
   .badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid var(--border);color:var(--dim);margin-left:8px}
   @media(max-width:640px){ .form-row{grid-template-columns:1fr} table.responsive th:nth-child(2),table.responsive td:nth-child(2){display:none} }
+
+  /* 晨光模式（由 iframe 主题参数触发） */
+  body.vault-light{background:radial-gradient(900px 520px at 8% -12%,rgba(131,217,220,.45),transparent 60%),
+    radial-gradient(700px 460px at 92% -6%,rgba(200,244,249,.9),transparent 58%),
+    linear-gradient(180deg,#F2FCFE 0%,#E4F7FA 55%,#D9F1F6 100%) !important;color:#0D2C54 !important}
+  body.vault-light .panel{background:linear-gradient(180deg,rgba(255,255,255,.8),rgba(228,247,250,.62)) !important;
+    border-color:rgba(30,91,140,.18) !important;color:#0D2C54 !important}
+  body.vault-light .sub,body.vault-light .muted,body.vault-light .empty,body.vault-light th{color:rgba(13,44,84,.55) !important}
+  body.vault-light td{border-bottom-color:rgba(30,91,140,.12) !important}
+  body.vault-light input[type=text],body.vault-light input[type=password]{
+    background:rgba(255,255,255,.8) !important;color:#0D2C54 !important;border-color:rgba(30,91,140,.25) !important}
+  body.vault-light button{background:rgba(255,255,255,.72) !important;color:#0D2C54 !important;border-color:rgba(30,91,140,.24) !important}
+  body.vault-light button.prim{background:#48A9C5 !important;color:#04121a !important;border-color:transparent !important}
+  body.vault-light .tag{background:rgba(72,169,197,.16) !important;color:#1E5B8C !important}
 </style>
 </head>
 <body>
@@ -119,6 +133,7 @@
 
 <script>
 (function(){
+  try { if (new URLSearchParams(location.search).get('theme') === 'light') document.body.classList.add('vault-light'); } catch(e) {}
   var API="/cgi-bin/vault";
   var token=sessionStorage.getItem('vault-token')||'';
   var entries=[];
