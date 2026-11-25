@@ -1,30 +1,28 @@
 /* ============================================================
-   Liquid Glass skin for LuCI (Argon / Carbon) — performance tuned
-   - 只对主要面板做毛玻璃，表格/行/小控件不做模糊
-   - 背景使用静态渐变（不随滚动重绘）
+   Liquid Glass skin for LuCI (Argon) — content-only glass, stock sidebar layout
+   No backdrop-filter (performance mode): translucent gradients + borders only.
    ============================================================ */
 :root{
-  --lg-text:#eef4ff;
-  --lg-dim:rgba(226,236,255,.62);
-  --lg-mint:#5ef2c0;
-  --lg-cyan:#6fd6ff;
-  --lg-stroke:rgba(255,255,255,.16);
-  --lg-stroke-soft:rgba(255,255,255,.09);
-  --lg-glass:linear-gradient(145deg,rgba(255,255,255,.11),rgba(255,255,255,.04));
-  --lg-shadow:0 12px 30px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.24);
+  --lg-text:#e8eefb;
+  --lg-dim:rgba(232,238,251,.55);
+  --lg-mint:#6fe3c4;
+  --lg-cyan:#6fc9ff;
+  --lg-stroke:rgba(255,255,255,.09);
+  --lg-stroke-strong:rgba(255,255,255,.16);
+  --lg-glass:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.028));
+  --lg-shadow:0 10px 28px rgba(0,0,0,.28);
 }
-html{background:#0a0f18 !important}
+html{background:#070b12 !important}
 body{
   background:
-    radial-gradient(1000px 700px at 15% 10%, #1b3a5c 0%, transparent 60%),
-    radial-gradient(900px 650px at 85% 15%, #3a2260 0%, transparent 62%),
-    radial-gradient(1000px 800px at 70% 90%, #0f4a4a 0%, transparent 60%),
-    linear-gradient(160deg,#0a0f18 0%,#0b1220 50%,#0a0d16 100%) !important;
+    radial-gradient(1100px 520px at 18% -12%, rgba(64,116,186,.18), transparent 60%),
+    radial-gradient(900px 480px at 88% -8%, rgba(118,84,200,.14), transparent 58%),
+    radial-gradient(900px 700px at 60% 110%, rgba(24,110,100,.12), transparent 60%),
+    linear-gradient(180deg,#070b12 0%,#0a1019 55%,#080b11 100%) !important;
   background-attachment:scroll !important;
   color:var(--lg-text) !important;
   -webkit-font-smoothing:antialiased;
 }
-/* ---------- 文字色 ---------- */
 body,h1,h2,h3,h4,h5,h6,label,td,th,dt,dd,li,p,span,strong,b,
 .cbi-value-title,.cbi-value-field,.cbi-input-user,.cbi-select,
 .cbi-input-text,.cbi-input-password,.cbi-input-select,.cbi-input-textarea{color:var(--lg-text) !important}
@@ -32,101 +30,113 @@ a,a:link,a:visited{color:var(--lg-cyan) !important}
 a:hover{color:var(--lg-mint) !important}
 small,.help-block,.cbi-value-description,.text-muted,.cbi-section-descr,
 .cbi-input-desc,.label,.cbi-tooltip,.cbi-value-title small{color:var(--lg-dim) !important}
-/* ---------- 玻璃面板（只保留主要容器） ---------- */
-.main,.header,.nav,.cbi-section,.cbi-section-node,.panel,.well,.card,
-.modal-content,.login-page,.login-container,.login-form,
-.dropdown-menu,.table-container,.cbi-page-actions,
-.ifacebox,.cbi-dashboard{
+/* ---------- 顶栏：与 Argon 布局兼容（不改变结构） ---------- */
+header{background:linear-gradient(180deg,rgba(13,19,28,.96),rgba(10,15,23,.92)) !important;
+  border-bottom:1px solid var(--lg-stroke) !important;
+  box-shadow:none !important;border-radius:0 !important;margin:0 !important;padding:0 !important}
+header .brand,header a{color:var(--lg-text) !important}
+/* ---------- 侧边栏：保持 Argon 布局，只换配色 ---------- */
+.main-left{background:linear-gradient(180deg,rgba(13,19,28,.97),rgba(9,13,20,.97)) !important;
+  border-right:1px solid var(--lg-stroke) !important;
+  box-shadow:none !important;border-radius:0 !important;margin:0 !important}
+.main-left .sidenav-header{border-bottom:1px solid var(--lg-stroke) !important;background:transparent !important}
+.main-left .brand{color:var(--lg-text) !important}
+.main-left ul{background:transparent !important;border:none !important;box-shadow:none !important;margin:0 !important;padding:6px 8px !important}
+.main-left li{background:transparent !important;border:none !important}
+.main-left a{color:var(--lg-dim) !important;border-radius:10px !important;padding:8px 10px !important;margin:1px 0 !important;
+  display:block !important;text-decoration:none !important;background:transparent !important;box-shadow:none !important}
+.main-left a:hover{background:rgba(255,255,255,.06) !important;color:var(--lg-text) !important}
+.main-left li.active>a,.main-left a.active{background:rgba(111,227,196,.12) !important;color:var(--lg-mint) !important}
+.main-left .sidenav-header .brand{font-weight:600}
+/* 移动端遮罩 */
+.darkMask{background:rgba(4,8,14,.5) !important}
+/* ---------- 内容面板：半透明渐变 + 描边 ---------- */
+.cbi-section,.cbi-section-node,.cbi-map,.panel,.well,.card,
+.modal-content,.login-page .login-container,.login-page .login-form,
+.dropdown-menu,.table-container,.cbi-page-actions,.ifacebox,.cbi-dashboard,.cbi-tabcontainer{
   background:var(--lg-glass) !important;
   border:1px solid var(--lg-stroke) !important;
-  border-radius:18px !important;
+  border-radius:12px !important;
   box-shadow:var(--lg-shadow) !important;
   color:var(--lg-text) !important;
 }
-tr,.list-group-item,.cbi-value,fieldset{background:transparent !important;border-color:var(--lg-stroke-soft) !important}
-/* ---------- 头部/导航 ---------- */
-.header,.nav{
-  background:linear-gradient(135deg,rgba(255,255,255,.11),rgba(255,255,255,.04)) !important;
-  border:1px solid var(--lg-stroke) !important;border-radius:999px !important;
-  margin:8px 10px !important;padding:6px 12px !important;
-}
-.nav a,.header a{border-radius:999px !important;color:var(--lg-text) !important}
-.nav a:hover,.nav a.active{background:rgba(255,255,255,.13) !important;color:var(--lg-mint) !important}
-/* ---------- 表单控件 ---------- */
+.cbi-map{background:transparent !important;border:none !important;box-shadow:none !important}
+.cbi-value{background:transparent !important;border-radius:10px !important;box-shadow:none !important;margin-bottom:4px}
+.cbi-value:hover{background:rgba(255,255,255,.025) !important}
+fieldset{background:transparent !important;border-color:var(--lg-stroke) !important}
+/* ---------- 表单 ---------- */
 input,select,textarea,.cbi-input-text,.cbi-input-password,
 .cbi-input-select,.cbi-input-textarea,.form-control,.cbi-select{
-  background:rgba(255,255,255,.07) !important;
-  border:1px solid var(--lg-stroke) !important;border-radius:12px !important;
-  color:var(--lg-text) !important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.16) !important;
+  background:rgba(255,255,255,.045) !important;
+  border:1px solid var(--lg-stroke) !important;border-radius:8px !important;
+  color:var(--lg-text) !important;box-shadow:none !important;
 }
 input:focus,select:focus,textarea:focus,.cbi-input-text:focus,.cbi-input-password:focus{
-  outline:none !important;border-color:rgba(94,242,192,.55) !important;
-  box-shadow:0 0 0 3px rgba(94,242,192,.12), inset 0 1px 0 rgba(255,255,255,.18) !important;
+  outline:none !important;border-color:rgba(111,227,196,.55) !important;
+  box-shadow:0 0 0 3px rgba(111,227,196,.10) !important;
 }
-input[type=checkbox],input[type=radio]{accent-color:#5ef2c0 !important}
+input[type=checkbox],input[type=radio]{accent-color:#6fe3c4 !important}
 /* ---------- 按钮 ---------- */
 .btn,.cbi-button,.cbi-button-save,.cbi-button-apply,.cbi-button-reset,
-.cbi-button-remove,.cbi-button-action,.cbi-button-link,.btn-default,.btn-primary,.cbi-button-neutral{
-  border-radius:999px !important;border:1px solid var(--lg-stroke) !important;
-  background:rgba(255,255,255,.10) !important;color:var(--lg-text) !important;
-  box-shadow:0 6px 16px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.22) !important;
+.cbi-button-remove,.cbi-button-action,.cbi-button-link,.btn-default,.cbi-button-neutral{
+  border-radius:8px !important;border:1px solid var(--lg-stroke-strong) !important;
+  background:rgba(255,255,255,.05) !important;color:var(--lg-text) !important;
+  box-shadow:none !important;transition:background .15s ease !important;
 }
-.btn:hover,.cbi-button:hover{transform:translateY(-1px) !important;filter:brightness(1.07) !important}
+.btn:hover,.cbi-button:hover{background:rgba(255,255,255,.10) !important}
 .btn-primary,.cbi-button-save,.cbi-button-apply,.cbi-button-action,.cbi-button-positive{
-  background:linear-gradient(120deg,#8bffd9,#5ef2c0 45%,#6fd6ff) !important;
+  background:linear-gradient(120deg,#8bffd9,#6fe3c4 50%,#6fc9ff) !important;
   color:#052018 !important;border:none !important;font-weight:600 !important;
 }
 .btn-danger,.cbi-button-remove,.cbi-button-negative{
-  background:linear-gradient(120deg,#ffb3c4,#ff7f9c) !important;color:#2a0710 !important;border:none !important;
+  background:rgba(255,127,156,.85) !important;color:#2a0710 !important;border:none !important;
 }
 /* ---------- 表格 ---------- */
 .table,.cbi-section-table{background:transparent !important;border:none !important;box-shadow:none !important}
 .table>thead>tr>th{color:var(--lg-dim) !important;border-bottom:1px solid var(--lg-stroke) !important;background:transparent !important}
-.table>tbody>tr>td{border-top:1px solid var(--lg-stroke-soft) !important;color:var(--lg-text) !important}
-.table-striped>tbody>tr:nth-of-type(odd){background:rgba(255,255,255,.03) !important}
+.table>tbody>tr>td{border-top:1px solid rgba(255,255,255,.06) !important;color:var(--lg-text) !important}
+.table-striped>tbody>tr:nth-of-type(odd){background:rgba(255,255,255,.02) !important}
 /* ---------- 标签页 ---------- */
-.cbi-tabmenu>li>a{border-radius:999px !important;color:var(--lg-dim) !important;background:transparent !important}
-.cbi-tabmenu>li.cbi-tab>a,.cbi-tabmenu>li>a:hover{background:rgba(255,255,255,.13) !important;color:var(--lg-mint) !important}
+.cbi-tabmenu{display:flex;gap:6px;padding:0 !important;background:transparent !important;border:none !important;box-shadow:none !important}
+.cbi-tabmenu>li>a{border-radius:8px !important;color:var(--lg-dim) !important;background:transparent !important;padding:6px 12px !important}
+.cbi-tabmenu>li.cbi-tab>a,.cbi-tabmenu>li>a:hover{background:rgba(255,255,255,.07) !important;color:var(--lg-mint) !important}
 /* ---------- 登录页 ---------- */
-.login-page .login-container,.login-page .login-form,.login-page form{
-  background:linear-gradient(150deg,rgba(255,255,255,.13),rgba(255,255,255,.045)) !important;
-  border:1px solid var(--lg-stroke) !important;border-radius:24px !important;
-  box-shadow:0 24px 60px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.28) !important;
+.login-page .login-container,.login-page .login-form{
+  background:var(--lg-glass) !important;border:1px solid var(--lg-stroke) !important;
+  border-radius:16px !important;box-shadow:0 20px 50px rgba(0,0,0,.4) !important;
 }
-.login-page .cbi-input-user,.login-page .cbi-input-password{border-radius:12px !important}
-.login-page .btn,.login-page .cbi-button{border-radius:999px !important;min-height:40px}
+.login-page .cbi-input-user,.login-page .cbi-input-password{border-radius:8px !important}
+.login-page .btn,.login-page .cbi-button{border-radius:8px !important;min-height:38px}
 /* ---------- 弹窗 ---------- */
 .modal-backdrop{background:rgba(4,8,14,.5) !important}
-.modal-content{border-radius:20px !important;border:1px solid var(--lg-stroke) !important;
-  background:linear-gradient(150deg,rgba(255,255,255,.13),rgba(255,255,255,.045)) !important;
+.modal-content{border-radius:14px !important;border:1px solid var(--lg-stroke) !important;
+  background:linear-gradient(180deg,rgba(20,28,40,.98),rgba(13,19,28,.98)) !important;
   box-shadow:0 24px 60px rgba(0,0,0,.45) !important}
-.modal-header,.modal-footer{border-color:var(--lg-stroke-soft) !important}
+.modal-header,.modal-footer{border-color:rgba(255,255,255,.07) !important}
 /* ---------- 杂项 ---------- */
-.cbi-progressbar{background:rgba(255,255,255,.08) !important;border-radius:999px !important;overflow:hidden !important}
-.cbi-progressbar>div{background:linear-gradient(90deg,#5ef2c0,#6fd6ff) !important;border-radius:999px !important}
-.alert{border-radius:14px !important;border:1px solid var(--lg-stroke) !important;
-  background:rgba(255,255,255,.07) !important;color:var(--lg-text) !important}
-.alert-success{border-color:rgba(94,242,192,.4) !important;background:rgba(94,242,192,.10) !important}
-.alert-warning{border-color:rgba(255,196,107,.4) !important;background:rgba(255,196,107,.09) !important}
-.alert-danger{border-color:rgba(255,127,156,.45) !important;background:rgba(255,127,156,.10) !important}
-hr{border-color:var(--lg-stroke-soft) !important}
+.cbi-progressbar{background:rgba(255,255,255,.07) !important;border-radius:2px !important;overflow:hidden !important}
+.cbi-progressbar>div{background:var(--lg-mint) !important;border-radius:2px !important}
+.alert{border-radius:10px !important;border:1px solid var(--lg-stroke) !important;
+  background:rgba(255,255,255,.05) !important;color:var(--lg-text) !important}
+.alert-success{border-color:rgba(111,227,196,.35) !important;background:rgba(111,227,196,.10) !important}
+.alert-warning{border-color:rgba(255,196,107,.35) !important;background:rgba(255,196,107,.08) !important}
+.alert-danger{border-color:rgba(255,127,156,.4) !important;background:rgba(255,127,156,.10) !important}
+hr{border-color:var(--lg-stroke) !important}
 ::-webkit-scrollbar{width:8px;height:8px}
-::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:8px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:8px}
 ::-webkit-scrollbar-track{background:transparent}
-:root,[data-darkmode="true"]{
-  --background-color-high:#0f1620 !important;
-  --background-color-medium:rgba(255,255,255,.07) !important;
-  --bg-white:transparent !important;
-  --bg-light:rgba(255,255,255,.07) !important;
-  --bg-gray:rgba(255,255,255,.05) !important;
-  --border-color:rgba(255,255,255,.15) !important;
-  --text-color:#eef4ff !important;
-}
-
-/* ---------- 性能模式：全局禁用毛玻璃（只保留半透明渐变 + 描边） ---------- */
+/* ---------- 性能模式：禁用所有毛玻璃 ---------- */
 *,*::before,*::after{
   backdrop-filter:none !important;
   -webkit-backdrop-filter:none !important;
 }
-
+/* Argon 深色变量兜底 */
+:root,[data-darkmode="true"]{
+  --background-color-high:#0d131c !important;
+  --background-color-medium:rgba(255,255,255,.06) !important;
+  --bg-white:transparent !important;
+  --bg-light:rgba(255,255,255,.06) !important;
+  --bg-gray:rgba(255,255,255,.04) !important;
+  --border-color:rgba(255,255,255,.09) !important;
+  --text-color:var(--lg-text) !important;
+}
