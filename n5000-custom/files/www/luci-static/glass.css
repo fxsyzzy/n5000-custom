@@ -12,3 +12,15 @@
 .cbi-progressbar>div{background:var(--primary, #6fe3c4) !important}
 /* 登录页略提圆角，与仪表盘统一 */
 .login-page .login-container,.login-page .login-form{border-radius:16px !important}
+
+/* ---------- Pandora Na'vi bioluminescent theme ---------- */
+body{
+  background:
+    radial-gradient(1100px 640px at 8% -12%, rgba(30,91,140,.42) 0%, transparent 62%),
+    radial-gradient(900px 560px at 92% -6%, rgba(72,169,197,.22) 0%, transparent 58%),
+    radial-gradient(800px 620px at 60% 112%, rgba(13,44,84,.55) 0%, transparent 62%),
+    linear-gradient(180deg,#061428 0%,#0D2C54 55%,#071a30 100%) !important;
+  background-attachment:scroll !important;
+}
+.cbi-progressbar>div{background:var(--primary,#48A9C5) !important}
+a:hover{color:#83D9DC !important}
