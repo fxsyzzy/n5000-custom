@@ -2,7 +2,6 @@
  * N5000 大肥鱼（DeepSeek 鲸鱼娘）全局挂件 —— 左下角常驻
  *  - 静态站立（不游动），点击喂白饭：饭放头上，一叠一碗
  *  - 白饭计数存 localStorage，里程碑有专属台词
- *  - 随机出现 1~2 只"串门"的大肥鱼（不同形象），停一会儿自己走
  * 素材：社区二创（xxnb0/deepseek-chan-fanpack，CC BY-NC-SA 4.0）
  * ============================================================ */
 (function () {
@@ -22,10 +21,6 @@
 		if (document.getElementById('n5000-mascot')) return;
 
 		var RICE_KEY = 'n5000-rice';
-		var VISITORS = [
-			'mascot-v01.png', 'mascot-v02.png', 'mascot-v03.png', 'mascot-v04.png',
-			'mascot-v05.png', 'mascot-v06.png', 'mascot-v07.png'
-		];
 		var BASE = '/luci-static/n5000/';
 
 		var css = ''
@@ -44,12 +39,7 @@
 			+ '#n5000-mascot .n5m-bubble:before{content:"";position:absolute;left:-7px;bottom:16px;border:7px solid transparent;border-right-color:rgba(127,127,127,.3)}'
 			+ '#n5000-mascot .n5m-rice{position:absolute;left:50%;top:100%;transform:translateX(-50%);margin-top:2px;font-size:11.5px;'
 			+ 'padding:2px 9px;border-radius:999px;background:rgba(127,127,127,.16);border:1px solid rgba(127,127,127,.3);white-space:nowrap}'
-			+ '.n5m-visitor{position:fixed;bottom:12px;z-index:890;pointer-events:none;opacity:0;transition:opacity .6s ease}'
-			+ '.n5m-visitor img{height:104px;width:auto;filter:drop-shadow(0 8px 16px rgba(0,0,0,.4))}'
-			+ '.n5m-visitor.show{opacity:1}'
-			+ '.n5m-visitor .vb{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);margin-bottom:4px;white-space:nowrap;'
 			+ 'font-size:11.5px;padding:3px 9px;border-radius:10px;background:rgba(127,127,127,.16);border:1px solid rgba(127,127,127,.3)}'
-			+ '@media(max-width:640px){#n5000-mascot{bottom:66px}#n5000-mascot .n5m-img{height:120px}#n5000-mascot .n5m-head{bottom:96px}#n5000-mascot .n5m-bubble{max-width:42vw;font-size:11.5px;margin-bottom:52px}.n5m-visitor{display:none}}';
 
 		var style = document.createElement('style');
 		style.textContent = css;
@@ -197,51 +187,6 @@
 		wrap.addEventListener('pointerup', endDrag);
 		wrap.addEventListener('pointercancel', function () { drag = null; img.classList.remove('dragging'); });
 
-		/* ---------- 串门的大肥鱼 ---------- */
-		var visitors = [];
-		var VISITOR_LINES = ['路过～', '哼，看你一眼。', '有白饭吗？', '本鱼来串个门。', '摸鱼中…', '这里网速还行。'];
-
-		function spawnVisitor() {
-			if (window.innerWidth < 900) return;
-			if (visitors.length >= 2) return;
-			var used = {};
-			visitors.forEach(function (v) { used[v.img] = 1; });
-			var pool = VISITORS.filter(function (n) { return !used[n]; });
-			if (!pool.length) return;
-			var file = pick(pool);
-			var el = document.createElement('div');
-			el.className = 'n5m-visitor';
-			var leftPct = 26 + Math.random() * 46;
-			el.style.left = leftPct + 'vw';
-			el.innerHTML = '<img src="' + BASE + file + '" alt="">'
-				+ '<div class="vb" style="display:none"></div>';
-			document.body.appendChild(el);
-			var entry = { el: el, img: file };
-			visitors.push(entry);
-			requestAnimationFrame(function () { el.classList.add('show'); });
-			var vbc = el.querySelector('.vb');
-			if (Math.random() < 0.6) {
-				setTimeout(function () {
-					vbc.textContent = pick(VISITOR_LINES);
-					vbc.style.display = '';
-					setTimeout(function () { vbc.style.display = 'none'; }, 3200);
-				}, 900 + Math.random() * 1500);
-			}
-			var life = 22000 + Math.random() * 38000;
-			entry.timer = setTimeout(function () {
-				el.classList.remove('show');
-				setTimeout(function () {
-					el.remove();
-					visitors = visitors.filter(function (v) { return v !== entry; });
-				}, 700);
-			}, life);
-		}
-
-		setTimeout(spawnVisitor, 4000);
-		setInterval(function () {
-			if (visitors.length === 0 && Math.random() < 0.75) spawnVisitor();
-			else if (visitors.length < 2 && Math.random() < 0.45) spawnVisitor();
-		}, 40000);
 
 		/* ---------- 状态刷新 ---------- */
 		function refreshStatus() {
