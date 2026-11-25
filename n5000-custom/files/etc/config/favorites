@@ -1,0 +1,28 @@
+
+config category 'cat_general'
+	option name '常用'
+	option order '1'
+
+config category 'cat_work'
+	option name '工作'
+	option order '2'
+
+config category 'cat_fun'
+	option name '娱乐'
+	option order '3'
+
+config category 'cat_study'
+	option name '学习'
+	option order '4'
+
+config site 'site_panel'
+	option name 'N5000 面板'
+	option url '/cgi-bin/luci/admin/n5000'
+	option category 'cat_general'
+	option note '路由器管理面板'
+
+config site 'site_openwrt'
+	option name 'OpenWrt 文档'
+	option url 'https://openwrt.org/docs/start'
+	option category 'cat_study'
+	option note '官方文档'
