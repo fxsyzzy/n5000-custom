@@ -1,0 +1,4 @@
+config appfilter 'global'
+	option enabled '1'
+	option block_enabled '0'
+	option stats_enabled '1'
