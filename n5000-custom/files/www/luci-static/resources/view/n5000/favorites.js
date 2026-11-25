@@ -10,7 +10,7 @@ var FAVCSS = [
 	'.fav-cat h3{display:flex;align-items:center;gap:8px;margin:0 0 10px;font-size:14px}',
 	'.fav-count{font-size:11px;opacity:.6;font-weight:400}',
 	'.fav-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}',
-	'.fav-card{display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-radius:12px;',
+	'.fav-card{backdrop-filter:blur(12px) saturate(150%);-webkit-backdrop-filter:blur(12px) saturate(150%);display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-radius:12px;',
 	'border:1px solid rgba(127,127,127,.28);background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02))}',
 	'.fav-card .t{display:flex;align-items:center;gap:8px}',
 	'.fav-ico{width:26px;height:26px;flex:0 0 auto;border-radius:8px;display:flex;align-items:center;justify-content:center;',
