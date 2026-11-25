@@ -386,7 +386,7 @@ return view.extend({
 				fetch('/cgi-bin/appfilter?action=state', { cache: 'no-store' }).then(function(r) { return r.json(); }).catch(function() { return null; }),
 				fetch('/cgi-bin/traffic?action=summary', { cache: 'no-store' }).then(function(r) { return r.json(); }).catch(function() { return null; })
 			]).then(function(res) { if (res[2]) tr = res[2]; paint(res[0] || d, res[1] || af); });
-		}, 5);
+		}, 10);
 
 		return root;
 	},
