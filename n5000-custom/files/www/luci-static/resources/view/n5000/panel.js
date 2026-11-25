@@ -171,6 +171,20 @@ return view.extend({
 					E('span', { 'class': 'np-badge', 'id': 'np-link' }, ['--'])
 				]),
 				E('div', { 'class': 'np-chips' }, [
+					(function() {
+						var cur = document.documentElement.getAttribute('data-argon-mode') || 'dark';
+						var isDark = cur !== 'light';
+						return E('button', {
+							'class': 'np-chip',
+							'style': 'cursor:pointer;color:inherit;font:inherit',
+							click: function() {
+								fetch('/cgi-bin/theme?to=' + (isDark ? 'light' : 'dark'), { cache: 'no-store' })
+									.then(function(r) { return r.json(); })
+									.then(function() { location.reload(); })
+									.catch(function() { location.reload(); });
+							}
+						}, [isDark ? '☀ 晨光模式' : '🌙 暗夜模式']);
+					})(),
 					E('span', { 'class': 'np-chip', 'id': 'np-chip-temp' }, ['温度 --']),
 					E('span', { 'class': 'np-chip', 'id': 'np-chip-load' }, ['负载 --']),
 					E('span', { 'class': 'np-chip', 'id': 'np-chip-uptime' }, ['运行 --']),
@@ -275,8 +289,22 @@ return view.extend({
 				box.innerHTML = '';
 				arr.forEach(function(s, i) {
 					var label = (s.d || '?').replace(/^www\./, '').split('.')[0] || '?';
+					var color = NP_COLORS[i % NP_COLORS.length];
+					var tile = E('div', { 'class': 'np-tile', 'style': 'background:' + color + ';overflow:hidden' });
+					var img = E('img', {
+						'src': 'https://' + s.d + '/favicon.ico',
+						'width': '20', 'height': '20',
+						'style': 'display:block;border-radius:4px',
+						'alt': '',
+						'loading': 'lazy'
+					});
+					img.addEventListener('error', function() {
+						if (img.parentNode) img.parentNode.removeChild(img);
+						tile.textContent = label.charAt(0).toUpperCase();
+					});
+					tile.appendChild(img);
 					box.appendChild(E('div', { 'class': 'np-app' }, [
-						E('div', { 'class': 'np-tile', 'style': 'background:' + NP_COLORS[i % NP_COLORS.length] }, [label.charAt(0).toUpperCase()]),
+						tile,
 						E('div', { 'class': 'n', 'title': s.d }, [label.slice(0, 8)]),
 						E('div', { 'class': 'v' }, [npFmt(s.b)])
 					]));
