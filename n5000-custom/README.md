@@ -164,3 +164,32 @@ files/                         # 注入固件的自定义文件
 - 已通过 `/etc/dockerd.json` 设置 `"firewall-backend": "nftables"`，并在 `/etc/config/dockerd` 里设置 `alt_config_file` + `iptables=0`，Docker 全部走 nftables，警告消失。
 - Docker 数据目录在 `/mnt/sda1/docker`，**必须插入 USB 移动硬盘并格式化为 ext4**（TF 卡的 f2fs 不支持 overlay2 存储驱动，容器会启动失败）。
 - 国内拉取镜像：`docker.io` 经常被污染，可在 `/etc/dockerd.json` 加 `"registry-mirrors": ["https://你的镜像加速地址"]` 后重启 Docker。
+
+## 常用插件清单（可扩展）
+
+### 网络优化
+| 插件 | 包名 | 用途 |
+|---|---|---|
+| SQM QoS | `sqm-scripts` + `luci-app-sqm` | 智能限速 / 缓冲控制（cake），保障游戏、视频流畅 |
+| SmartDNS | `smartdns` + `luci-app-smartdns` | 多上游 DNS 并发测速，优选低延迟结果 |
+
+### 安全与广告拦截
+| 插件 | 包名 | 用途 |
+|---|---|---|
+| AdGuard Home | `adguardhome` + `luci-app-adguardhome` | DNS 级去广告、恶意域名拦截、查询统计 |
+| DNSCrypt | `dnscrypt-proxy2` | 加密 DNS 防劫持（无官方 LuCI 界面，改配置文件） |
+| 上网时间管控 | `luci-app-wifischedule` | WiFi 定时开关（按时间管控上网） |
+
+### 高级功能
+| 插件 | 包名 | 用途 |
+|---|---|---|
+| WireGuard | `wireguard-tools` + `kmod-wireguard` + `luci-proto-wireguard` | 高速 VPN（客户端/服务端） |
+
+### ⚠️ DNS 插件冲突说明
+`AdGuard Home`、`SmartDNS`、`DNSCrypt`、`adblock` 都会占用 53 端口 / DNS 链路，**同一时间只能启用一套**。推荐组合：
+- 方案 A（简单）：AdGuard Home 单独用（广告拦截 + DNS）
+- 方案 B（极致速度）：SmartDNS（解析优选）+ DNSCrypt（加密）串联
+- 方案 C：dnsmasq + adblock（最轻量）
+
+### 应用过滤（App Filter）
+官方 OpenWrt 源没有「应用过滤」包，需要第三方 OpenAppFilter（含内核模块 + DPI 引擎，可识别数千种应用并按设备限速/封禁）。是否需要引入第三方源可另行决定。
