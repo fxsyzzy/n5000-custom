@@ -113,6 +113,10 @@ var NPCSS = [
 	'@media(max-width:640px){.np-actions{grid-template-columns:repeat(4,1fr)}.np-stats{grid-template-columns:repeat(2,1fr)}}'
 ].join('\n');
 
+function npIsLight() {
+	return document.documentElement.getAttribute('data-argon-mode') === 'light';
+}
+
 var NP_COLORS = ['#48A9C5', '#83D9DC', '#1E5B8C', '#7FA8FF', '#5ef2c0'];
 
 return view.extend({
@@ -258,8 +262,8 @@ return view.extend({
 				});
 				ctx.strokeStyle = color; ctx.lineWidth = 1.8; ctx.stroke();
 			}
-			line('down', '#48A9C5');
-			line('up', '#83D9DC');
+			line('down', npIsLight() ? '#1A1A1A' : '#48A9C5');
+			line('up', npIsLight() ? '#888888' : '#83D9DC');
 		}
 
 		function paint(d2, af2) {
@@ -278,7 +282,7 @@ return view.extend({
 			document.getElementById('np-link').textContent = 'WAN ' + (d2.wan_ip ? '已连接' : '未连接');
 			var chipTemp = document.getElementById('np-chip-temp');
 			chipTemp.textContent = tv.toFixed(1) + '°C';
-			chipTemp.style.color = tv >= 80 ? '#ff8fa3' : (tv >= 70 ? '#ffc46b' : '#83D9DC');
+			chipTemp.style.color = tv >= 80 ? '#b3261e' : (tv >= 70 ? '#8a6a00' : (npIsLight() ? '#111111' : '#83D9DC'));
 			document.getElementById('np-chip-load').textContent = load1.toFixed(2);
 			document.getElementById('np-chip-uptime').textContent = npUptime(d2.uptime);
 			document.getElementById('np-chip-wan').textContent = d2.wan_ip || '--';
@@ -331,7 +335,8 @@ return view.extend({
 				box.innerHTML = '';
 				arr.forEach(function(s, i) {
 					var label = (s.d || '?').replace(/^www\./, '').split('.')[0] || '?';
-					var color = NP_COLORS[i % NP_COLORS.length];
+					var colors = npIsLight() ? ['#111111', '#333333', '#555555', '#777777', '#999999'] : NP_COLORS;
+					var color = colors[i % colors.length];
 					var tile = E('div', { 'class': 'np-tile', 'style': 'background:' + color + ';overflow:hidden' });
 					var img = E('img', {
 						'src': 'https://' + s.d + '/favicon.ico',
