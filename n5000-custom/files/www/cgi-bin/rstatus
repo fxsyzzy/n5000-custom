@@ -1,7 +1,21 @@
 #!/bin/sh
-# N5000 仪表盘数据接口（返回 JSON）
+# 状态接口：2 秒内重复请求直接返回缓存，降低轮询开销
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
 printf 'Content-Type: application/json\r\nCache-Control: no-store\r\n\r\n'
+CACHE=/tmp/rstatus.cache
+_now=$(date +%s)
+if [ -f "$CACHE" ]; then
+	_ts=$(sed -n '1p' "$CACHE" 2>/dev/null)
+	case "$_ts" in ''|*[!0-9]*) ;; *)
+		if [ $((_now - _ts)) -le 2 ] && [ $((_now - _ts)) -ge 0 ]; then
+			sed -n '2p' "$CACHE"
+			exit 0
+		fi
+	;; esac
+fi
 
+# N5000 仪表盘数据接口（返回 JSON）
 UP=$(cut -d. -f1 /proc/uptime 2>/dev/null)
 set -- $(cat /proc/loadavg 2>/dev/null)
 L1=$1; L5=$2; L15=$3
@@ -58,10 +72,13 @@ ERRS=$(dmesg 2>/dev/null | grep -ciE 'I/O error|EXT_CSD|mmc.*error|f2fs.*error')
 HOST=$(cat /proc/sys/kernel/hostname 2>/dev/null)
 TS=$(date +%s)
 
-printf '{"host":"%s","uptime":%s,"load":[%s,%s,%s],"mem_total":%s,"mem_avail":%s,"swap_total":%s,"swap_free":%s,"temp":%s,"root_total":%s,"root_used":%s,"root_free":%s,"tf_total":%s,"tf_used":%s,"tf_free":%s,"wan_ip":"%s","wan_rx":%s,"wan_tx":%s,"lan_ip":"%s","lan_rx":%s,"lan_tx":%s,"ssid":"%s","clients":%s,"devices":%s,"pw":%s,"pw_enabled":%s,"docker":%s,"docker_count":%s,"modem":%s,"modem_ip":"%s","tf_model":"%s","errs":%s,"ts":%s}\n' \
+OUT=$(printf '{"host":"%s","uptime":%s,"load":[%s,%s,%s],"mem_total":%s,"mem_avail":%s,"swap_total":%s,"swap_free":%s,"temp":%s,"root_total":%s,"root_used":%s,"root_free":%s,"tf_total":%s,"tf_used":%s,"tf_free":%s,"wan_ip":"%s","wan_rx":%s,"wan_tx":%s,"lan_ip":"%s","lan_rx":%s,"lan_tx":%s,"ssid":"%s","clients":%s,"devices":%s,"pw":%s,"pw_enabled":%s,"docker":%s,"docker_count":%s,"modem":%s,"modem_ip":"%s","tf_model":"%s","errs":%s,"ts":%s}\n' \
   "$HOST" "${UP:-0}" "${L1:-0}" "${L5:-0}" "${L15:-0}" \
   "${MEMT:-0}" "${MEMA:-0}" "${SWT:-0}" "${SWF:-0}" "${TEMP:-0}" \
   "${RT:-0}" "${RU:-0}" "${RF:-0}" "${TT:-0}" "${TU:-0}" "${TFREE:-0}" \
   "$WANIP" "${WRX:-0}" "${WTX:-0}" "$LANIP" "${LRX:-0}" "${LTX:-0}" \
   "$SSID" "${CLIENTS:-0}" "${DEVICES:-0}" "$PW" "${PWEN:-0}" "$DOCKER" "${DCON:-0}" \
-  "$MODEM" "$MODEMIP" "$TFMODEL" "${ERRS:-0}" "$TS"
+  "$MODEM" "$MODEMIP" "$TFMODEL" "${ERRS:-0}" "$TS")
+
+printf '%s\n%s\n' "$_now" "$OUT" > "$CACHE"
+printf '%s\n' "$OUT"
