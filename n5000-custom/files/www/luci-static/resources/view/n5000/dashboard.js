@@ -42,18 +42,26 @@ var DBCSS = [
 	'.db-row .bar{flex:1;margin:0}',
 	'.db-row .vl{width:90px;text-align:right;font-variant-numeric:tabular-nums}',
 	'@media(max-width:1000px){.db-grid{grid-template-columns:repeat(2,1fr)}.db-cols{grid-template-columns:1fr}}',
+	'.db-traffic-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}',
+	'.db-seg{display:flex;gap:4px;background:rgba(127,127,127,.14);border-radius:10px;padding:3px}',
+	'.db-segbtn{border:0;background:transparent;color:inherit;font:inherit;font-size:12.5px;padding:5px 16px;border-radius:8px;cursor:pointer;opacity:.72}',
+	'.db-segbtn.on{background:var(--primary,#48A9C5);color:#04121a;font-weight:600;opacity:1}',
+	'.db-traffic .db-row .bar{flex:1}',
 ].join('\n');
 
 return view.extend({
 	load: function() {
 		return Promise.all([
 			fetch('/cgi-bin/rstatus?t=' + Date.now(), { cache: 'no-store' }).then(function(r) { return r.json(); }).catch(function() { return null; }),
-			fetch('/cgi-bin/appfilter?action=state', { cache: 'no-store' }).then(function(r) { return r.json(); }).catch(function() { return null; })
+			fetch('/cgi-bin/appfilter?action=state', { cache: 'no-store' }).then(function(r) { return r.json(); }).catch(function() { return null; }),
+			fetch('/cgi-bin/traffic?action=summary', { cache: 'no-store' }).then(function(r) { return r.json(); }).catch(function() { return null; })
 		]);
 	},
 
 	renderInner: function(data) {
-		var d = data[0] || {}, af = data[1] || {};
+		var d = data[0] || {}, af = data[1] || {}, tr = data[2] || {};
+		var self = this;
+		this.range = this.range || 'today';
 		var samples = [], prev = null, MAX = 80;
 
 		var mkCard = function(label, bigId, noteId) {
@@ -91,6 +99,27 @@ return view.extend({
 			E('div', { 'class': 'db-cols' }, [
 				E('div', { 'class': 'cbi-section' }, [E('h3', {}, ['分类流量']), E('div', { 'id': 'db-cats' }, [' '])]),
 				E('div', { 'class': 'cbi-section' }, [E('h3', {}, ['网站 Top 10']), E('div', { 'id': 'db-sites' }, [' '])])
+			]),
+			E('div', { 'class': 'cbi-section db-traffic' }, [
+				E('div', { 'class': 'db-traffic-head' }, [
+					E('h3', { 'style': 'margin:0' }, ['流量统计（自动累计）']),
+					E('div', { 'class': 'db-seg' }, [
+						E('button', { 'class': 'db-segbtn on', 'id': 'db-seg-today', click: function() { self.range = 'today'; self.paintTraffic(tr); } }, ['今日']),
+						E('button', { 'class': 'db-segbtn', 'id': 'db-seg-month', click: function() { self.range = 'month'; self.paintTraffic(tr); } }, ['本月'])
+					])
+				]),
+				E('div', { 'class': 'db-grid', 'style': 'margin:10px 0' }, [
+					E('div', { 'class': 'cbi-section db-card' }, [E('div', { 'class': 'db-label' }, ['流量合计']), E('div', { 'class': 'db-big', 'id': 'db-t-total' }, ['--'])]),
+					E('div', { 'class': 'cbi-section db-card' }, [E('div', { 'class': 'db-label' }, ['下载']), E('div', { 'class': 'db-big', 'id': 'db-t-rx' }, ['--'])]),
+					E('div', { 'class': 'cbi-section db-card' }, [E('div', { 'class': 'db-label' }, ['上传']), E('div', { 'class': 'db-big', 'id': 'db-t-tx' }, ['--'])]),
+					E('div', { 'class': 'cbi-section db-card' }, [E('div', { 'class': 'db-label' }, ['统计天数']), E('div', { 'class': 'db-big', 'id': 'db-t-days' }, ['--'])])
+				]),
+				E('div', { 'class': 'db-cols' }, [
+					E('div', {}, [E('h4', { 'style': 'margin:4px 0 8px' }, ['流量用在哪（分类）']), E('div', { 'id': 'db-tcats' }, [' '])]),
+					E('div', {}, [E('h4', { 'style': 'margin:4px 0 8px' }, ['流量用在哪（网站 Top 10）']), E('div', { 'id': 'db-tsites' }, [' '])])
+				]),
+				E('div', { 'class': 'db-note', 'style': 'margin-top:12px' }, ['近 30 天每日流量']),
+				E('canvas', { 'id': 'db-days', 'style': 'width:100%;height:120px;display:block' })
 			]),
 			E('div', { 'class': 'cbi-section' }, [E('h3', {}, ['设备流量']), E('div', { 'id': 'db-devs' }, [' '])]),
 
@@ -232,15 +261,92 @@ return view.extend({
 			});
 		};
 
-		setTimeout(paint, 100);
-		window.addEventListener('resize', drawChart);
+		self.paintTraffic = function(tdata) {
+			tdata = tdata || tr || {};
+			if (!document.getElementById('db-t-total')) return;
+			var isMonth = self.range === 'month';
+			var segT = document.getElementById('db-seg-today'), segM = document.getElementById('db-seg-month');
+			if (segT && segM) {
+				segT.className = 'db-segbtn' + (isMonth ? '' : ' on');
+				segM.className = 'db-segbtn' + (isMonth ? ' on' : '');
+			}
+			var r = isMonth ? (tdata.month || {}) : (tdata.today || {});
+			document.getElementById('db-t-total').textContent = dbFmt(r.total || 0);
+			document.getElementById('db-t-rx').textContent = dbFmt(r.rx || 0);
+			document.getElementById('db-t-tx').textContent = dbFmt(r.tx || 0);
+			document.getElementById('db-t-days').textContent = isMonth ? ((r.days || 0) + ' 天') : '今日';
+
+			var cats = r.cats || [], maxC = 1;
+			cats.forEach(function(c) { maxC = Math.max(maxC, c.bytes || 0); });
+			var cl = document.getElementById('db-tcats');
+			cl.innerHTML = '';
+			if (!cats.length) cl.appendChild(E('em', {}, ['暂无数据（统计服务刚启动）']));
+			cats.slice(0, 10).forEach(function(c) {
+				cl.appendChild(E('div', { 'class': 'db-row' }, [
+					E('span', { 'class': 'nm' }, [dbCatName(c.cat)]),
+					E('span', { 'class': 'bar' }, [E('i', { 'style': 'width:' + Math.round((c.bytes || 0) / maxC * 100) + '%' })]),
+					E('span', { 'class': 'vl' }, [dbFmt(c.bytes)])
+				]));
+			});
+
+			var sites = r.sites || [];
+			var sl = document.getElementById('db-tsites');
+			sl.innerHTML = '';
+			if (!sites.length) sl.appendChild(E('em', {}, ['暂无数据']));
+			sites.slice(0, 10).forEach(function(x) {
+				sl.appendChild(E('div', { 'class': 'db-row' }, [
+					E('span', { 'class': 'nm', 'title': x.domain }, [x.domain]),
+					E('span', { 'class': 'vl' }, [dbFmt(x.bytes)])
+				]));
+			});
+
+			drawDays(tdata.days || []);
+		};
+
+		var drawDays = function(days) {
+			var c = document.getElementById('db-days');
+			if (!c || !c.getContext) return;
+			var dpr = window.devicePixelRatio || 1;
+			var w = c.clientWidth, h = c.clientHeight;
+			if (!w || !h) return;
+			if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) {
+				c.width = Math.round(w * dpr);
+				c.height = Math.round(h * dpr);
+			}
+			var ctx = c.getContext('2d');
+			ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+			ctx.clearRect(0, 0, w, h);
+			var list = days.slice(-30);
+			ctx.fillStyle = 'rgba(127,127,127,.55)';
+			ctx.font = '10px sans-serif';
+			if (!list.length) { ctx.fillText('暂无历史数据', 8, h - 8); return; }
+			var max = 1;
+			list.forEach(function(x) { max = Math.max(max, x.total || 0); });
+			var n = list.length, gap = 4;
+			var bw = Math.max(1, (w - gap * (n - 1)) / n);
+			list.forEach(function(x, i) {
+				var bh = Math.max(1, (x.total || 0) / max * (h - 20));
+				var xx = i * (bw + gap);
+				ctx.fillStyle = (i === n - 1) ? '#48A9C5' : 'rgba(72,169,197,.42)';
+				ctx.fillRect(xx, h - bh - 2, bw, bh);
+			});
+			ctx.fillStyle = 'rgba(200,244,249,.55)';
+			ctx.fillText(list[0].date, 0, h - 4);
+			var lastTxt = list[list.length - 1].date;
+			var tw = ctx.measureText(lastTxt).width;
+			ctx.fillText(lastTxt, w - tw, h - 4);
+		};
+
+		setTimeout(function() { paint(); self.paintTraffic(tr); }, 100);
+		window.addEventListener('resize', function() { drawChart(); drawDays(tr.days || []); });
 
 
 		poll.add(function() {
 			return Promise.all([
 				fetch('/cgi-bin/rstatus?t=' + Date.now(), { cache: 'no-store' }).then(function(r) { return r.json(); }).catch(function() { return null; }),
-				fetch('/cgi-bin/appfilter?action=state', { cache: 'no-store' }).then(function(r) { return r.json(); }).catch(function() { return null; })
-			]).then(function(res) { if (res[0]) d = res[0]; if (res[1]) af = res[1]; paint(); });
+				fetch('/cgi-bin/appfilter?action=state', { cache: 'no-store' }).then(function(r) { return r.json(); }).catch(function() { return null; }),
+				fetch('/cgi-bin/traffic?action=summary', { cache: 'no-store' }).then(function(r) { return r.json(); }).catch(function() { return null; })
+			]).then(function(res) { if (res[0]) d = res[0]; if (res[1]) af = res[1]; if (res[2]) tr = res[2]; paint(); self.paintTraffic(tr); });
 		}, 5);
 
 		return root;
