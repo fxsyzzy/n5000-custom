@@ -1,5 +1,5 @@
 #!/bin/sh
-# N5000 仪表盘数据接口（JSON）
+# N5000 ????????JSON?
 printf 'Content-Type: application/json\r\nCache-Control: no-store\r\n\r\n'
 
 UP=$(cut -d. -f1 /proc/uptime 2>/dev/null)
@@ -19,13 +19,16 @@ set -- $(df -k /overlay 2>/dev/null | awk 'NR==2{print $2, $3, $4}')
 TT=$1; TU=$2; TFREE=$3
 
 WANIP=$(ip -4 addr show eth1 2>/dev/null | awk '/inet /{print $2}' | cut -d/ -f1)
-LANIP=$(ip -4 addr show eth0 2>/dev/null | awk '/inet /{print $2}' | cut -d/ -f1)
+LANIP=$(ip -4 addr show br-lan 2>/dev/null | awk '/inet /{print $2}' | cut -d/ -f1)
+[ -z "$LANIP" ] && LANIP=$(ip -4 addr show eth0 2>/dev/null | awk '/inet /{print $2}' | cut -d/ -f1)
+LANDEV=br-lan
+[ -d /sys/class/net/br-lan ] || LANDEV=eth0
 WRX=$(cat /sys/class/net/eth1/statistics/rx_bytes 2>/dev/null || echo 0)
 WTX=$(cat /sys/class/net/eth1/statistics/tx_bytes 2>/dev/null || echo 0)
-LRX=$(cat /sys/class/net/eth0/statistics/rx_bytes 2>/dev/null || echo 0)
-LTX=$(cat /sys/class/net/eth0/statistics/tx_bytes 2>/dev/null || echo 0)
+LRX=$(cat /sys/class/net/$LANDEV/statistics/rx_bytes 2>/dev/null || echo 0)
+LTX=$(cat /sys/class/net/$LANDEV/statistics/tx_bytes 2>/dev/null || echo 0)
 
-SSID=$(iwinfo 2>/dev/null | awk '/ESSID/{print $2; exit}')
+SSID=$(iwinfo 2>/dev/null | sed -n 's/.*ESSID: "\([^"]*\)".*/\1/p' | head -n1)
 [ -z "$SSID" ] && SSID="--"
 CLIENTS=0
 for dev in $(iw dev 2>/dev/null | awk '/Interface/{print $2}'); do
@@ -60,3 +63,4 @@ printf '{"host":"%s","uptime":%s,"load":[%s,%s,%s],"mem_total":%s,"mem_avail":%s
   "$WANIP" "${WRX:-0}" "${WTX:-0}" "$LANIP" "${LRX:-0}" "${LTX:-0}" \
   "$SSID" "${CLIENTS:-0}" "$PW" "${PWEN:-0}" "$DOCKER" "${DCON:-0}" \
   "$MODEM" "$MODEMIP" "$TFMODEL" "${ERRS:-0}" "$TS"
+
