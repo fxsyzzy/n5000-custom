@@ -241,7 +241,7 @@ return view.extend({
 				fetch('/cgi-bin/rstatus?t=' + Date.now(), { cache: 'no-store' }).then(function(r) { return r.json(); }).catch(function() { return null; }),
 				fetch('/cgi-bin/appfilter?action=state', { cache: 'no-store' }).then(function(r) { return r.json(); }).catch(function() { return null; })
 			]).then(function(res) { if (res[0]) d = res[0]; if (res[1]) af = res[1]; paint(); });
-		}, 3);
+		}, 5);
 
 		return root;
 	},
