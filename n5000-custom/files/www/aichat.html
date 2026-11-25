@@ -20,13 +20,9 @@
       radial-gradient(1200px 900px at 70% 95%, #0f4a4a 0%, transparent 60%),
       radial-gradient(900px 700px at 20% 90%, #241a45 0%, transparent 65%),
       linear-gradient(160deg,#0a0f18 0%,#0b1220 45%,#0a0d16 100%)}
-  .bg::before,.bg::after{content:"";position:absolute;border-radius:50%;filter:blur(38px);opacity:.55;mix-blend-mode:screen}
-  .bg::before{width:52vw;height:52vw;left:-10vw;top:-12vw;
-    background:radial-gradient(circle at 30% 30%,rgba(94,242,192,.45),rgba(111,214,255,.18) 45%,transparent 70%);
-    }
-  .bg::after{width:46vw;height:46vw;right:-8vw;bottom:-14vw;
-    background:radial-gradient(circle at 60% 40%,rgba(180,155,255,.42),rgba(255,127,156,.16) 50%,transparent 72%);
-    }
+  
+  
+  
   @keyframes float1{from{transform:translate3d(0,0,0)}to{transform:translate3d(6vw,4vh,0) scale(1.12)}}
   @keyframes float2{from{transform:translate3d(0,0,0) scale(1.05)}to{transform:translate3d(-5vw,-4vh,0) scale(.95)}}
   
@@ -34,12 +30,10 @@
   header{display:flex;align-items:center;gap:10px;padding:12px 18px;margin:14px 16px 6px;flex-wrap:wrap;
     border-radius:999px;border:1px solid var(--stroke);
     background:linear-gradient(135deg,rgba(255,255,255,.12),rgba(255,255,255,.04));
-    backdrop-filter:blur(10px) saturate(145%);-webkit-backdrop-filter:blur(10px) saturate(145%);
     box-shadow:0 12px 34px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.28)}
   header h1{margin:0;font-size:19px;font-weight:700;letter-spacing:.4px;
     background:linear-gradient(100deg,#a9ffe4,#6fd6ff 55%,#b49bff);
-    -webkit-background-clip:text;background-clip:text;color:transparent;
-    filter:drop-shadow(0 0 14px rgba(111,214,255,.3))}
+    -webkit-background-clip:text;background-clip:text;color:transparent;)}
   .badge{display:flex;align-items:center;font-size:12px;color:var(--dim);border:1px solid var(--stroke-soft);
     padding:4px 12px;border-radius:999px;background:rgba(255,255,255,.06)}
   .dot{width:8px;height:8px;border-radius:50%;background:var(--mint);display:inline-block;margin-right:6px;
@@ -58,12 +52,10 @@
   .avatar{width:34px;height:34px;border-radius:12px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
     font-size:13px;font-weight:600;border:1px solid var(--stroke-soft);
     background:linear-gradient(145deg,rgba(255,255,255,.14),rgba(255,255,255,.04));
-    backdrop-filter:blur(10px)}
   .msg.ai .avatar{color:var(--mint);border-color:rgba(94,242,192,.4);box-shadow:0 0 18px rgba(94,242,192,.15)}
   .msg.me .avatar{color:var(--cyan);border-color:rgba(111,214,255,.4)}
   .bubble{padding:11px 15px;border-radius:20px;font-size:14px;line-height:1.65;white-space:pre-wrap;word-break:break-word;
     background:linear-gradient(145deg,rgba(255,255,255,.11),rgba(255,255,255,.04));
-    border:1px solid var(--stroke);backdrop-filter:blur(10px) saturate(140%);-webkit-backdrop-filter:blur(10px) saturate(140%);
     box-shadow:0 14px 34px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.26)}
   .msg.me .bubble{border-color:rgba(111,214,255,.34);background:linear-gradient(145deg,rgba(111,214,255,.16),rgba(111,214,255,.05))}
   .meta{font-size:11px;color:var(--dim);margin-top:5px}
@@ -71,7 +63,6 @@
   #input{flex:1;background:linear-gradient(145deg,rgba(255,255,255,.10),rgba(255,255,255,.035));
     border:1px solid var(--stroke);color:var(--text);font-family:inherit;font-size:14px;
     border-radius:22px;padding:12px 18px;resize:none;min-height:46px;max-height:140px;line-height:1.45;
-    backdrop-filter:blur(10px) saturate(140%);-webkit-backdrop-filter:blur(10px) saturate(140%);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.22), 0 10px 26px rgba(0,0,0,.28)}
   #input:focus{outline:none;border-color:rgba(94,242,192,.5);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 0 0 3px rgba(94,242,192,.12),0 10px 26px rgba(0,0,0,.28)}
   #send{height:46px;padding:0 22px;border:none;border-radius:999px;font-family:inherit;font-size:14px;font-weight:600;
@@ -83,12 +74,10 @@
   .typing{font-size:12.5px;color:var(--dim);padding:0 24px 6px;display:none}
   .typing.on{display:block}
   /* modal */
-  .mask{position:fixed;inset:0;background:rgba(4,8,14,.55);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;padding:18px;z-index:20}
   .mask.on{display:flex}
   .panel{width:min(720px,96vw);max-height:88vh;overflow-y:auto;border-radius:26px;padding:22px;
     border:1px solid var(--stroke);
     background:linear-gradient(150deg,rgba(255,255,255,.14),rgba(255,255,255,.05));
-    backdrop-filter:blur(14px) saturate(145%);-webkit-backdrop-filter:blur(14px) saturate(145%);
     box-shadow:0 30px 80px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.3)}
   .panel h2{margin:0 0 16px;font-size:16px;font-weight:600;
     background:linear-gradient(100deg,#a9ffe4,#6fd6ff);-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -96,7 +85,6 @@
   .row label{display:block;font-size:12px;color:var(--dim);margin-bottom:6px;letter-spacing:.3px}
   .row input[type=text],.row input[type=password],.row select,.row textarea{width:100%;color:var(--text);font-family:inherit;
     font-size:13px;padding:10px 14px;border-radius:14px;border:1px solid var(--stroke);
-    background:rgba(10,16,24,.45);backdrop-filter:blur(8px)}
   .row textarea{min-height:84px;resize:vertical}
   .row input:focus,.row textarea:focus{outline:none;border-color:rgba(94,242,192,.5)}
   .row.inline{display:flex;align-items:center;gap:10px}
@@ -112,7 +100,6 @@
   .sect{border-top:1px solid var(--stroke-soft);margin:18px 0 14px;padding-top:16px;font-size:13px;color:var(--mint);letter-spacing:.4px}
   .toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);padding:10px 22px;border-radius:999px;
     font-size:13px;display:none;z-index:30;color:var(--text);
-    border:1px solid var(--stroke);background:rgba(20,28,40,.75);backdrop-filter:blur(18px);
     box-shadow:0 16px 40px rgba(0,0,0,.4)}
   .toast.on{display:block}
   @media(max-width:600px){
@@ -327,5 +314,6 @@
 </script>
 </body>
 </html>
+
 
 
