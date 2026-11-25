@@ -71,7 +71,6 @@ var NPCSS = [
 	'.np-act:hover{background:rgba(72,169,197,.16);opacity:1}',
 	'.np-act .i{font-size:17px;line-height:1}',
 	'.np-ok{color:#35c48a}.np-warn{color:#e6a23c}.np-bad{color:#e05a5a}',
-	/* ---- 大尺寸优化 ---- */',
 	'.np{font-size:15px;gap:14px}',
 	'.np-top{padding:14px 20px}',
 	'.np-brand{font-size:16px}',
