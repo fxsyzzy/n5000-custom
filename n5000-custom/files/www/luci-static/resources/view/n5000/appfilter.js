@@ -36,6 +36,10 @@ var AFCSS = [
 	'.af-hint{font-size:11.5px;opacity:.6;margin-top:6px;line-height:1.45}',
 	'.af-modal .cbi-value{display:block}',
 	'@media(max-width:1000px){.af-stats{grid-template-columns:repeat(2,1fr)}.af-cols{grid-template-columns:1fr}}',
+	'.af-panel{display:none;margin-bottom:12px;padding:14px;border-radius:12px;border:1px solid rgba(131,217,220,.28);background:linear-gradient(180deg,rgba(200,244,249,.06),rgba(13,44,84,.30));backdrop-filter:blur(12px) saturate(150%);-webkit-backdrop-filter:blur(12px) saturate(150%)}',
+	'.af-panel.on{display:block}',
+	'.af-panel .cbi-value{display:block;margin-bottom:10px}',
+	'.af-panel label{font-size:12px;opacity:.7;margin-bottom:4px;display:block}',
 ].join('\n');
 
 function afMatchCat(domain, cats) {
@@ -82,6 +86,7 @@ return view.extend({
 				E('button', { 'class': 'btn cbi-button cbi-button-remove', 'id': 'af-reset', click: function() { self.resetStats(); } },
 					['清空统计'])
 			]),
+			E('div', { 'class': 'af-panel', 'id': 'af-rule' }, []),
 			E('div', { 'class': 'af-stats' }, [
 				E('div', { 'class': 'cbi-section af-stat' }, [
 					E('div', { 'class': 'af-label' }, ['总流量']),
@@ -235,93 +240,90 @@ return view.extend({
 		};
 
 		this.openRule = function(mac, name) {
+			if (!mac) return;
+			self.ruleMac = mac;
+			self.ruleName = name || mac;
+			var panel = document.getElementById('af-rule');
+			if (!panel) return;
 			var rule = null;
 			(state.rules || []).forEach(function(r) { if (r.mac === mac) rule = r; });
 			var selCats = rule && rule.block_cats ? rule.block_cats.split(',') : [];
 			var selDays = rule && rule.schedule_days ? rule.schedule_days.split(',') : [];
+			panel.innerHTML = '';
+			panel.appendChild(E('div', { 'style': 'font-size:13.5px;font-weight:600;margin-bottom:10px' },
+				['设备管控：' + self.ruleName + '（' + mac + '）']));
+
 			var catBoxes = [];
 			var chkGrid = E('div', { 'class': 'af-chk' });
-			cats.forEach(function(c) {
+			(cats || []).forEach(function(c) {
 				var cb = E('input', { 'type': 'checkbox' });
 				cb.checked = selCats.indexOf(c.key) >= 0;
 				catBoxes.push({ key: c.key, cb: cb });
 				chkGrid.appendChild(E('label', {}, [cb, ' ', c.name]));
 			});
-			var domInput = E('input', { 'type': 'text', 'class': 'cbi-input-text', 'style': 'width:100%',
+			panel.appendChild(E('div', { 'class': 'cbi-value' }, [E('label', {}, ['禁止分类']), chkGrid]));
+
+			var domInput = E('input', { 'type': 'text',
+				'style': 'width:100%;padding:8px 10px;border-radius:8px;border:1px solid rgba(131,217,220,.3);background:rgba(13,44,84,.35);color:inherit;font:inherit;font-size:13px',
 				'placeholder': '如 douyin.com,qq.com', 'value': (rule && rule.block_domains) || '' });
-			var stInput = E('input', { 'type': 'time', 'class': 'cbi-input-text', 'value': (rule && rule.schedule_start) || '' });
-			var etInput = E('input', { 'type': 'time', 'class': 'cbi-input-text', 'value': (rule && rule.schedule_end) || '' });
-			var dayNames = ['一', '二', '三', '四', '五', '六', '日'];
+			panel.appendChild(E('div', { 'class': 'cbi-value' }, [E('label', {}, ['额外禁止域名']), domInput]));
+
+			var stInput = E('input', { 'type': 'time', 'value': (rule && rule.schedule_start) || '' });
+			var etInput = E('input', { 'type': 'time', 'value': (rule && rule.schedule_end) || '' });
+			var dayNames = ['一','二','三','四','五','六','日'];
 			var dayBoxes = [];
 			var dayGrid = E('div', { 'class': 'af-days' });
-			for (var di = 1; di <= 7; di++) {
-				(function(d) {
-					var cb = E('input', { 'type': 'checkbox' });
-					cb.checked = selDays.indexOf(String(d)) >= 0;
-					dayBoxes.push({ d: d, cb: cb });
-					dayGrid.appendChild(E('label', {}, [cb, ' 周' + dayNames[d - 1]]));
-				})(di);
-			}
+			for (var di = 1; di <= 7; di++) (function(dd) {
+				var cb = E('input', { 'type': 'checkbox' });
+				cb.checked = selDays.indexOf(String(dd)) >= 0;
+				dayBoxes.push({ d: dd, cb: cb });
+				dayGrid.appendChild(E('label', {}, [cb, ' 周' + dayNames[dd - 1]]));
+			})(di);
+			panel.appendChild(E('div', { 'class': 'cbi-value' }, [
+				E('label', {}, ['生效时间段（留空=全天）']),
+				E('div', { 'style': 'display:flex;gap:8px;align-items:center' }, [stInput, E('span', {}, ['—']), etInput]),
+				dayGrid
+			]));
 
-			var content = E('div', { 'class': 'af-modal' }, [
-				E('p', {}, [E('b', {}, [name || mac]) + ' （' + mac + '）']),
-				E('div', { 'class': 'cbi-value' }, [
-					E('label', { 'class': 'cbi-value-title' }, ['禁止分类']),
-					E('div', { 'class': 'cbi-value-field' }, [chkGrid])
-				]),
-				E('div', { 'class': 'cbi-value' }, [
-					E('label', { 'class': 'cbi-value-title' }, ['额外禁止域名']),
-					E('div', { 'class': 'cbi-value-field' }, [domInput])
-				]),
-				E('div', { 'class': 'cbi-value' }, [
-					E('label', { 'class': 'cbi-value-title' }, ['生效时间段']),
-					E('div', { 'class': 'cbi-value-field' }, [
-						E('div', { 'style': 'display:flex;gap:8px;align-items:center' }, [stInput, ' — ', etInput]),
-						dayGrid,
-						E('div', { 'class': 'af-hint' }, ['留空=全天；未选星期=每天'])
-					])
-				])
-			]);
-
-			var save = function() {
-				var blockedCats = [];
-				catBoxes.forEach(function(o) { if (o.cb.checked) blockedCats.push(o.key); });
-				var blockedDays = [];
-				dayBoxes.forEach(function(o) { if (o.cb.checked) blockedDays.push(String(o.d)); });
-				var newRule = {
-					mac: mac, name: name || mac,
-					block_cats: blockedCats.join(','),
-					block_domains: domInput.value.trim(),
+			var saveFn = function() {
+				var blockedCats = []; catBoxes.forEach(function(o) { if (o.cb.checked) blockedCats.push(o.key); });
+				var blockedDays = []; dayBoxes.forEach(function(o) { if (o.cb.checked) blockedDays.push(String(o.d)); });
+				var nr = { mac: mac, name: self.ruleName, block_cats: blockedCats.join(','),
+					block_domains: (domInput.value || '').trim(),
 					schedule_start: stInput.value, schedule_end: etInput.value,
-					schedule_days: blockedDays.join(',')
-				};
+					schedule_days: blockedDays.join(',') };
 				var rules = (state.rules || []).filter(function(r) { return r.mac !== mac; });
-				if (newRule.block_cats || newRule.block_domains) rules.push(newRule);
+				if (nr.block_cats || nr.block_domains) rules.push(nr);
 				fetch('/cgi-bin/appfilter?action=save', {
 					method: 'POST', headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({ global: { enabled: state.enabled, block_enabled: state.block_enabled }, devices: rules })
 				}).then(function(r) { return r.json(); }).then(function() {
-					ui.hideModal();
 					return fetch('/cgi-bin/appfilter?action=state', { cache: 'no-store' }).then(function(r) { return r.json(); });
-				}).then(function(st) { state = st; paint(); });
+				}).then(function(st) { state = st; paint(); self.closeRule(); });
 			};
 
-			var remove = function() {
+			var delFn = function() {
 				var rules = (state.rules || []).filter(function(r) { return r.mac !== mac; });
 				fetch('/cgi-bin/appfilter?action=save', {
 					method: 'POST', headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({ global: { enabled: state.enabled, block_enabled: state.block_enabled }, devices: rules })
 				}).then(function(r) { return r.json(); }).then(function() {
-					ui.hideModal();
 					return fetch('/cgi-bin/appfilter?action=state', { cache: 'no-store' }).then(function(r) { return r.json(); });
-				}).then(function(st) { state = st; paint(); });
+				}).then(function(st) { state = st; paint(); self.closeRule(); });
 			};
 
-			ui.showModal('设备管控：' + (name || mac), content, [
-				E('button', { 'class': 'btn cbi-button cbi-button-remove', click: remove }, ['删除规则']),
-				E('button', { 'class': 'btn cbi-button', click: ui.hideModal }, ['取消']),
-				E('button', { 'class': 'btn cbi-button cbi-button-save', click: save }, ['保存'])
-			]);
+			panel.appendChild(E('div', { 'style': 'display:flex;gap:8px;justify-content:flex-end;margin-top:10px' }, [
+				E('button', { 'class': 'btn cbi-button cbi-button-remove', click: delFn }, ['删除规则']),
+				E('button', { 'class': 'btn cbi-button', click: function() { self.closeRule(); } }, ['取消']),
+				E('button', { 'class': 'btn cbi-button cbi-button-save', click: saveFn }, ['保存'])
+			]));
+			panel.className = 'af-panel on';
+			if (panel.scrollIntoView) panel.scrollIntoView({ block: 'nearest' });
+		};
+
+		this.closeRule = function() {
+			var panel = document.getElementById('af-rule');
+			if (panel) { panel.className = 'af-panel'; panel.innerHTML = ''; }
 		};
 
 		return root;
