@@ -98,6 +98,10 @@ jobs:
                    openwrt/files/www/cgi-bin/rstatus \
                    openwrt/files/www/cgi-bin/aichat \
                    openwrt/files/www/cgi-bin/wechat \
+                   openwrt/files/www/cgi-bin/appfilter \
+                   openwrt/files/usr/sbin/appfilter \
+                   openwrt/files/etc/init.d/appfilter \
+                   openwrt/files/etc/uci-defaults/94-appfilter \
                    openwrt/files/usr/sbin/theme
           find openwrt/files -type f -exec ls -l {} \;
 
@@ -142,4 +146,5 @@ jobs:
         with:
           name: build-log
           path: /tmp/build.log
+
 
