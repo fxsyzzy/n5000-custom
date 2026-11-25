@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>N5000 · 密码本</title>
+<style>
+  :root{--text:#C8F4F9;--dim:rgba(200,244,249,.55);--card:rgba(255,255,255,.055);--border:rgba(131,217,220,.24);
+    --accent:#48A9C5;--accent2:#83D9DC;--bad:#ff7f9c;--warn:#ffc46b;--radius:14px}
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%;color:var(--text);font-family:"Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    background:radial-gradient(1100px 640px at 8% -12%,rgba(30,91,140,.42),transparent 62%),
+      radial-gradient(900px 560px at 92% -6%,rgba(72,169,197,.22),transparent 58%),
+      linear-gradient(180deg,#061428 0%,#0D2C54 55%,#071a30 100%);background-attachment:fixed}
+  .wrap{max-width:1100px;margin:0 auto;padding:24px}
+  h1{font-size:18px;margin:0 0 6px;letter-spacing:.3px}
+  .sub{color:var(--dim);font-size:12.5px;margin-bottom:16px}
+  .panel{background:linear-gradient(180deg,rgba(200,244,249,.07),rgba(13,44,84,.30));
+    border:1px solid var(--border);border-radius:var(--radius);padding:18px;
+    backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%)}
+  .center{max-width:420px;margin:12vh auto 0}
+  input[type=text],input[type=password]{width:100%;padding:10px 12px;border-radius:9px;border:1px solid var(--border);
+    background:rgba(13,44,84,.35);color:inherit;font:inherit;font-size:14px;margin-bottom:10px}
+  input:focus{outline:none;border-color:var(--accent)}
+  button{border:1px solid rgba(131,217,220,.32);background:rgba(13,44,84,.4);color:inherit;cursor:pointer;
+    font:inherit;font-size:13px;padding:8px 14px;border-radius:9px}
+  button:hover{background:rgba(72,169,197,.22)}
+  button.prim{background:var(--accent);border-color:transparent;color:#04121a;font-weight:600}
+  button.danger{background:rgba(255,127,156,.2);border-color:rgba(255,127,156,.5);color:#ffd9e3}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+  .toolbar .spacer{flex:1}
+  .search{flex:1;min-width:150px;max-width:280px;padding:8px 11px;border-radius:8px;border:1px solid var(--border);
+    background:rgba(13,44,84,.35);color:inherit;font:inherit;font-size:13px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;color:var(--dim);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+    padding:8px 8px;border-bottom:1px solid var(--border);font-weight:600}
+  td{padding:9px 8px;border-bottom:1px solid rgba(131,217,220,.12);vertical-align:middle}
+  tr:hover td{background:rgba(200,244,249,.04)}
+  .pwd{font-family:Consolas,monospace;letter-spacing:1px}
+  .muted{color:var(--dim);font-size:12px}
+  .tag{font-size:11px;padding:2px 8px;border-radius:5px;background:rgba(72,169,197,.15);color:var(--accent2)}
+  .mini{font-size:11.5px;padding:4px 9px;border-radius:6px}
+  .form-panel{display:none;margin-bottom:14px}
+  .form-panel.on{display:block}
+  .row{margin-bottom:10px}
+  .row label{display:block;font-size:12px;color:var(--dim);margin-bottom:4px}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .empty{color:var(--dim);font-size:13px;padding:14px 0;text-align:center}
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);padding:9px 18px;border-radius:9px;
+    background:#0f2238;border:1px solid var(--border);font-size:13px;display:none;z-index:50}
+  .toast.on{display:block}
+  .badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid var(--border);color:var(--dim);margin-left:8px}
+  @media(max-width:640px){ .form-row{grid-template-columns:1fr} table.responsive th:nth-child(2),table.responsive td:nth-child(2){display:none} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <!-- 解锁界面 -->
+  <div id="lockview" class="center" style="display:none">
+    <div class="panel">
+      <h1>🔐 N5000 密码本</h1>
+      <div class="sub">本地加密存储 · 主密码不落盘</div>
+      <div id="initbox" style="display:none">
+        <input type="password" id="m1" placeholder="设置主密码（至少6位）">
+        <input type="password" id="m2" placeholder="再输一次确认">
+        <button class="prim" id="btnInit" style="width:100%">创建密码本</button>
+      </div>
+      <div id="unlockbox" style="display:none">
+        <input type="password" id="mpass" placeholder="输入主密码解锁">
+        <button class="prim" id="btnUnlock" style="width:100%">解锁</button>
+      </div>
+      <div class="sub" style="margin-top:12px" id="lockerr"></div>
+    </div>
+  </div>
+
+  <!-- 主界面 -->
+  <div id="vaultview" style="display:none">
+    <h1>🔐 N5000 密码本 <span class="badge" id="statebadge">已解锁</span></h1>
+    <div class="sub">仅保存在路由器本地（AES-256 加密），不会上传任何地方</div>
+    <div class="toolbar">
+      <button class="prim" id="btnAdd">＋ 添加密码</button>
+      <input class="search" id="search" placeholder="搜索名称/网址/账号…">
+      <span class="spacer"></span>
+      <button id="btnChangeMaster">改主密码</button>
+      <button class="danger" id="btnLock">锁定</button>
+    </div>
+
+    <div class="panel form-panel" id="editbox">
+      <div class="row"><label>名称（如：GitHub / 微信 / 某软件）</label><input type="text" id="f_name" placeholder="GitHub"></div>
+      <div class="form-row">
+        <div class="row"><label>网址</label><input type="text" id="f_url" placeholder="https://github.com"></div>
+        <div class="row"><label>账号</label><input type="text" id="f_user" placeholder="用户名 / 邮箱 / 手机号"></div>
+      </div>
+      <div class="row"><label>密码</label>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="f_pass" placeholder="密码" style="margin-bottom:0">
+          <button id="btnGen" title="生成随机密码">生成</button>
+          <button id="btnTogglePass" title="显示/隐藏">👁</button>
+        </div>
+      </div>
+      <div class="row"><label>备注</label><input type="text" id="f_note" placeholder="可选"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button id="btnCancel">取消</button>
+        <button class="prim" id="btnSave">保存</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <table class="responsive">
+        <thead><tr><th>名称</th><th>网址</th><th>账号</th><th>密码</th><th>备注</th><th style="width:150px">操作</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div class="empty" id="empty" style="display:none">还没有记录，点「＋ 添加密码」开始吧</div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  var API="/cgi-bin/vault";
+  var token=sessionStorage.getItem('vault-token')||'';
+  var entries=[];
+  var editing=null;
+  var autoLockTimer=null;
+  var AUTO_LOCK_MS=10*60*1000;
+
+  var $=function(id){return document.getElementById(id)};
+  function toast(m){var e=$('toast');e.textContent=m;e.classList.add('on');clearTimeout(e._t);e._t=setTimeout(function(){e.classList.remove('on')},1800)}
+  function api(action,data){
+    return fetch(API+'?action='+action,{method:data?'POST':'GET',cache:'no-store',
+      headers:data?{'Content-Type':'application/json'}:{},body:data?JSON.stringify(data):undefined})
+      .then(function(r){return r.json()});
+  }
+  function esc(s){return String(s||'').replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+
+  function resetAutoLock(){
+    if(autoLockTimer) clearTimeout(autoLockTimer);
+    autoLockTimer=setTimeout(function(){lock(true)},AUTO_LOCK_MS);
+  }
+
+  function showLock(initialized){
+    $('vaultview').style.display='none';
+    $('lockview').style.display='block';
+    $('initbox').style.display=initialized?'none':'block';
+    $('unlockbox').style.display=initialized?'block':'none';
+    $('lockerr').textContent='';
+  }
+
+  function showVault(){
+    $('lockview').style.display='none';
+    $('vaultview').style.display='block';
+    resetAutoLock();
+    render();
+  }
+
+  function lock(showTip){
+    api('lock',{token:token}).catch(function(){});
+    token=''; sessionStorage.removeItem('vault-token'); entries=[];
+    if(autoLockTimer) clearTimeout(autoLockTimer);
+    api('status').then(function(st){ showLock(st.initialized); });
+    if(showTip) toast('已自动锁定');
+  }
+
+  function render(){
+    var q=($('search').value||'').toLowerCase();
+    var list=entries.filter(function(e){
+      if(!q) return true;
+      return ((e.name||'')+' '+(e.url||'')+' '+(e.user||'')+' '+(e.note||'')).toLowerCase().indexOf(q)>=0;
+    });
+    var tb=$('tbody'); tb.innerHTML='';
+    $('empty').style.display=list.length?'none':'block';
+    list.forEach(function(e){
+      var tr=document.createElement('tr');
+      tr.innerHTML='<td><b>'+esc(e.name)+'</b></td>'
+        +'<td class="muted">'+esc((e.url||'').replace(/^https?:\/\//,''))+'</td>'
+        +'<td>'+esc(e.user)+'</td>'
+        +'<td class="pwd">•••••••• <button class="mini" data-act="show" data-id="'+esc(e.id)+'">显示</button>'
+        +' <button class="mini" data-act="copy" data-id="'+esc(e.id)+'">复制</button></td>'
+        +'<td class="muted">'+esc(e.note)+'</td>'
+        +'<td><button class="mini" data-act="edit" data-id="'+esc(e.id)+'">编辑</button> '
+        +'<button class="mini danger" data-act="del" data-id="'+esc(e.id)+'">删除</button></td>';
+      tb.appendChild(tr);
+    });
+    tb.querySelectorAll('button[data-act]').forEach(function(b){
+      b.onclick=function(){ handleAction(b.getAttribute('data-act'), b.getAttribute('data-id'), b); };
+    });
+  }
+
+  function find(id){ for(var i=0;i<entries.length;i++) if(entries[i].id===id) return i; return -1; }
+
+  function handleAction(act,id,btn){
+    var i=find(id); if(i<0) return; var e=entries[i];
+    if(act==='show'){
+      var cell=btn.parentNode;
+      cell.innerHTML='<span class="pwd">'+esc(e.pass)+'</span> <button class="mini" data-act="hide" data-id="'+esc(e.id)+'">隐藏</button>'
+        +' <button class="mini" data-act="copy" data-id="'+esc(e.id)+'">复制</button>';
+      cell.querySelectorAll('button[data-act]').forEach(function(b){ b.onclick=function(){handleAction(b.getAttribute('data-act'),b.getAttribute('data-id'),b)} });
+    } else if(act==='hide'){
+      render();
+    } else if(act==='copy'){
+      copyText(e.pass);
+    } else if(act==='edit'){
+      openEdit(e);
+    } else if(act==='del'){
+      if(!confirm('删除「'+e.name+'」这条密码记录？')) return;
+      entries.splice(i,1); save().then(function(){ render(); });
+    }
+  }
+
+  function copyText(t){
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(function(){toast('已复制')},function(){fallbackCopy(t)});
+    } else fallbackCopy(t);
+  }
+  function fallbackCopy(t){
+    var ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select();
+    try{document.execCommand('copy');toast('已复制')}catch(e){toast('复制失败')}
+    ta.remove();
+  }
+
+  function openEdit(e){
+    editing=e||null;
+    $('f_name').value=e?e.name||'':''; $('f_url').value=e?e.url||'':'';
+    $('f_user').value=e?e.user||'':''; $('f_pass').value=e?e.pass||'':'';
+    $('f_note').value=e?e.note||'':'';
+    $('f_pass').type='password';
+    $('editbox').classList.add('on');
+    $('f_name').focus();
+  }
+  function closeEdit(){ $('editbox').classList.remove('on'); editing=null; }
+
+  function save(){
+    return api('save',{token:token,entries:entries}).then(function(j){
+      if(j.code!==0){ toast(j.error||'保存失败'); if(/会话/.test(j.error||'')) lock(); }
+      return j;
+    });
+  }
+
+  function doSaveForm(){
+    var name=($('f_name').value||'').trim(), pass=$('f_pass').value||'';
+    if(!name||!pass){ toast('名称和密码不能为空'); return; }
+    if(editing){
+      var i=find(editing.id);
+      if(i>=0) entries[i]={id:editing.id,name:name,url:$('f_url').value.trim(),user:$('f_user').value.trim(),pass:pass,note:$('f_note').value.trim(),updated:Date.now()};
+    } else {
+      entries.push({id:'e'+Date.now(),name:name,url:$('f_url').value.trim(),user:$('f_user').value.trim(),pass:pass,note:$('f_note').value.trim(),updated:Date.now()});
+    }
+    save().then(function(j){ if(j.code===0){ closeEdit(); render(); toast('已保存'); } });
+  }
+
+  /* ---- events ---- */
+  $('btnInit').onclick=function(){
+    var a=$('m1').value, b=$('m2').value;
+    if(!a||a.length<6){ $('lockerr').textContent='主密码至少 6 位'; return; }
+    if(a!==b){ $('lockerr').textContent='两次输入不一致'; return; }
+    api('init',{master:a}).then(function(j){
+      if(j.code!==0){ $('lockerr').textContent=j.error||'创建失败'; return; }
+      token=j.token; sessionStorage.setItem('vault-token',token); entries=j.entries||[];
+      showVault();
+    });
+  };
+  $('btnUnlock').onclick=function(){
+    var m=$('mpass').value; if(!m) return;
+    api('unlock',{master:m}).then(function(j){
+      if(j.code!==0){ $('lockerr').textContent=j.error||'解锁失败'; return; }
+      token=j.token; sessionStorage.setItem('vault-token',token); entries=j.entries||[];
+      showVault();
+    });
+  };
+  $('mpass').addEventListener('keydown',function(e){ if(e.key==='Enter') $('btnUnlock').click(); });
+  $('m2').addEventListener('keydown',function(e){ if(e.key==='Enter') $('btnInit').click(); });
+
+  $('btnAdd').onclick=function(){ openEdit(null); };
+  $('btnCancel').onclick=closeEdit;
+  $('btnSave').onclick=doSaveForm;
+  $('btnLock').onclick=function(){ lock(); };
+  $('btnGen').onclick=function(){
+    var chars='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*';
+    var out=''; var arr=new Uint32Array(16); (window.crypto||window.msCrypto).getRandomValues(arr);
+    for(var i=0;i<16;i++) out+=chars[arr[i]%chars.length];
+    $('f_pass').type='text'; $('f_pass').value=out;
+  };
+  $('btnTogglePass').onclick=function(){ $('f_pass').type = $('f_pass').type==='password'?'text':'password'; };
+  $('search').oninput=function(){ render(); };
+  $('btnChangeMaster').onclick=function(){
+    var nm=prompt('输入新的主密码（至少6位）'); if(!nm) return;
+    if(nm.length<6){ toast('至少 6 位'); return; }
+    api('changemaster',{token:token,new:nm}).then(function(j){
+      if(j.code===0) toast('主密码已修改'); else toast(j.error||'修改失败');
+    });
+  };
+
+  /* ---- boot ---- */
+  api('status').then(function(st){
+    if(!st.code || !st.initialized){ showLock(false); return; }
+    if(!token){ showLock(true); return; }
+    api('load',{token:token}).then(function(j){
+      if(j.code===0){ entries=j.entries||[]; showVault(); }
+      else { token=''; sessionStorage.removeItem('vault-token'); showLock(true); }
+    }).catch(function(){ showLock(true); });
+  }).catch(function(){ showLock(true); });
+
+  // 屏幕锁定/离开页面时自动锁定
+  document.addEventListener('visibilitychange',function(){
+    if(document.visibilityState==='hidden') {
+      // 不立即锁定，避免切标签页导致频繁重输；靠 10 分钟自动锁定
+    } else resetAutoLock();
+  });
+})();
+</script>
+</body>
+</html>
