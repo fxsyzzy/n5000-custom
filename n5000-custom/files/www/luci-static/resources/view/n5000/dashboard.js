@@ -41,12 +41,6 @@ var DBCSS = [
 	'.db-row .nm{width:110px;flex:0 0 auto;opacity:.75;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
 	'.db-row .bar{flex:1;margin:0}',
 	'.db-row .vl{width:90px;text-align:right;font-variant-numeric:tabular-nums}',
-	'.db-fish{position:fixed;right:22px;bottom:16px;z-index:600;display:flex;align-items:flex-end;gap:10px;cursor:pointer;user-select:none;max-width:64vw}',
-	'.db-fish img{width:92px;height:66px;filter:drop-shadow(0 6px 14px rgba(0,0,0,.35));animation:dbBob 3.2s ease-in-out infinite}',
-	'@keyframes dbBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}',
-	'.db-fish .msg{font-size:12px;line-height:1.45;padding:8px 13px;border-radius:14px;background:rgba(127,127,127,.14);border:1px solid rgba(127,127,127,.28);max-width:340px}',
-	'.db-fish.swim img{animation:dbSwim 2.6s ease-in-out forwards}',
-	'@keyframes dbSwim{0%{transform:translateX(0) scale(1)}45%{transform:translateX(-60vw) scale(1.05)}100%{transform:translateX(-130vw) scale(.9)}}',
 	'@media(max-width:1000px){.db-grid{grid-template-columns:repeat(2,1fr)}.db-cols{grid-template-columns:1fr}}'
 ].join('\n');
 
@@ -99,15 +93,7 @@ return view.extend({
 				E('div', { 'class': 'cbi-section' }, [E('h3', {}, ['网站 Top 10']), E('div', { 'id': 'db-sites' }, [' '])])
 			]),
 			E('div', { 'class': 'cbi-section' }, [E('h3', {}, ['设备流量']), E('div', { 'id': 'db-devs' }, [' '])]),
-			E('div', { 'class': 'db-fish', 'id': 'db-fish', click: function() {
-				var f = document.getElementById('db-fish');
-				if (!f || f.classList.contains('swim')) return;
-				f.classList.add('swim');
-				setTimeout(function() { f.classList.remove('swim'); }, 2800);
-			}}, [
-				E('div', { 'class': 'msg', 'id': 'db-fishmsg' }, [' ']),
-				E('img', { 'src': '/luci-static/n5000/fish.svg', 'alt': 'fish' })
-			])
+
 		]);
 
 		var drawChart = function() {
@@ -189,17 +175,6 @@ return view.extend({
 			document.getElementById('db-svc').appendChild(E('span', { 'class': 'db-big sm' }, [svc.join(' · ')]));
 			document.getElementById('db-svcnone').textContent = '';
 
-			/* 大肥鱼 */
-			var fmEl = document.getElementById('db-fishmsg');
-			if (fmEl) {
-				var fm2;
-				if (tv >= 80) fm2 = '鱼要熟了！！快降温！';
-				else if (Number(d.load[0]) > 1.5) fm2 = '鱼儿在狂奔…';
-				else if (tv >= 65) fm2 = '有点热，鱼儿在冒汗…';
-				else if ((d.clients || 0) === 0) fm2 = '水里好安静，没有小鱼连上来';
-				else fm2 = '水温舒服，' + d.clients + ' 条小鱼在游（点我试试）';
-				fmEl.textContent = fm2;
-			}
 			/* 速率 */
 			var down = 0, up = 0;
 			if (prev && d.ts > prev.ts) {
