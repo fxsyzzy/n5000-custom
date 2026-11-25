@@ -496,3 +496,14 @@ N5000              order 0   分组（展开）
 - 清理 ngrok 残留（二进制 + 配置），隧道统一走 Tailscale Funnel
 - CI：workflow 引用 19 个自定义文件全部存在，无缺失
 - uci-defaults：91~99 共 8 个脚本齐全
+
+## 固件发布 v5.0.0
+
+- Release：https://github.com/fxsyzzy/n5000-custom/releases/tag/v5.0.0
+- 固件：`openwrt-mediatek-filogic-nradio_n5000-squashfs-sysupgrade.bin`（136.7 MB）
+- SHA256：`786027bc2460c72c189cc58c3418cf52204ec7e225d6389c62ac0649601b9a56`
+- 基于 OpenWrt SNAPSHOT 全源码编译，manifest 共 380 个包
+- 含：纳美蓝玻璃/黑白晨光主题、面板 v2、流量统计、收藏夹、AI 助手、大肥鱼、应用过滤、密码本、微信远程、PassWall、AdGuard Home、SmartDNS、DNSCrypt、Docker、SQM、WireGuard、WiFi 定时
+- 刷机后需要重新配置：WiFi 密码、AI Key、微信（tailscale auth key + `n5000-tunnel-up`）、密码本主密码
+- 刷机方法：NROS Storage Manager「Create Boot Disk」或用现有 OpenWrt `sysupgrade`
+- 首次启动：LAN 192.168.88.1，SSID OpenWrt-2G / OpenWrt-5G
