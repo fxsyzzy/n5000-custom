@@ -14,7 +14,7 @@
 .login-page .login-container,.login-page .login-form{border-radius:16px !important}
 
 /* ---------- Pandora Na'vi bioluminescent theme ---------- */
-body{
+html[data-argon-mode="dark"] body{
   background:
     radial-gradient(1100px 640px at 8% -12%, rgba(30,91,140,.42) 0%, transparent 62%),
     radial-gradient(900px 560px at 92% -6%, rgba(72,169,197,.22) 0%, transparent 58%),
@@ -51,3 +51,114 @@ input,select,textarea,.cbi-input-text,.cbi-input-password,.cbi-input-select,.cbi
 
 /* ---------- 隐藏密码本入口（仅直链访问） ---------- */
 #mainmenu a[href*="n5000/vault"],.nav a[href*="n5000/vault"],.mainmenu a[href*="n5000/vault"],.main-left a[href*="n5000/vault"]{display:none !important}
+
+/* ================= 晨光版纳美蓝（浅色主题） ================= */
+html[data-argon-mode="light"] body{
+  background:
+    radial-gradient(1100px 640px at 8% -12%, rgba(131,217,220,.40) 0%, transparent 62%),
+    radial-gradient(900px 560px at 92% -6%, rgba(200,244,249,.85) 0%, transparent 58%),
+    radial-gradient(900px 700px at 60% 112%, rgba(72,169,197,.20) 0%, transparent 62%),
+    linear-gradient(180deg,#F2FCFE 0%,#E4F7FA 55%,#D9F1F6 100%) !important;
+  background-attachment:scroll !important;
+  color:#0D2C54 !important;
+}
+html[data-argon-mode="light"] .main-left{
+  background:linear-gradient(180deg,rgba(255,255,255,.75),rgba(200,244,249,.55)) !important;
+  border-right:1px solid rgba(30,91,140,.18) !important;
+}
+html[data-argon-mode="light"] .main-left a{color:rgba(13,44,84,.72) !important}
+html[data-argon-mode="light"] .main-left a:hover{background:rgba(72,169,197,.14) !important;color:#0D2C54 !important}
+html[data-argon-mode="light"] .main-left li.active>a,
+html[data-argon-mode="light"] .main-left a.active{background:rgba(72,169,197,.22) !important;color:#0D2C54 !important}
+html[data-argon-mode="light"] header{
+  background:linear-gradient(180deg,rgba(255,255,255,.85),rgba(228,247,250,.75)) !important;
+  border-bottom:1px solid rgba(30,91,140,.16) !important;
+}
+html[data-argon-mode="light"] header .brand,
+html[data-argon-mode="light"] header a{color:#0D2C54 !important}
+html[data-argon-mode="light"] .cbi-section,
+html[data-argon-mode="light"] .cbi-section-node,
+html[data-argon-mode="light"] .panel,
+html[data-argon-mode="light"] .well,
+html[data-argon-mode="light"] .card,
+html[data-argon-mode="light"] .modal-content,
+html[data-argon-mode="light"] .login-container,
+html[data-argon-mode="light"] .login-form,
+html[data-argon-mode="light"] .table-container,
+html[data-argon-mode="light"] .cbi-page-actions,
+html[data-argon-mode="light"] .ifacebox,
+html[data-argon-mode="light"] .cbi-dashboard{
+  background:linear-gradient(180deg,rgba(255,255,255,.72),rgba(228,247,250,.55)) !important;
+  border:1px solid rgba(30,91,140,.18) !important;
+  color:#0D2C54 !important;
+}
+html[data-argon-mode="light"] h1,
+html[data-argon-mode="light"] h2,
+html[data-argon-mode="light"] h3,
+html[data-argon-mode="light"] h4,
+html[data-argon-mode="light"] label,
+html[data-argon-mode="light"] td,
+html[data-argon-mode="light"] th,
+html[data-argon-mode="light"] .cbi-value-title{color:#0D2C54 !important}
+html[data-argon-mode="light"] small,
+html[data-argon-mode="light"] .help-block,
+html[data-argon-mode="light"] .cbi-value-description,
+html[data-argon-mode="light"] .text-muted,
+html[data-argon-mode="light"] .cbi-section-descr{color:rgba(13,44,84,.55) !important}
+html[data-argon-mode="light"] a{color:#1E5B8C !important}
+html[data-argon-mode="light"] a:hover{color:#48A9C5 !important}
+html[data-argon-mode="light"] input,
+html[data-argon-mode="light"] select,
+html[data-argon-mode="light"] textarea{
+  background:rgba(255,255,255,.75) !important;border-color:rgba(30,91,140,.25) !important;color:#0D2C54 !important
+}
+html[data-argon-mode="light"] .table>thead>tr>th{color:rgba(13,44,84,.6) !important;border-bottom-color:rgba(30,91,140,.18) !important}
+html[data-argon-mode="light"] .table>tbody>tr>td{border-top-color:rgba(30,91,140,.12) !important}
+/* 自定义页面深色卡片在晨光模式下的浅色覆盖 */
+html[data-argon-mode="light"] .np-top,
+html[data-argon-mode="light"] .np-panel,
+html[data-argon-mode="light"] .np-card,
+html[data-argon-mode="light"] .db-card,
+html[data-argon-mode="light"] .db-chart,
+html[data-argon-mode="light"] .af-stat,
+html[data-argon-mode="light"] .fav-card,
+html[data-argon-mode="light"] .fav-panel,
+html[data-argon-mode="light"] .ai-chat,
+html[data-argon-mode="light"] .ai-bubble,
+html[data-argon-mode="light"] .ai-settings,
+html[data-argon-mode="light"] .n5v-wrap{
+  background:linear-gradient(180deg,rgba(255,255,255,.78),rgba(228,247,250,.6)) !important;
+  border-color:rgba(30,91,140,.2) !important;
+  color:#0D2C54 !important;
+  backdrop-filter:blur(10px) saturate(150%) !important;-webkit-backdrop-filter:blur(10px) saturate(150%) !important;
+}
+html[data-argon-mode="light"] .np-name,
+html[data-argon-mode="light"] .np-card .t,
+html[data-argon-mode="light"] .np-card .t b,
+html[data-argon-mode="light"] .np-stat .v,
+html[data-argon-mode="light"] .db-big,
+html[data-argon-mode="light"] .af-big,
+html[data-argon-mode="light"] .fav-name,
+html[data-argon-mode="light"] .fav-ico,
+html[data-argon-mode="light"] .ai-bubble,
+html[data-argon-mode="light"] .ai-badge{color:#0D2C54 !important}
+html[data-argon-mode="light"] .np-sub,
+html[data-argon-mode="light"] .np-card .s,
+html[data-argon-mode="light"] .np-stat .l,
+html[data-argon-mode="light"] .mini,
+html[data-argon-mode="light"] .fav-url,
+html[data-argon-mode="light"] .fav-note{color:rgba(13,44,84,.58) !important}
+html[data-argon-mode="light"] .np-msg,
+html[data-argon-mode="light"] .np-app{color:#0D2C54 !important}
+html[data-argon-mode="light"] .np-act{color:rgba(13,44,84,.8) !important}
+html[data-argon-mode="light"] .np-act:hover{background:rgba(72,169,197,.16) !important}
+html[data-argon-mode="light"] .np-hero{background:linear-gradient(180deg,rgba(255,255,255,.7),rgba(228,247,250,.55)) !important}
+html[data-argon-mode="light"] .np-call,
+html[data-argon-mode="light"] .np-chip,
+html[data-argon-mode="light"] .np-badge{background:rgba(255,255,255,.65) !important;border-color:rgba(30,91,140,.22) !important;color:#0D2C54 !important}
+html[data-argon-mode="light"] .np-bar{background:rgba(30,91,140,.18) !important}
+html[data-argon-mode="light"] .ai-input,
+html[data-argon-mode="light"] .af-search,
+html[data-argon-mode="light"] .fav-search{background:rgba(255,255,255,.7) !important;color:#0D2C54 !important}
+/* 晨光模式下的磨砂减弱（浅色背景上降低性能开销） */
+html[data-argon-mode="light"] *{--n5-light:1}
