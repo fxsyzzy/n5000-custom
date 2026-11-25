@@ -9,7 +9,7 @@ return view.extend({
 
 	render: function() {
 		var iframe = E('iframe', {
-			'src': '/vault.html',
+			'src': '/vault.html?theme=' + ((document.documentElement.getAttribute('data-argon-mode') === 'light') ? 'light' : 'dark'),
 			'style': 'width:100%;height:calc(100vh - 190px);min-height:560px;border:0;border-radius:14px;' +
 				'background:transparent;display:block'
 		});
