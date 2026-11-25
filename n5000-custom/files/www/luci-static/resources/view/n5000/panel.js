@@ -147,11 +147,7 @@ return view.extend({
 
 		var root = E('div', {}, [
 			style,
-			E('div', { 'class': 'n5-head' }, [
-				E('h2', {}, [_s('N5000 面板', 'N5000 Panel')]),
-				E('img', { 'class': 'n5-fish n5-fishimg', 'src': '/luci-static/n5000/fish.svg', 'alt': 'fish' }),
-				E('div', { 'class': 'n5-bubble', 'id': 'n5-fishmsg' }, [' '])
-			]),
+			E('h2', {}, [_s('N5000 面板', 'N5000 Panel')]),
 			grid1, grid2,
 			E('div', { 'class': 'n5-cols' }, [catBox, siteBox]),
 			links
@@ -167,17 +163,6 @@ return view.extend({
 			var memPct = memTotal ? (memTotal - memAvail) / memTotal * 100 : 0;
 			var tfPct = d.tf_total ? (d.tf_used || 0) / d.tf_total * 100 : 0;
 			var swUsed = Math.max(0, (d.swap_total || 0) - (d.swap_free || 0));
-			/* 大肥鱼的碎碎念 */
-			var fmsg = document.getElementById('n5-fishmsg');
-			if (fmsg) {
-				var fm;
-				if (tv >= 80) fm = _s('鱼要熟了！！快给路由器降温！', 'The fish is cooking! Cool me down!');
-				else if (d.load[0] > 1.5) fm = _s('鱼儿在狂奔，CPU 快冒烟了', 'The fish is sprinting, CPU is hot');
-				else if (tv >= 65) fm = _s('有点热，鱼儿在冒汗…', 'Warm, the fish is sweating…');
-				else if ((d.clients || 0) === 0) fm = _s('水里好安静，一条小鱼都没连上来', 'So quiet, no clients online');
-				else fm = _s('水温舒服，' + d.clients + ' 条小鱼在游', 'Water is nice, ' + d.clients + ' little fish online');
-				fmsg.textContent = fm;
-			}
 
 			document.getElementById('n5-uptime').textContent = n5fmtUptime(d.uptime, zh);
 			document.getElementById('n5-boot').textContent =
