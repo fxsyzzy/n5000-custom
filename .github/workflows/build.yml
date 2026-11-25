@@ -96,20 +96,16 @@ jobs:
                    openwrt/files/etc/uci-defaults/* \
                    openwrt/files/etc/hotplug.d/block/20-n5000-docker \
                    openwrt/files/www/cgi-bin/rstatus \
-                   openwrt/files/www/cgi-bin/aichat \
-                   openwrt/files/www/cgi-bin/wechat \
                    openwrt/files/www/cgi-bin/appfilter \
                    openwrt/files/www/cgi-bin/favorites \
                    openwrt/files/www/cgi-bin/vault \
                    openwrt/files/www/cgi-bin/theme \
+                   openwrt/files/www/cgi-bin/menuver \
                    openwrt/files/www/cgi-bin/traffic \
                    openwrt/files/usr/sbin/trafficd \
                    openwrt/files/usr/sbin/appfilter \
                    openwrt/files/etc/init.d/appfilter \
                    openwrt/files/etc/uci-defaults/94-appfilter \
-                   openwrt/files/etc/uci-defaults/91-tailscale-wechat \
-                   openwrt/files/etc/init.d/n5000-wechat-http \
-                   openwrt/files/usr/sbin/n5000-tunnel-up \
                    openwrt/files/usr/sbin/theme
           find openwrt/files -type f -exec ls -l {} \;
 
