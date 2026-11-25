@@ -27,20 +27,14 @@ a:hover{color:#83D9DC !important}
 .cbi-section,.cbi-section-node,.panel,.well,.card,.modal-content,.login-container,.login-form,.dropdown-menu,.table-container,.cbi-page-actions,.ifacebox,.cbi-dashboard,.cbi-map{
   background:linear-gradient(180deg,rgba(200,244,249,.07),rgba(13,44,84,.30)) !important;
   border:1px solid rgba(131,217,220,.22) !important;
-  backdrop-filter:blur(14px) saturate(160%) !important;
-  -webkit-backdrop-filter:blur(14px) saturate(160%) !important;
 }
 .main-left,header,.modal-backdrop{
-  backdrop-filter:blur(16px) saturate(150%) !important;
-  -webkit-backdrop-filter:blur(16px) saturate(150%) !important;
 }
 input,select,textarea,.cbi-input-text,.cbi-input-password,.cbi-input-select,.cbi-input-textarea{
   background:rgba(13,44,84,.30) !important;
-  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
 }
 @media(max-width:700px){
   .cbi-section,.cbi-section-node,.panel,.well,.card,.modal-content,.login-container,.login-form,.dropdown-menu,.table-container,.cbi-page-actions,.ifacebox{
-    backdrop-filter:blur(8px) saturate(140%) !important;-webkit-backdrop-filter:blur(8px) saturate(140%) !important;
   }
 }
 
@@ -128,7 +122,6 @@ html[data-argon-mode="light"] .n5v-wrap{
   background:linear-gradient(180deg,rgba(255,255,255,.78),rgba(228,247,250,.6)) !important;
   border-color:rgba(30,91,140,.2) !important;
   color:#0D2C54 !important;
-  backdrop-filter:blur(10px) saturate(150%) !important;-webkit-backdrop-filter:blur(10px) saturate(150%) !important;
 }
 html[data-argon-mode="light"] .np-name,
 html[data-argon-mode="light"] .np-card .t,
@@ -202,16 +195,12 @@ html[data-argon-mode="light"] ::-webkit-scrollbar-thumb{background:rgba(30,91,14
 html[data-argon-mode="dark"] #mainmenu.main-left,
 html[data-argon-mode="dark"] .main-left{
   background:linear-gradient(180deg,rgba(10,30,52,.62),rgba(8,24,44,.55)) !important;
-  backdrop-filter:blur(20px) saturate(170%) !important;
-  -webkit-backdrop-filter:blur(20px) saturate(170%) !important;
   border-right:1px solid rgba(131,217,220,.22) !important;
   box-shadow:8px 0 28px rgba(0,10,22,.35) !important;
 }
 html[data-argon-mode="light"] #mainmenu.main-left,
 html[data-argon-mode="light"] .main-left{
   background:linear-gradient(180deg,rgba(255,255,255,.62),rgba(228,247,250,.55)) !important;
-  backdrop-filter:blur(20px) saturate(160%) !important;
-  -webkit-backdrop-filter:blur(20px) saturate(160%) !important;
   border-right:1px solid rgba(30,91,140,.16) !important;
   box-shadow:8px 0 24px rgba(30,91,140,.10) !important;
 }
@@ -404,8 +393,6 @@ html[data-argon-mode="light"] .cbi-map{
   background:linear-gradient(180deg,rgba(255,255,255,.88),rgba(247,247,248,.78)) !important;
   border:1px solid rgba(0,0,0,.10) !important;
   color:#111111 !important;
-  backdrop-filter:blur(12px) saturate(110%) !important;
-  -webkit-backdrop-filter:blur(12px) saturate(110%) !important;
 }
 /* 文本 */
 html[data-argon-mode="light"] h1,html[data-argon-mode="light"] h2,html[data-argon-mode="light"] h3,
@@ -462,8 +449,6 @@ html[data-argon-mode="light"] .n5v-wrap{
   background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(248,248,249,.82)) !important;
   border-color:rgba(0,0,0,.10) !important;
   color:#111111 !important;
-  backdrop-filter:blur(10px) saturate(105%) !important;
-  -webkit-backdrop-filter:blur(10px) saturate(105%) !important;
 }
 html[data-argon-mode="light"] .np-name,
 html[data-argon-mode="light"] .np-card .t,
@@ -522,3 +507,15 @@ html[data-argon-mode="light"] #n5000-mascot .n5m-bubble{
   border:1px solid rgba(0,0,0,.12) !important;box-shadow:0 6px 18px rgba(0,0,0,.08) !important;
 }
 html[data-argon-mode="light"] #n5000-mascot .n5m-rice{color:rgba(17,17,17,.6) !important}
+
+/* ================= 性能优化：只保留必要模糊（侧边栏/顶栏/弹窗） ================= */
+#mainmenu.main-left,.main-left,header,.modal-backdrop{
+  backdrop-filter:blur(12px) saturate(140%) !important;
+  -webkit-backdrop-filter:blur(12px) saturate(140%) !important;
+}
+@media(max-width:700px){
+  #mainmenu.main-left,.main-left,header,.modal-backdrop{
+    backdrop-filter:blur(8px) !important;
+    -webkit-backdrop-filter:blur(8px) !important;
+  }
+}
