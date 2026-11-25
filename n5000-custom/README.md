@@ -518,3 +518,11 @@ N5000              order 0   分组（展开）
   - 未配置服务禁用自启（AdGuard Home / haproxy / dnscrypt-proxy / smartdns），需要时 `uci set ... enabled=1` 或 `/etc/init.d/<svc> enable` 后手动启动
   - CPU 调频改为 `schedutil`（`/etc/init.d/n5000-perf`）
 - 效果：LuCI 页面响应 ~0.07s，内存占用 201MB→160MB
+
+## 性能模式：关闭磨砂 + 关闭大肥鱼（v3.2）
+
+- 彻底移除所有 `backdrop-filter`（glass.css 不再有模糊）；Argon 玻璃关闭：`main_glass=0`、`dark_glass_mode=off`、`blur=0`、`blur_dark=0`
+- 大肥鱼挂件默认关闭：`93-mascot-inject` 改为只清理旧注入（`mascot.js` 文件仍保留）
+- 需要恢复时：
+  - 重新开启磨砂：`uci set argon.@global[0].main_glass='1'; uci set argon.@global[0].blur_dark='8'; uci commit argon`
+  - 重新开启大肥鱼：在 `93-mascot-inject` 里恢复注入 mascot.js 即可（或手动在 page_scripts.ut 加 `<script src="/luci-static/n5000/mascot.js"></script>`）
