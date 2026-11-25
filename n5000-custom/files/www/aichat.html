@@ -7,7 +7,7 @@
 <style>
   :root{
     --text:#eef4ff; --dim:rgba(226,236,255,.62);
-    --mint:#5ef2c0; --cyan:#6fd6ff; --amber:#ffc46b; --rose:#ff7f9c; --violet:#b49bff;
+    --mint:#4C7DFF; --cyan:#7FA8FF; --amber:#ffc46b; --rose:#ff7f9c; --violet:#b49bff;
     --stroke:rgba(255,255,255,.17); --stroke-soft:rgba(255,255,255,.09);
   }
   *{box-sizing:border-box}
@@ -32,7 +32,7 @@
     background:linear-gradient(135deg,rgba(255,255,255,.12),rgba(255,255,255,.04));
     box-shadow:0 12px 34px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.28)}
   header h1{margin:0;font-size:19px;font-weight:700;letter-spacing:.4px;
-    background:linear-gradient(100deg,#a9ffe4,#6fd6ff 55%,#b49bff);
+    background:linear-gradient(100deg,#9FB9FF,#7FA8FF 55%,#b49bff);
     -webkit-background-clip:text;background-clip:text;color:transparent;)}
   .badge{display:flex;align-items:center;font-size:12px;color:var(--dim);border:1px solid var(--stroke-soft);
     padding:4px 12px;border-radius:999px;background:rgba(255,255,255,.06)}
@@ -52,7 +52,7 @@
   .avatar{width:34px;height:34px;border-radius:12px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
     font-size:13px;font-weight:600;border:1px solid var(--stroke-soft);
     background:linear-gradient(145deg,rgba(255,255,255,.14),rgba(255,255,255,.04));
-  .msg.ai .avatar{color:var(--mint);border-color:rgba(94,242,192,.4);box-shadow:0 0 18px rgba(94,242,192,.15)}
+  .msg.ai .avatar{color:var(--mint);border-color:rgba(76,125,255,.4);box-shadow:0 0 18px rgba(76,125,255,.15)}
   .msg.me .avatar{color:var(--cyan);border-color:rgba(111,214,255,.4)}
   .bubble{padding:11px 15px;border-radius:20px;font-size:14px;line-height:1.65;white-space:pre-wrap;word-break:break-word;
     background:linear-gradient(145deg,rgba(255,255,255,.11),rgba(255,255,255,.04));
@@ -64,10 +64,10 @@
     border:1px solid var(--stroke);color:var(--text);font-family:inherit;font-size:14px;
     border-radius:22px;padding:12px 18px;resize:none;min-height:46px;max-height:140px;line-height:1.45;
     box-shadow:inset 0 1px 0 rgba(255,255,255,.22), 0 10px 26px rgba(0,0,0,.28)}
-  #input:focus{outline:none;border-color:rgba(94,242,192,.5);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 0 0 3px rgba(94,242,192,.12),0 10px 26px rgba(0,0,0,.28)}
+  #input:focus{outline:none;border-color:rgba(76,125,255,.5);box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 0 0 3px rgba(76,125,255,.12),0 10px 26px rgba(0,0,0,.28)}
   #send{height:46px;padding:0 22px;border:none;border-radius:999px;font-family:inherit;font-size:14px;font-weight:600;
-    color:#052018;background:linear-gradient(120deg,#8bffd9,#5ef2c0 45%,#6fd6ff);cursor:pointer;
-    box-shadow:0 10px 26px rgba(94,242,192,.28), inset 0 1px 0 rgba(255,255,255,.55);
+    color:#052018;background:linear-gradient(120deg,#6F97FF,#4C7DFF 45%,#7FA8FF);cursor:pointer;
+    box-shadow:0 10px 26px rgba(76,125,255,.28), inset 0 1px 0 rgba(255,255,255,.55);
     transition:transform .2s ease, filter .2s ease}
   #send:hover{transform:translateY(-1px);filter:brightness(1.06)}
   #send:disabled{opacity:.5;cursor:not-allowed;transform:none}
@@ -80,23 +80,23 @@
     background:linear-gradient(150deg,rgba(255,255,255,.14),rgba(255,255,255,.05));
     box-shadow:0 30px 80px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.3)}
   .panel h2{margin:0 0 16px;font-size:16px;font-weight:600;
-    background:linear-gradient(100deg,#a9ffe4,#6fd6ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+    background:linear-gradient(100deg,#9FB9FF,#7FA8FF);-webkit-background-clip:text;background-clip:text;color:transparent}
   .row{margin-bottom:14px}
   .row label{display:block;font-size:12px;color:var(--dim);margin-bottom:6px;letter-spacing:.3px}
   .row input[type=text],.row input[type=password],.row select,.row textarea{width:100%;color:var(--text);font-family:inherit;
     font-size:13px;padding:10px 14px;border-radius:14px;border:1px solid var(--stroke);
   .row textarea{min-height:84px;resize:vertical}
-  .row input:focus,.row textarea:focus{outline:none;border-color:rgba(94,242,192,.5)}
+  .row input:focus,.row textarea:focus{outline:none;border-color:rgba(76,125,255,.5)}
   .row.inline{display:flex;align-items:center;gap:10px}
-  .row.inline input{width:auto;accent-color:#5ef2c0}
+  .row.inline input{width:auto;accent-color:#4C7DFF}
   .hint{font-size:11.5px;color:var(--dim);line-height:1.5;margin-top:6px}
   .actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
   .actions button{border-radius:999px;padding:9px 20px;font-family:inherit;font-size:13px;cursor:pointer;
     border:1px solid var(--stroke-soft);background:rgba(255,255,255,.08);color:var(--text);transition:all .2s}
   .actions button:hover{background:rgba(255,255,255,.16)}
   .actions button.primary{border:none;color:#052018;font-weight:600;
-    background:linear-gradient(120deg,#8bffd9,#5ef2c0 45%,#6fd6ff);
-    box-shadow:0 10px 24px rgba(94,242,192,.26), inset 0 1px 0 rgba(255,255,255,.55)}
+    background:linear-gradient(120deg,#6F97FF,#4C7DFF 45%,#7FA8FF);
+    box-shadow:0 10px 24px rgba(76,125,255,.26), inset 0 1px 0 rgba(255,255,255,.55)}
   .sect{border-top:1px solid var(--stroke-soft);margin:18px 0 14px;padding-top:16px;font-size:13px;color:var(--mint);letter-spacing:.4px}
   .toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);padding:10px 22px;border-radius:999px;
     font-size:13px;display:none;z-index:30;color:var(--text);
@@ -314,6 +314,8 @@
 </script>
 </body>
 </html>
+
+
 
 
 
