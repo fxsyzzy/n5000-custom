@@ -48,7 +48,7 @@ input,select,textarea,.cbi-input-text,.cbi-input-password,.cbi-input-select,.cbi
 #argon-appearance,#argon-appearance-trigger,#argon-appearance-options{display:none !important}
 
 /* ---------- 隐藏密码本入口（仅直链访问） ---------- */
-#mainmenu a[href*="n5000/vault"],.nav a[href*="n5000/vault"],.mainmenu a[href*="n5000/vault"],.main-left a[href*="n5000/vault"]{display:none !important}
+#mainmenu a[href*="n5000-vault"],.nav a[href*="n5000-vault"],.mainmenu a[href*="n5000-vault"],.main-left a[href*="n5000-vault"]{display:none !important}
 
 /* ================= 晨光版纳美蓝（浅色主题） ================= */
 html[data-argon-mode="light"] body{
