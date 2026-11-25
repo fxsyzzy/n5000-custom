@@ -1,0 +1,366 @@
+#!/bin/sh
+# ============================================================
+# 自研应用过滤 / 流量统计（N5000）
+#  - 流量来源：/proc/net/nf_conntrack（按连接字节数）
+#  - 应用识别：dnsmasq 查询/应答日志 + 应用域名库
+#  - 拦截：nftables 动态集合，按设备 + 分类/域名 + 时间计划
+# 子命令：daemon | update | apply | stats | state | reset | resolve | stop
+# ============================================================
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+
+STATE=/tmp/appfilter
+DOMAINS=/usr/share/appfilter/domains.json
+LANPREFIX="192.168.88."
+DNSLOG=/var/log/dnsmasq.log
+mkdir -p "$STATE"
+
+uci_get() { uci -q get "appfilter.$1" 2>/dev/null; }
+g_enabled() { uci_get "global.enabled"; }
+
+device_sections() {
+	uci -q show appfilter 2>/dev/null | sed -n 's/^appfilter\.\([^.]*\)=device$/\1/p'
+}
+
+lan_ip_of_mac() {
+	awk -v m="$1" '$2==m{print $3}' /tmp/dhcp.leases 2>/dev/null | tail -n1
+}
+
+# ---------- 应用域名库 ----------
+domain_cat_tsv() {
+	jq -r 'to_entries[] | .key as $c | .value.domains[] | "\(.)\t\($c)"' "$DOMAINS" 2>/dev/null
+}
+
+# ---------- 解析单个域名（IPv4） ----------
+resolve_one() {
+	nslookup "$1" 127.0.0.1 2>/dev/null |
+		awk -v d="$1" -v c="$2" '/^Name:/{want=1;next} /^Address: /{if(want && $2 ~ /^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$/) print $2"\t"d"\t"c}'
+}
+
+# ---------- 域名解析缓存 ----------
+resolve_domains() {
+	: > "$STATE/ipmap.tsv"
+	domain_cat_tsv > "$STATE/catmap.tsv"
+	# 1) DNS 应答日志的精确映射（域名↔IP，含访问设备）
+	if [ -s "$STATE/dnslive.tsv" ]; then
+		awk -F'\t' -v mapf="$STATE/catmap.tsv" '
+			BEGIN { while ((getline l < mapf) > 0) { split(l,a,"\t"); cm[a[1]]=a[2] } }
+			{
+				d=$2; c="other"; best=""
+				for (k in cm) if (d==k || index(d, "."k) > 0) if (length(k) > length(best)) best=k
+				if (best != "") c=cm[best]
+				print $1 "\t" d "\t" c
+			}' "$STATE/dnslive.tsv" >> "$STATE/ipmap.tsv"
+	fi
+	# 2) 应用库域名（nslookup 兜底）
+	while IFS="$(printf '\t')" read -r d c; do
+		[ -z "$d" ] && continue
+		resolve_one "$d" "$c" >> "$STATE/ipmap.tsv"
+	done < "$STATE/catmap.tsv"
+	# 3) 设备访问过的域名
+	if [ -s "$STATE/queries.raw" ]; then
+		awk -F'\t' '{print $2}' "$STATE/queries.raw" | sort -u | head -n 800 > "$STATE/qdomains.txt"
+		while read -r d; do
+			[ -z "$d" ] && continue
+			best=$(awk -F'\t' -v d="$d" 'BEGIN{b=""}{if(d==$1||index(d,"."$1)>0){if(length($1)>length(b))b=$1}}END{print b}' "$STATE/catmap.tsv")
+			if [ -n "$best" ]; then
+				c2=$(awk -F'\t' -v b="$best" '$1==b{print $2; exit}' "$STATE/catmap.tsv")
+			else
+				c2="other"
+			fi
+			resolve_one "$d" "$c2" >> "$STATE/ipmap.tsv"
+		done < "$STATE/qdomains.txt"
+	fi
+	# 压缩（仅 IPv4，先到先得）
+	awk -F'\t' '$1 ~ /^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$/ && $1!~/^127\./ && $1!~/^0\./{print}' "$STATE/ipmap.tsv" |
+		awk -F'\t' '!seen[$1]++' > "$STATE/ipmap2.tsv"
+	mv "$STATE/ipmap2.tsv" "$STATE/ipmap.tsv"
+	touch "$STATE/ipmap.stamp"
+}
+
+# ---------- 实时映射（每轮更新，无需 nslookup） ----------
+merge_live() {
+	: > "$STATE/ipmap_live.tsv"
+	[ -s "$STATE/dnslive.tsv" ] || return 0
+	awk -F'\t' -v mapf="$STATE/catmap.tsv" '
+		BEGIN { while ((getline l < mapf) > 0) { split(l,a,"\t"); cm[a[1]]=a[2] } }
+		{
+			d=$2; c="other"; best=""
+			for (k in cm) if (d==k || index(d, "."k) > 0) if (length(k) > length(best)) best=k
+			if (best != "") c=cm[best]
+			if (d != "") print $1 "\t" d "\t" c
+		}' "$STATE/dnslive.tsv" | awk -F'\t' '!seen[$1]++' > "$STATE/ipmap_live.tsv"
+}
+
+# ---------- DNS 日志解析（增量） ----------
+parse_dns_log() {
+	[ -f "$DNSLOG" ] || return 0
+	OFF=$(cat "$STATE/dnslog.offset" 2>/dev/null)
+	[ -z "$OFF" ] && OFF=1
+	SIZE=$(wc -c < "$DNSLOG" 2>/dev/null)
+	[ -z "$SIZE" ] && SIZE=0
+	if [ "$SIZE" -gt 8388608 ]; then
+		: > "$DNSLOG"
+		echo 1 > "$STATE/dnslog.offset"
+		return 0
+	fi
+	[ "$SIZE" -lt "$OFF" ] && OFF=1
+	[ "$SIZE" -le "$OFF" ] && return 0
+	tail -c +"$OFF" "$DNSLOG" 2>/dev/null | awk -v q="$STATE/queries.raw" -v dl="$STATE/dnslive.tsv" '
+		/query\[/ {
+			d=""; ip=""
+			for (i=1;i<=NF;i++) {
+				if ($i ~ /^query\[/) d=$(i+1)
+				if ($i == "from") ip=$(i+1)
+			}
+			if (d != "" && ip != "") print ip "\t" d >> q
+		}
+		/reply / && / is / {
+			d=""; ip=""; cli=""
+			for (i=1;i<=NF;i++) {
+				if ($i == "reply") d=$(i+1)
+				if ($i == "is") ip=$(i+1)
+				if ($i ~ /^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\//) cli=substr($i, 1, index($i,"/")-1)
+			}
+			if (d != "" && ip ~ /^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$/) print ip "\t" d "\t" cli >> dl
+		}'
+	OFF=$((SIZE + 1))
+	echo "$OFF" > "$STATE/dnslog.offset"
+	sort -u "$STATE/queries.raw" > "$STATE/.q" 2>/dev/null && mv "$STATE/.q" "$STATE/queries.raw"
+	sort -u "$STATE/dnslive.tsv" > "$STATE/.dl" 2>/dev/null && mv "$STATE/.dl" "$STATE/dnslive.tsv"
+}
+
+# ---------- conntrack 流量 ----------
+parse_conntrack() {
+	awk -v lan="$LANPREFIX" '
+	{
+		n = split($0, seg, "src=")
+		if (n < 3) next
+		s1=""; d1=""; b1=0
+		split(seg[2], w1, " ")
+		s1=w1[1]
+		for (i=2;i<=length(w1);i++) { if (w1[i] ~ /^dst=/) d1=substr(w1[i],5); if (w1[i] ~ /^bytes=/) b1=substr(w1[i],7)+0 }
+		s2=""; d2=""; b2=0
+		split(seg[3], w2, " ")
+		s2=w2[1]
+		for (i=2;i<=length(w2);i++) { if (w2[i] ~ /^dst=/) d2=substr(w2[i],5); if (w2[i] ~ /^bytes=/) b2=substr(w2[i],7)+0 }
+		tot = b1 + b2
+		if (tot <= 0) next
+		if (index(s1, lan) == 1 && d1 != "") print s1 "\t" d1 "\t" tot
+		else if (index(d2, lan) == 1 && s2 != "") print d2 "\t" s2 "\t" tot
+	}' /proc/net/nf_conntrack 2>/dev/null
+}
+
+# ---------- 聚合统计 ----------
+build_stats() {
+	merge_live
+	parse_conntrack > "$STATE/flows.tsv"
+	awk -F'\t' -v m1="$STATE/ipmap.tsv" -v m2="$STATE/ipmap_live.tsv" '
+		BEGIN {
+			while ((getline l < m1) > 0) { split(l,a,"\t"); ipdom[a[1]]=a[2]; ipcat[a[1]]=a[3] }
+			while ((getline l < m2) > 0) { split(l,a,"\t"); ipdom[a[1]]=a[2]; ipcat[a[1]]=a[3] }
+		}
+		{
+			rip=$2
+			d = (rip in ipdom) ? ipdom[rip] : "unknown"
+			c = (rip in ipcat) ? ipcat[rip] : "other"
+			printf "%s\t%s\t%s\t%d\n", $1, c, d, $3
+		}' "$STATE/flows.tsv" > "$STATE/flows3.tsv"
+
+	awk -F'\t' -v leases=/tmp/dhcp.leases '
+		BEGIN { while ((getline l < leases) > 0) { split(l,a," "); mac[a[3]]=a[2]; nm[a[3]]=a[4] } }
+		{
+			ip=$1
+			macaddr = (ip in mac) ? mac[ip] : "unknown"
+			name = (ip in nm && nm[ip] != "*") ? nm[ip] : macaddr
+			print macaddr "\t" name "\t" $2 "\t" $3 "\t" $4
+		}' "$STATE/flows3.tsv" > "$STATE/flows4.tsv"
+
+	jq -Rn '
+		[inputs | split("\t") | {mac:.[0], name:.[1], cat:.[2], domain:.[3], bytes:(.[4]|tonumber)}]
+		| group_by(.mac) | map({
+			mac: .[0].mac, name: .[0].name,
+			total: (map(.bytes)|add),
+			cats: (group_by(.cat) | map({cat:.[0].cat, bytes:(map(.bytes)|add)}) | sort_by(-.bytes)),
+			sites: (group_by(.domain) | map({domain:.[0].domain, bytes:(map(.bytes)|add)}) | sort_by(-.bytes) | .[:60])
+		}) | sort_by(-.total)
+	' < "$STATE/flows4.tsv" > "$STATE/stats.json" 2>/dev/null
+
+	jq -n --slurpfile s "$STATE/stats.json" '
+		($s[0] | map(.cats[]) | group_by(.cat) | map({cat:.[0].cat, bytes:(map(.bytes)|add)}) | sort_by(-.bytes))
+	' > "$STATE/cats.json" 2>/dev/null
+}
+
+# ---------- 时间计划 ----------
+in_schedule() {
+	sec="$1"
+	st=$(uci_get "$sec.schedule_start")
+	[ -z "$st" ] && return 0
+	et=$(uci_get "$sec.schedule_end")
+	days=$(uci_get "$sec.schedule_days")
+	dow=$(date +%u)
+	if [ -n "$days" ]; then
+		case ",$days," in *",$dow,"*) : ;; *) return 1 ;; esac
+	fi
+	hm=$(date +%H%M)
+	sh=$(echo "$st" | tr -d ':')
+	eh=$(echo "$et" | tr -d ':')
+	[ -z "$eh" ] && return 0
+	if [ "$sh" -le "$eh" ]; then
+		[ "$hm" -ge "$sh" ] && [ "$hm" -lt "$eh" ]
+	else
+		[ "$hm" -ge "$sh" ] || [ "$hm" -lt "$eh" ]
+	fi
+}
+
+# ---------- 拦截规则 ----------
+apply_rules() {
+	[ "$(g_enabled)" = "1" ] || { nft delete table inet appfilter 2>/dev/null; return 0; }
+	[ "$(uci_get global.block_enabled)" = "1" ] || { nft delete table inet appfilter 2>/dev/null; return 0; }
+
+	domain_cat_tsv > "$STATE/catmap.tsv"
+	RULES="$STATE/rules.nft"
+	: > "$RULES"
+	echo "table inet appfilter {" >> "$RULES"
+	idx=0
+	RULEDEFS=""
+	for sec in $(device_sections); do
+		mac=$(uci_get "$sec.mac")
+		[ -z "$mac" ] && continue
+		cats=$(uci_get "$sec.block_cats")
+		doms=$(uci_get "$sec.block_domains")
+		[ -z "$cats" ] && [ -z "$doms" ] && continue
+		in_schedule "$sec" || continue
+		ip=$(lan_ip_of_mac "$mac")
+		[ -z "$ip" ] && continue
+		: > "$STATE/ips.$idx"
+		# A) 该设备自己解析过的域名 IP（最精确）
+		if [ -s "$STATE/dnslive.tsv" ]; then
+			awk -F'\t' -v cli="$ip" -v cats="$cats" -v doms="$doms" -v mapf="$STATE/catmap.tsv" '
+				BEGIN {
+					while ((getline l < mapf) > 0) { split(l,a,"\t"); cm[a[1]]=a[2] }
+					n=split(cats, ca, ",")
+					for (i=1;i<=n;i++) if (ca[i] != "") blockedcat[ca[i]]=1
+					n=split(doms, dl, ",")
+					for (i=1;i<=n;i++) if (dl[i] != "") blockeddom[dl[i]]=1
+				}
+				$3 != cli { next }
+				{
+					d=$2; hit=0; best=""
+					for (k in cm) if (d==k || index(d, "."k) > 0) if (length(k) > length(best)) best=k
+					if (best != "" && (cm[best] in blockedcat)) hit=1
+					if (!hit) for (k in blockeddom) if (d==k || index(d, "."k) > 0) { hit=1; break }
+					if (hit) print $1
+				}' "$STATE/dnslive.tsv" >> "$STATE/ips.$idx"
+		fi
+		# B) 全局解析缓存兜底
+		for cd in $(echo "$cats" | tr ',' ' '); do
+			[ -z "$cd" ] && continue
+			awk -F'\t' -v c="$cd" '$3==c{print $1}' "$STATE/ipmap.tsv" >> "$STATE/ips.$idx"
+		done
+		for dd in $(echo "$doms" | tr ',' ' '); do
+			[ -z "$dd" ] && continue
+			awk -F'\t' -v d="$dd" '($2==d || index($2,"."d)>0){print $1}' "$STATE/ipmap.tsv" >> "$STATE/ips.$idx"
+		done
+		awk '/^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$/' "$STATE/ips.$idx" | sort -u > "$STATE/ips.$idx.u"
+		mv "$STATE/ips.$idx.u" "$STATE/ips.$idx"
+		[ -s "$STATE/ips.$idx" ] || { rm -f "$STATE/ips.$idx"; continue; }
+		ELEMS=$(awk 'BEGIN{sep=""}{printf "%s%s",sep,$0; sep=","}' "$STATE/ips.$idx")
+		echo "    set blk$idx { type ipv4_addr; flags interval; elements = { $ELEMS } }" >> "$RULES"
+		RULEDEFS="$RULEDEFS    ip saddr $ip ip daddr @blk$idx drop\n"
+		idx=$((idx + 1))
+		rm -f "$STATE/ips.$idx"
+	done
+	echo "  chain forward {" >> "$RULES"
+	echo "    type filter hook forward priority -10; policy accept;" >> "$RULES"
+	printf "$RULEDEFS" >> "$RULES"
+	echo "  }" >> "$RULES"
+	echo "}" >> "$RULES"
+
+	nft delete table inet appfilter 2>/dev/null
+	nft -f "$RULES" 2>/dev/null
+}
+
+# ---------- 状态导出 ----------
+dump_state() {
+	DEV=$(jq -Rn '
+		[inputs | split("\t") | {mac:.[0], name:.[1]}]
+	' < /tmp/dhcp.leases 2>/dev/null || echo '[]')
+
+	RULES=""
+	for sec in $(device_sections); do
+		mac=$(uci_get "$sec.mac")
+		[ -z "$mac" ] && continue
+		r=$(jq -n -c --arg sec "$sec" --arg mac "$mac" \
+			--arg name "$(uci_get "$sec.name")" \
+			--arg cats "$(uci_get "$sec.block_cats")" \
+			--arg doms "$(uci_get "$sec.block_domains")" \
+			--arg ss "$(uci_get "$sec.schedule_start")" \
+			--arg se "$(uci_get "$sec.schedule_end")" \
+			--arg sd "$(uci_get "$sec.schedule_days")" \
+			'{section:$sec, mac:$mac, name:$name, block_cats:$cats, block_domains:$doms,
+			  schedule_start:$ss, schedule_end:$se, schedule_days:$sd}')
+		RULES="$RULES$r
+"
+	done
+	printf '%s' "$RULES" | jq -s 'map(select(. != null))' > "$STATE/rules.json" 2>/dev/null
+
+	jq -n \
+		--slurpfile s "$STATE/stats.json" \
+		--slurpfile c "$STATE/cats.json" \
+		--slurpfile r "$STATE/rules.json" \
+		--argjson dev "$DEV" \
+		--arg up "$(cut -d. -f1 /proc/uptime)" \
+		--arg enabled "$(g_enabled)" \
+		--arg block "$(uci_get global.block_enabled)" \
+		'{
+			uptime: ($up|tonumber? // 0),
+			enabled: ($enabled=="1"),
+			block_enabled: ($block=="1"),
+			devices: ($s[0] // []),
+			categories: ($c[0] // []),
+			rules: ($r[0] // []),
+			leases: [$dev[] | select(.mac != null)]
+		}'
+}
+
+# ---------- 主循环 ----------
+daemon() {
+	mkdir -p "$STATE"
+	trap 'exit 0' TERM INT
+	LAST_RESOLVE=0
+	while :; do
+		now=$(date +%s)
+		parse_dns_log
+		if [ $((now - LAST_RESOLVE)) -ge 900 ] || [ ! -f "$STATE/ipmap.stamp" ]; then
+			resolve_domains
+			LAST_RESOLVE=$now
+		fi
+		build_stats
+		apply_rules
+		sleep 30
+	done
+}
+
+stop_daemon() {
+	[ -f "$STATE/pid" ] && kill "$(cat "$STATE/pid")" 2>/dev/null
+}
+
+case "$1" in
+daemon) stop_daemon; daemon ;;
+update)
+	parse_dns_log
+	[ -f "$STATE/ipmap.stamp" ] || resolve_domains
+	build_stats
+	apply_rules
+	;;
+apply) apply_rules ;;
+stats) build_stats ;;
+state) dump_state ;;
+reset) : > "$STATE/dns.log"; : > "$STATE/queries.raw"; rm -f "$STATE/stats.json"; echo ok ;;
+resolve) resolve_domains; echo ok ;;
+stop) stop_daemon; echo stopped ;;
+*)
+	echo "usage: appfilter {daemon|stop|update|apply|stats|state|reset|resolve}"
+	;;
+esac
