@@ -235,3 +235,12 @@ N5000 面板（登录后默认首页）
 - 应用过滤与流量仪表盘均已改为 LuCI 原生视图（非 iframe）
 - 原独立页面 `/appfilter.html`、`/dashboard.html` 仍保留，可继续直接访问
 - 实现文件：`www/luci-static/resources/view/n5000/{panel,appfilter,dashboard}.js` + `menu.d/luci-app-n5000-panel.json`
+
+## 专属小特色：大肥鱼 🐟
+
+- 「大肥鱼」是这套固件的吉祥物（SVG 动效：摆尾、眨眼、吐泡泡），出现在：
+  - N5000 面板：顶部会「碎碎念」——水温舒服 / 冒汗 / 鱼要熟了（按 CPU 温度、负载、在线设备数变化）
+  - 流量仪表盘：右下角浮动，**点一下会游走**，再点回来
+  - 应用过滤：鱼会报告当前守着几条管控规则
+- 页面图标（favicon）也换成了大肥鱼
+- 实现：`/www/luci-static/n5000/fish.svg`（纯 SVG + CSS 动画，无图片资源、零额外开销）
