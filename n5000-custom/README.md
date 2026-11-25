@@ -299,3 +299,35 @@ N5000 面板（登录后默认首页）
 - `/www/luci-static/glass.css` 增加磨砂规则：主要面板/卡片/弹窗/登录框 `backdrop-filter: blur(14px) saturate(160%)`，侧边栏/顶栏 `blur(16px)`，输入框 `blur(8px)`
 - 移动端自动降级为 `blur(8px)`，避免低性能设备卡顿
 - 独立页面（dashboard.html / appfilter.html）卡片同样加了磨砂
+
+## 微信远程控制（公众号）
+
+后端 `/www/cgi-bin/wechat` 已就绪，微信里发消息即可控制和查询 N5000：
+
+| 指令 | 作用 |
+|---|---|
+| 帮助 / help | 列出所有指令 |
+| 状态 | 主机、运行时间、负载、温度、内存、WAN/LAN、WiFi、PassWall、Docker |
+| 流量 | 总流量、设备数、Top 网站 |
+| 设备 | 在线设备（IP + 名称） |
+| 重启 | 重启路由器 |
+| 重启wifi | 重启 WiFi |
+| 改密码 新密码 | 修改 WiFi 密码（≥8位） |
+| 改ssid 新名称 | 修改 WiFi 名称（自动加 -2G/-5G） |
+| docker状态 | Docker 运行状态与容器 |
+| 重启docker | 重启 Docker |
+| 其它任意文字 | 交给 DeepSeek AI 回答（需在 LuCI AI 助手配置 Key） |
+
+### 接通步骤（需要用户操作）
+
+1. 注册微信公众号（个人订阅号免费）：https://mp.weixin.qq.com
+2. 内网穿透：ngrok 免费账号 → 创建免费静态域名（形如 `xxx.ngrok-free.app`）→ 拿到 authtoken
+3. 把 authtoken 给 AI，由 AI 在路由器上安装 ngrok + 启动隧道（映射 80 端口）
+4. 公众号后台 → 设置与开发 → 基本配置 → 服务器配置：
+   - URL：`https://xxx.ngrok-free.app/cgi-bin/wechat`
+   - Token：与 `uci set aichat.wechat.token=...` 一致
+   - 消息加解密：明文模式
+5. `uci set aichat.wechat.enabled=1 && uci commit aichat`
+6. 微信里给公众号发“帮助”验证
+
+> 说明：微信个人号没有官方机器人接口，第三方协议机器人有封号风险；公众号是合规方案。
