@@ -22,7 +22,7 @@ var AFCSS = [
 	'.af-row{display:flex;align-items:center;gap:10px;font-size:12.5px;margin-bottom:8px}',
 	'.af-row .nm{width:110px;flex:0 0 auto;opacity:.75;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
 	'.af-row .bar{flex:1;height:6px;border-radius:3px;background:rgba(127,127,127,.22);overflow:hidden}',
-	'.af-row .bar>i{display:block;height:100%;border-radius:3px;background:var(--primary,#4C7DFF)}',
+	'.af-row .bar>i{display:block;height:100%;border-radius:3px;background:var(--primary,#48A9C5)}',
 	'.af-row .vl{width:90px;text-align:right;font-variant-numeric:tabular-nums}',
 	'.af-dev{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(127,127,127,.18);font-size:12.5px}',
 	'.af-dev:last-child{border-bottom:none}',
