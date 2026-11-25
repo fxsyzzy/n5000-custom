@@ -101,6 +101,7 @@ jobs:
                    openwrt/files/www/cgi-bin/appfilter \
                    openwrt/files/www/cgi-bin/favorites \
                    openwrt/files/www/cgi-bin/vault \
+                   openwrt/files/www/cgi-bin/theme \
                    openwrt/files/usr/sbin/appfilter \
                    openwrt/files/etc/init.d/appfilter \
                    openwrt/files/etc/uci-defaults/94-appfilter \
@@ -151,6 +152,7 @@ jobs:
         with:
           name: build-log
           path: /tmp/build.log
+
 
 
 
