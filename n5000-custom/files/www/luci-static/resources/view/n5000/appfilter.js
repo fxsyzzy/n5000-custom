@@ -35,6 +35,10 @@ var AFCSS = [
 	'.af-days label{display:flex;align-items:center;gap:4px;padding:4px 8px;border:1px solid rgba(127,127,127,.3);border-radius:6px;cursor:pointer}',
 	'.af-hint{font-size:11.5px;opacity:.6;margin-top:6px;line-height:1.45}',
 	'.af-modal .cbi-value{display:block}',
+	'.af-fish{display:flex;align-items:center;gap:12px;margin:4px 0 10px}',
+	'.af-fish img{width:70px;height:50px;animation:afBob 3.2s ease-in-out infinite}',
+	'@keyframes afBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}',
+	'.af-fish .m{font-size:12.5px;opacity:.8;line-height:1.5}',
 	'@media(max-width:1000px){.af-stats{grid-template-columns:repeat(2,1fr)}.af-cols{grid-template-columns:1fr}}'
 ].join('\n');
 
@@ -74,7 +78,11 @@ return view.extend({
 
 		var root = E('div', { 'class': 'af-wrap' }, [
 			E('style', {}, [AFCSS]),
-			E('div', { 'class': 'af-toolbar' }, [
+			E('div', { 'class': 'af-fish' }, [
+			E('img', { 'src': '/luci-static/n5000/fish.svg', 'alt': 'fish' }),
+			E('div', { 'class': 'm', 'id': 'af-fishmsg' }, [' '])
+		]),
+		E('div', { 'class': 'af-toolbar' }, [
 				E('button', { 'class': 'btn cbi-button', 'id': 'af-toggle', click: function() { self.toggleBlock(); } },
 					['启用/停用拦截']),
 				E('button', { 'class': 'btn cbi-button', 'id': 'af-refresh', click: function() { self.refresh(); } },
@@ -129,6 +137,8 @@ return view.extend({
 			document.getElementById('af-devs').textContent = devs.length;
 			document.getElementById('af-sites').textContent = siteCount;
 			document.getElementById('af-rules').textContent = rules.length;
+			var afFm = document.getElementById('af-fishmsg');
+			if (afFm) afFm.textContent = (rules.length ? '鱼儿正守着 ' + rules.length + ' 条管控规则，禁止的网站会被它吞掉' : '鱼儿在闲着，还没有管控规则');
 			var tb = document.getElementById('af-toggle');
 			if (tb) {
 				tb.textContent = state.block_enabled ? '停用拦截' : '启用拦截';
