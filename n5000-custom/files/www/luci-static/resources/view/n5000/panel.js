@@ -49,12 +49,6 @@ var N5CSS = [
 	'.n5-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}',
 	'@media(max-width:1000px){.n5-grid{grid-template-columns:repeat(2,1fr)}.n5-cols{grid-template-columns:1fr}}',
 	'@media(max-width:600px){.n5-grid{grid-template-columns:1fr 1fr}}',
-	'.n5-head{display:flex;align-items:flex-end;gap:14px;margin-bottom:8px;flex-wrap:wrap}',
-	'.n5-head h2{margin:0 0 6px}',
-	'.n5-mascot{height:118px;width:auto;flex:0 0 auto;filter:drop-shadow(0 8px 16px rgba(0,0,0,.35));animation:n5swim 7s ease-in-out infinite}',
-	'@keyframes n5swim{0%,100%{transform:translate(0,0) rotate(0)}25%{transform:translate(-9px,-5px) rotate(-1.5deg)}50%{transform:translate(0,-9px) rotate(0)}75%{transform:translate(9px,-5px) rotate(1.5deg)}}',
-	'.n5-bubble{max-width:440px;font-size:12.5px;line-height:1.55;padding:9px 14px;border-radius:14px;background:rgba(127,127,127,.12);border:1px solid rgba(127,127,127,.25);position:relative;margin-bottom:6px}',
-	'.n5-bubble:before{content:"";position:absolute;left:-7px;bottom:18px;border:7px solid transparent;border-right-color:rgba(127,127,127,.25)}',
 ].join('\n');
 
 return view.extend({
@@ -146,13 +140,7 @@ return view.extend({
 
 		var root = E('div', {}, [
 			style,
-			E('div', { 'class': 'n5-head' }, [
-				E('div', {}, [
-					E('h2', {}, [_s('N5000 面板', 'N5000 Panel')]),
-					E('div', { 'class': 'n5-bubble', 'id': 'n5-mascotmsg' }, [' '])
-				]),
-				E('img', { 'class': 'n5-mascot', 'src': '/luci-static/n5000/mascot.png', 'alt': '大肥鱼' })
-			]),
+			E('h2', {}, [_s('N5000 面板', 'N5000 Panel')]),
 			grid1, grid2,
 			E('div', { 'class': 'n5-cols' }, [catBox, siteBox]),
 			links
@@ -168,38 +156,6 @@ return view.extend({
 			var memPct = memTotal ? (memTotal - memAvail) / memTotal * 100 : 0;
 			var tfPct = d.tf_total ? (d.tf_used || 0) / d.tf_total * 100 : 0;
 			var swUsed = Math.max(0, (d.swap_total || 0) - (d.swap_free || 0));
-			/* 大肥鱼的碎碎念（傲娇/吐槽版） */
-			var mm = document.getElementById('n5-mascotmsg');
-			if (mm) {
-				var pool;
-				if (tv >= 80) pool = [
-					'烫烫烫！你是想吃烤鱼吗？！',
-					'喂！散热风扇呢！本鱼要熟了啦！',
-					'……哼，热成这样，白饭都不香了。'
-				];
-				else if (Number(d.load[0]) > 1.5) pool = [
-					'别催了别催了，本鱼都快游断气了！',
-					'这么多请求…思考链都快绕成毛线团了。',
-					'CPU 冒烟中，赔我一碗白饭先。'
-				];
-				else if (tv >= 65) pool = [
-					'有点热…哼，才不是因为你。',
-					'本鱼在冒汗，别盯着看！',
-					'这温度…勉强能忍吧，才没有很热。'
-				];
-				else if ((d.clients || 0) === 0) pool = [
-					'一条鱼都没连上…白饭都白吃了。',
-					'哼，没人理我，那我去睡觉了（DeepSleep）。',
-					'好无聊，谁来连一下 WiFi 陪我玩嘛。'
-				];
-				else pool = [
-					'哼，才不是特意帮你看着路由器呢。',
-					'水温刚好…勉强表扬你一下。',
-					'd.clients 条小鱼在游，本鱼在摸鱼。'.replace('d.clients', d.clients),
-					'白饭呢？先端一碗过来再说。'
-				];
-				mm.textContent = pool[Math.floor(Math.random() * pool.length)];
-			}
 
 			document.getElementById('n5-uptime').textContent = n5fmtUptime(d.uptime, zh);
 			document.getElementById('n5-boot').textContent =
