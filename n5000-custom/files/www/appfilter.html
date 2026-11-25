@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>N5000 应用过滤</title>
+<link rel="icon" type="image/svg+xml" href="/luci-static/n5000/fish.svg">
 <style>
   :root{--text:#e8eefb;--dim:rgba(232,238,251,.55);--card:rgba(255,255,255,.045);--border:rgba(255,255,255,.085);
     --accent:#4C7DFF;--accent2:#7FA8FF;--warn:#ffc46b;--bad:#ff7f9c;--radius:16px}
@@ -91,6 +92,8 @@
     <h1>应用过滤 <span class="sub">/ Traffic &amp; App Filter</span></h1>
     <span class="sub"><span class="dot" id="liveDot"></span><span id="upText">--</span></span>
     <span class="spacer"></span>
+    <img src="/luci-static/n5000/fish.svg" alt="fish" style="width:64px;height:46px;animation:float 3.2s ease-in-out infinite">
+    <style>@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}</style>
     <button class="hbtn" id="btnBlock" title="启用/停用拦截">拦截: --</button>
     <button class="hbtn" id="btnReset">清空统计</button>
     <button class="hbtn" id="lang">EN</button>
