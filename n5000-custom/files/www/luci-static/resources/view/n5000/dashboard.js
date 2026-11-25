@@ -42,12 +42,6 @@ var DBCSS = [
 	'.db-row .bar{flex:1;margin:0}',
 	'.db-row .vl{width:90px;text-align:right;font-variant-numeric:tabular-nums}',
 	'@media(max-width:1000px){.db-grid{grid-template-columns:repeat(2,1fr)}.db-cols{grid-template-columns:1fr}}',
-	'.db-mascot{position:fixed;right:20px;bottom:14px;z-index:600;display:flex;align-items:flex-end;gap:10px;cursor:pointer;user-select:none;max-width:66vw}',
-	'.db-mascot img{height:132px;width:auto;filter:drop-shadow(0 8px 18px rgba(0,0,0,.4));animation:dbSwimIdle 8s ease-in-out infinite}',
-	'@keyframes dbSwimIdle{0%,100%{transform:translate(0,0) rotate(0)}25%{transform:translate(-12px,-6px) rotate(-1.6deg)}50%{transform:translate(0,-10px) rotate(0)}75%{transform:translate(12px,-6px) rotate(1.6deg)}}',
-	'.db-mascot .msg{font-size:12px;line-height:1.5;padding:9px 13px;border-radius:14px;background:rgba(127,127,127,.14);border:1px solid rgba(127,127,127,.28);max-width:340px}',
-	'.db-mascot.swim img{animation:dbSwim 2.6s ease-in-out forwards}',
-	'@keyframes dbSwim{0%{transform:translateX(0) scale(1)}45%{transform:translateX(-60vw) scale(1.06)}100%{transform:translateX(-130vw) scale(.92)}}',
 ].join('\n');
 
 return view.extend({
@@ -99,15 +93,6 @@ return view.extend({
 				E('div', { 'class': 'cbi-section' }, [E('h3', {}, ['网站 Top 10']), E('div', { 'id': 'db-sites' }, [' '])])
 			]),
 			E('div', { 'class': 'cbi-section' }, [E('h3', {}, ['设备流量']), E('div', { 'id': 'db-devs' }, [' '])]),
-			E('div', { 'class': 'db-mascot', 'id': 'db-mascot', click: function() {
-				var m = document.getElementById('db-mascot');
-				if (!m || m.classList.contains('swim')) return;
-				m.classList.add('swim');
-				setTimeout(function() { m.classList.remove('swim'); }, 2800);
-			}}, [
-				E('div', { 'class': 'msg', 'id': 'db-mascotmsg' }, [' ']),
-				E('img', { 'src': '/luci-static/n5000/mascot.png', 'alt': '大肥鱼' })
-			])
 
 		]);
 
@@ -190,38 +175,6 @@ return view.extend({
 			document.getElementById('db-svc').appendChild(E('span', { 'class': 'db-big sm' }, [svc.join(' · ')]));
 			document.getElementById('db-svcnone').textContent = '';
 
-			/* 大肥鱼（傲娇/吐槽版） */
-			var mmEl = document.getElementById('db-mascotmsg');
-			if (mmEl) {
-				var mp;
-				if (tv >= 80) mp = [
-					'烫烫烫！本鱼要熟了，快开风扇！',
-					'你是故意的吧？想喝鱼汤直说。',
-					'哼，热成这样，白饭都馊了！'
-				];
-				else if (Number(d.load[0]) > 1.5) mp = [
-					'别催了别催了，本鱼快游断气了！',
-					'思考链太长，CPU 都要冒烟了…',
-					'这么忙，加一碗白饭不过分吧？'
-				];
-				else if (tv >= 65) mp = [
-					'有点热…才不是因为你。',
-					'本鱼在冒汗，别盯着看！',
-					'忍一忍，本鱼还能再摸会鱼。'
-				];
-				else if ((d.clients || 0) === 0) mp = [
-					'一条鱼都没连…白饭白吃了。',
-					'哼，没人陪我玩，睡觉去了。',
-					'安静得有点过分，鱼都要长蘑菇了。'
-				];
-				else mp = [
-					'N 条小鱼在游，本鱼在摸鱼。'.replace('N', d.clients),
-					'哼，流量看着还行…勉强夸你一句。',
-					'点我干嘛？本鱼在减肥，不游。',
-					'今日份白饭什么时候到账？'
-				];
-				mmEl.textContent = mp[Math.floor(Math.random() * mp.length)];
-			}
 			/* 速率 */
 			var down = 0, up = 0;
 			if (prev && d.ts > prev.ts) {
@@ -282,13 +235,6 @@ return view.extend({
 		setTimeout(paint, 100);
 		window.addEventListener('resize', drawChart);
 
-		/* 每 45 秒自己游一趟 */
-		setInterval(function() {
-			var m = document.getElementById('db-mascot');
-			if (!m || m.classList.contains('swim')) return;
-			m.classList.add('swim');
-			setTimeout(function() { m.classList.remove('swim'); }, 2800);
-		}, 45000);
 
 		poll.add(function() {
 			return Promise.all([
