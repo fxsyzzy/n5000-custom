@@ -96,6 +96,8 @@ jobs:
                    openwrt/files/etc/uci-defaults/* \
                    openwrt/files/etc/hotplug.d/block/20-n5000-docker \
                    openwrt/files/www/cgi-bin/rstatus \
+                   openwrt/files/www/cgi-bin/aichat \
+                   openwrt/files/www/cgi-bin/wechat \
                    openwrt/files/usr/sbin/theme
           find openwrt/files -type f -exec ls -l {} \;
 
@@ -140,3 +142,4 @@ jobs:
         with:
           name: build-log
           path: /tmp/build.log
+
