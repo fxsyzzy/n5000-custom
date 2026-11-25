@@ -29,7 +29,7 @@
 		var BASE = '/luci-static/n5000/';
 
 		var css = ''
-			+ '#n5000-mascot{position:fixed;left:14px;bottom:12px;z-index:900;display:flex;align-items:flex-end;gap:12px;max-width:min(640px,90vw);user-select:none}'
+			+ '#n5000-mascot{position:fixed;left:14px;bottom:88px;z-index:900;display:flex;align-items:flex-end;gap:12px;max-width:min(640px,90vw);user-select:none}'
 			+ '#n5000-mascot .n5m-body{position:relative;flex:0 0 auto}'
 			+ '#n5000-mascot .n5m-img{height:168px;width:auto;display:block;cursor:pointer;filter:drop-shadow(0 10px 22px rgba(0,0,0,.45))}'
 			+ '#n5000-mascot .n5m-head{position:absolute;left:50%;bottom:132px;transform:translateX(-50%);width:0;height:0;pointer-events:none}'
@@ -48,7 +48,7 @@
 			+ '.n5m-visitor.show{opacity:1}'
 			+ '.n5m-visitor .vb{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);margin-bottom:4px;white-space:nowrap;'
 			+ 'font-size:11.5px;padding:3px 9px;border-radius:10px;background:rgba(127,127,127,.16);border:1px solid rgba(127,127,127,.3)}'
-			+ '@media(max-width:640px){#n5000-mascot .n5m-img{height:120px}#n5000-mascot .n5m-head{bottom:96px}#n5000-mascot .n5m-bubble{max-width:42vw;font-size:11.5px;margin-bottom:52px}.n5m-visitor{display:none}}';
+			+ '@media(max-width:640px){#n5000-mascot{bottom:66px}#n5000-mascot .n5m-img{height:120px}#n5000-mascot .n5m-head{bottom:96px}#n5000-mascot .n5m-bubble{max-width:42vw;font-size:11.5px;margin-bottom:52px}.n5m-visitor{display:none}}';
 
 		var style = document.createElement('style');
 		style.textContent = css;
