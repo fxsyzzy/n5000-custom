@@ -29,6 +29,7 @@ verify() {
 # ---------- reply helpers ----------
 reply_text() {
 	FROM="$1"; TO="$2"; TEXT="$3"
+	TEXT=$(printf "%b" "$TEXT")
 	printf 'Content-Type: text/xml; charset=utf-8\r\n\r\n'
 	printf '<xml><ToUserName><![CDATA[%s]]></ToUserName><FromUserName><![CDATA[%s]]></FromUserName><CreateTime>%s</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA[%s]]></Content></xml>' \
 		"$FROM" "$TO" "$(date +%s)" "$(cdata "$TEXT")"
@@ -118,7 +119,63 @@ case "$CMD" in
 		reply_text "$FROM" "$TO" "WiFi 密码已修改为：$NEWPW"
 	fi
 	;;
-*)
+帮助|help|指令|菜单)
+		reply_text "$FROM" "$TO" "可用指令：
+状态 —— 查看路由器状态
+流量 —— 流量统计摘要
+设备 —— 在线设备列表
+重启 —— 重启路由器
+重启wifi —— 重启 WiFi
+改密码 新密码 —— 修改 WiFi 密码（至少8位）
+改ssid 新名称 —— 修改 WiFi 名称（自动加 -2G/-5G）
+docker状态 —— Docker 状态
+重启docker —— 重启 Docker
+其他任何问题会交给 AI 回答（需要先配置 DeepSeek Key）。"
+		;;
+	流量|流量统计)
+		AF=$(wget -q -O - "http://127.0.0.1/cgi-bin/appfilter?action=state" 2>/dev/null)
+		AFT=$(printf '%s' "$AF" | jq -r '(.devices // []) as $d | ($d | map(.total) | add // 0) as $tot | ([$d[].sites[]?] | group_by(.domain) | map({d:.[0].domain,b:(map(.bytes)|add)}) | sort_by(-.b) | .[:5] | map("  " + .d + "  " + (((.b/1048576*10)|floor/10)|tostring) + " MB") | join("\n")) as $sites | "总流量: " + (((($tot/1048576*10)|floor)/10)|tostring) + " MB\n设备: " + (($d|length)|tostring) + " 台\nTop 网站:\n" + $sites' 2>/dev/null)
+		[ -z "$AFT" ] && AFT="暂无流量数据（统计服务可能刚启动）"
+		reply_text "$FROM" "$TO" "$AFT"
+		;;
+	设备|在线设备)
+		DEV=$(awk '{printf "%s  %s\n", $3, ($4=="*"?$2:$4)}' /tmp/dhcp.leases 2>/dev/null | head -20)
+		[ -z "$DEV" ] && DEV="暂无在线设备记录"
+		reply_text "$FROM" "$TO" "在线设备（IP 名称）:\n$DEV"
+		;;
+	改ssid*)
+		NEWSSID=$(printf '%s' "$CONTENT" | sed -n 's/^改ssid[[:space:]]*//p')
+		if [ -z "$NEWSSID" ]; then
+			reply_text "$FROM" "$TO" "用法：改ssid 新名称（例如：改ssid Home）"
+		else
+			for iface in $(uci -q show wireless 2>/dev/null | sed -n 's/^wireless\.\([^.=]*\)=wifi-iface$/\1/p'); do
+				dev=$(uci -q get "wireless.$iface.device")
+				band=$(uci -q get "wireless.$dev.band")
+				case "$band" in
+					2g) uci set "wireless.$iface.ssid=$NEWSSID-2G" ;;
+					5g) uci set "wireless.$iface.ssid=$NEWSSID-5G" ;;
+					6g) uci set "wireless.$iface.ssid=$NEWSSID-6G" ;;
+				esac
+			done
+			uci commit wireless
+			wifi reload >/dev/null 2>&1
+			reply_text "$FROM" "$TO" "WiFi 名称已改为：$NEWSSID-2G / $NEWSSID-5G"
+		fi
+		;;
+	docker状态|docker)
+		if pidof dockerd >/dev/null 2>&1; then
+			DC=$(docker ps --format '{{.Names}}' 2>/dev/null | head -10 | tr '\n' ',' | sed 's/,$//')
+			[ -z "$DC" ] && DC="无运行容器"
+			reply_text "$FROM" "$TO" "Docker: 运行中\n容器: $DC"
+		else
+			reply_text "$FROM" "$TO" "Docker: 未运行"
+		fi
+		;;
+	重启docker|restartdocker)
+		/etc/init.d/dockerd restart >/dev/null 2>&1
+		reply_text "$FROM" "$TO" "正在重启 Docker…"
+		;;
+	*)
 	# ---------- call the LLM ----------
 	BASE=$(uciget main.api_base | sed 's:/*$::')
 	KEY=$(uciget main.api_key)
@@ -126,7 +183,7 @@ case "$CMD" in
 	SYS=$(uciget main.system_prompt)
 	[ -z "$BASE" ] && BASE="https://api.deepseek.com"
 	if [ -z "$KEY" ]; then
-		reply_text "$FROM" "$TO" "AI Key 还没配置，请登录 http://192.168.88.1/aichat.html 设置。"
+		reply_text "$FROM" "$TO" "AI Key 还没配置，请在 LuCI → N5000 面板 → AI 助手 → 设置 里填写。"
 	fi
 	STATUS=$(/www/cgi-bin/rstatus 2>/dev/null | tail -n1 | jq -c '{host,uptime,load,temp,wan_ip,lan_ip,ssid,clients,pw_enabled,docker}' 2>/dev/null)
 	[ -n "$STATUS" ] && SYS="$SYS
