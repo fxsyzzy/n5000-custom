@@ -1,102 +1,92 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 400" width="560" height="400">
   <defs>
-    <linearGradient id="metalTop" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#F4FBFF"/>
-      <stop offset="35%" stop-color="#C8F4F9"/>
-      <stop offset="70%" stop-color="#9FD6E4"/>
-      <stop offset="100%" stop-color="#6FA9C6"/>
+    <!-- ins 风奶油白 / 雾霾蓝 -->
+    <linearGradient id="topFace" x1="0" y1="0" x2="0.9" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="55%" stop-color="#F2F8FB"/>
+      <stop offset="100%" stop-color="#E3EFF5"/>
     </linearGradient>
-    <linearGradient id="metalSide" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#7FB4CC"/>
-      <stop offset="100%" stop-color="#2E5F80"/>
+    <linearGradient id="edgeFace" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#D7E6EE"/>
+      <stop offset="100%" stop-color="#BFD4DF"/>
     </linearGradient>
-    <linearGradient id="blackGlass" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#1B2B3A"/>
-      <stop offset="100%" stop-color="#060D16"/>
+    <linearGradient id="sideFace" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#C9DAE4"/>
+      <stop offset="100%" stop-color="#A9C2D0"/>
     </linearGradient>
     <radialGradient id="halo" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#83D9DC" stop-opacity=".42"/>
-      <stop offset="100%" stop-color="#0D2C54" stop-opacity="0"/>
+      <stop offset="0%" stop-color="#DDF1F7" stop-opacity=".85"/>
+      <stop offset="100%" stop-color="#DDF1F7" stop-opacity="0"/>
     </radialGradient>
-    <linearGradient id="sheen" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0"/>
-      <stop offset="45%" stop-color="#FFFFFF" stop-opacity=".55"/>
-      <stop offset="60%" stop-color="#FFFFFF" stop-opacity="0"/>
-    </linearGradient>
-    <filter id="drop" x="-30%" y="-30%" width="160%" height="180%">
-      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#03101f" flood-opacity=".55"/>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="200%">
+      <feDropShadow dx="0" dy="20" stdDeviation="22" flood-color="#7FA3B5" flood-opacity=".35"/>
     </filter>
   </defs>
 
-  <!-- 背景光晕 -->
-  <ellipse cx="280" cy="210" rx="230" ry="150" fill="url(#halo)"/>
+  <!-- 柔和背景光 -->
+  <circle cx="282" cy="196" r="168" fill="url(#halo)"/>
+  <circle cx="120" cy="120" r="5" fill="#D7E6EE"/>
+  <circle cx="470" cy="96" r="4" fill="#D7E6EE"/>
+  <circle cx="492" cy="284" r="6" fill="#E3EFF5"/>
+  <circle cx="88" cy="300" r="4" fill="#E3EFF5"/>
 
-  <!-- 地面阴影 -->
-  <ellipse cx="280" cy="322" rx="170" ry="26" fill="#03101f" opacity=".5"/>
+  <!-- 底部投影 -->
+  <ellipse cx="290" cy="322" rx="150" ry="16" fill="#9FB8C6" opacity=".38"/>
 
-  <g filter="url(#drop)">
-    <!-- 机身侧面厚度 -->
-    <path d="M128 262 L430 262 Q448 262 448 280 L448 288 Q448 306 430 306 L146 306 Q128 306 128 288 Z"
-          fill="url(#metalSide)"/>
-    <!-- 顶面（略带透视的圆角方形） -->
-    <path d="M150 88 L410 88 Q446 88 446 124 L446 250 Q446 286 410 286 L150 286 Q114 286 114 250 L114 124 Q114 88 150 88 Z"
-          fill="url(#metalTop)" stroke="#EAFBFF" stroke-opacity=".8" stroke-width="1.5"/>
-    <!-- 左上高光 -->
-    <path d="M150 88 L410 88 Q446 88 446 124 L446 150 Q300 120 114 150 L114 124 Q114 88 150 88 Z"
-          fill="#FFFFFF" opacity=".35"/>
-    <!-- 表面扫光 -->
-    <path d="M114 190 L446 130 L446 170 L114 230 Z" fill="url(#sheen)" opacity=".35"/>
+  <g filter="url(#soft)" transform="rotate(-7 280 210)">
+    <!-- 机身厚度（右侧） -->
+    <path d="M170 112 L420 112 Q436 112 436 128 L436 286 Q436 302 420 302 L186 302 Q170 302 170 286 Z"
+          fill="url(#sideFace)"/>
+    <!-- 顶面 -->
+    <path d="M150 96 L400 96 Q422 96 422 118 L422 278 Q422 300 400 300 L170 300 Q148 300 148 278 L148 118 Q148 96 150 96 Z"
+          fill="url(#topFace)" stroke="#FFFFFF" stroke-opacity=".9" stroke-width="2"/>
+    <!-- 顶面高光 -->
+    <path d="M158 108 L412 108 L412 132 Q280 120 158 140 Z" fill="#FFFFFF" opacity=".65"/>
+    <!-- 顶部细线装饰 -->
+    <path d="M172 258 L398 258" stroke="#D7E6EE" stroke-width="2" stroke-linecap="round"/>
 
-    <!-- NR radio 标识 -->
-    <g transform="translate(280 190)">
-      <text x="0" y="0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-weight="800"
-            font-size="46" fill="#0B2237" letter-spacing="1.5">NR</text>
-      <text x="60" y="-2" text-anchor="start" font-family="Segoe UI, Arial, sans-serif" font-weight="600"
-            font-size="20" fill="#1E5B8C">radio</text>
-      <g stroke="#1E5B8C" stroke-width="2.6" fill="none" stroke-linecap="round" opacity=".85">
-        <path d="M96 -22 a12 12 0 0 1 0 18"/>
-        <path d="M104 -30 a22 22 0 0 1 0 34"/>
+    <!-- 极简标识 -->
+    <g transform="translate(285 196)">
+      <text x="0" y="0" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-weight="700"
+            font-size="26" fill="#8FA9B8" letter-spacing="6">N5000</text>
+      <g stroke="#A9C2D0" stroke-width="1.8" fill="none" stroke-linecap="round" opacity=".9">
+        <path d="M-13 -22 a8 8 0 0 1 0 12"/>
+        <path d="M-6 -28 a15 15 0 0 1 0 22"/>
       </g>
-      <text x="0" y="34" text-anchor="middle" font-family="Consolas, monospace" font-size="13"
-            fill="#2E5F80" letter-spacing="3">N5000</text>
     </g>
 
-    <!-- 前面黑色玻璃带 -->
-    <path d="M132 258 L428 258 Q438 258 438 266 Q438 274 428 274 L132 274 Q122 274 122 266 Q122 258 132 258 Z"
-          fill="url(#blackGlass)"/>
-    <rect x="404" y="262" width="10" height="4" rx="2" fill="#83D9DC" opacity=".9"/>
-    <rect x="420" y="262" width="10" height="4" rx="2" fill="#48A9C5" opacity=".6"/>
+    <!-- 前面黑色玻璃饰条 -->
+    <rect x="178" y="264" width="212" height="16" rx="8" fill="#2B3B47" opacity=".92"/>
+    <circle cx="376" cy="272" r="3" fill="#9FE3D0"/>
 
-    <!-- 右侧接口：双 2.5G + USB -->
+    <!-- 右侧接口 -->
     <g>
-      <!-- RJ45 x2 -->
-      <rect x="446" y="176" width="16" height="22" rx="3" fill="#0A1520"/>
-      <rect x="449" y="180" width="10" height="6" rx="1" fill="#B98A3C" opacity=".85"/>
-      <rect x="446" y="206" width="16" height="22" rx="3" fill="#0A1520"/>
-      <rect x="449" y="210" width="10" height="6" rx="1" fill="#B98A3C" opacity=".85"/>
+      <!-- RJ45 2.5G -->
+      <rect x="422" y="150" width="16" height="20" rx="3" fill="#3A4A55"/>
+      <rect x="424" y="154" width="12" height="4" rx="1" fill="#D9C28A"/>
+      <!-- RJ45 2.5G -->
+      <rect x="422" y="180" width="16" height="20" rx="3" fill="#3A4A55"/>
+      <rect x="424" y="184" width="12" height="4" rx="1" fill="#D9C28A"/>
       <!-- USB-A -->
-      <rect x="444" y="132" width="20" height="14" rx="3" fill="#0A1520"/>
-      <rect x="448" y="136" width="12" height="6" rx="1" fill="#2E5F80"/>
+      <rect x="420" y="120" width="20" height="13" rx="3" fill="#3A4A55"/>
+      <rect x="424" y="124" width="12" height="5" rx="1" fill="#8FA9B8"/>
       <!-- USB-C -->
-      <rect x="450" y="112" width="10" height="6" rx="3" fill="#0A1520"/>
+      <rect x="426" y="104" width="10" height="6" rx="3" fill="#3A4A55"/>
+      <!-- DC 供电 -->
+      <circle cx="430" cy="240" r="6" fill="#3A4A55"/>
+      <circle cx="430" cy="240" r="2.2" fill="#8FA9B8"/>
     </g>
   </g>
 
-  <!-- 接口标注 -->
-  <g font-family="Segoe UI, sans-serif" font-size="12" fill="#C8F4F9">
-    <path d="M470 145 L508 118" stroke="#83D9DC" stroke-width="1.6" stroke-dasharray="3 4"/>
-    <rect x="452" y="96" width="96" height="24" rx="12" fill="#061428" opacity=".9" stroke="#83D9DC" stroke-width="1.2"/>
-    <text x="500" y="112" text-anchor="middle">USB 3.2</text>
-
-    <path d="M470 216 L508 240" stroke="#83D9DC" stroke-width="1.6" stroke-dasharray="3 4"/>
-    <rect x="452" y="238" width="104" height="24" rx="12" fill="#061428" opacity=".9" stroke="#83D9DC" stroke-width="1.2"/>
-    <text x="504" y="254" text-anchor="middle">2.5G ×2</text>
-  </g>
-
-  <!-- WiFi 7 波纹 -->
-  <g stroke="#83D9DC" fill="none" stroke-linecap="round" opacity=".55">
-    <path d="M196 66 a64 64 0 0 1 96 0" stroke-width="2.2"/>
-    <path d="M214 50 a96 96 0 0 1 118 0" stroke-width="1.8" opacity=".7"/>
-    <path d="M232 34 a128 128 0 0 1 130 0" stroke-width="1.4" opacity=".45"/>
+  <!-- 接口小标注（ins 风细线标签） -->
+  <g font-family="Segoe UI, sans-serif" font-size="10.5" fill="#A9C2D0" letter-spacing=".5">
+    <line x1="462" y1="118" x2="500" y2="118" stroke="#C9DAE4" stroke-width="1"/>
+    <text x="504" y="121">USB</text>
+    <line x1="462" y1="162" x2="500" y2="162" stroke="#C9DAE4" stroke-width="1"/>
+    <text x="504" y="165">2.5G</text>
+    <line x1="462" y1="192" x2="500" y2="192" stroke="#C9DAE4" stroke-width="1"/>
+    <text x="504" y="195">2.5G</text>
+    <line x1="462" y1="242" x2="500" y2="242" stroke="#C9DAE4" stroke-width="1"/>
+    <text x="504" y="245">PD</text>
   </g>
 </svg>
