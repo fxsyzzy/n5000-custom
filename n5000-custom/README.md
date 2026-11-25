@@ -364,3 +364,4 @@ N5000 面板（登录后默认首页）
   - 完全本地，不上传、不同步
 - 注意：忘记主密码无法恢复（只能删除 `/etc/vault.enc` 重置）；需要备份时复制 `/etc/vault.enc` 即可（加密文件）
 - 实现：`/www/cgi-bin/vault`（接口）、`/www/vault.html`（页面）、openssl-util
+
