@@ -34,7 +34,7 @@ var DBCSS = [
 	'.db-chart{padding:12px 16px}',
 	'.db-chart canvas{width:100%;height:110px;display:block}',
 	'.db-bar{height:5px;border-radius:3px;background:rgba(127,127,127,.22);overflow:hidden;margin-top:6px}',
-	'.db-bar>i{display:block;height:100%;border-radius:3px;background:var(--primary,#4C7DFF)}',
+	'.db-bar>i{display:block;height:100%;border-radius:3px;background:var(--primary,#48A9C5)}',
 	'.db-ok{color:#35c48a}.db-warn{color:#e6a23c}.db-bad{color:#e05a5a}',
 	'.db-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}',
 	'.db-row{display:flex;align-items:center;gap:10px;font-size:12.5px;margin-bottom:8px}',
@@ -130,8 +130,8 @@ return view.extend({
 				ctx.lineWidth = 2;
 				ctx.stroke();
 			};
-			line('down', 'var(--primary)' === '' ? '#4C7DFF' : '#4C7DFF');
-			line('up', '#7FA8FF');
+			line('down', 'var(--primary)' === '' ? '#48A9C5' : '#48A9C5');
+			line('up', '#83D9DC');
 		};
 
 		var paint = function() {
