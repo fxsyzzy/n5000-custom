@@ -1,17 +1,13 @@
 #!/bin/sh
-# 全局注入：大肥鱼挂件 + 菜单缓存版本检查
-[ -f /www/luci-static/n5000/mascot.js ] || exit 0
-
-inject() {
+# 全局挂件/菜单脚本注入器（当前版本：挂件关闭，仅清理旧注入）
+# 如需重新开启大肥鱼挂件：把下面 inject 调用取消注释并保留 mascot.js
+cleanup() {
 	f="$1"
 	[ -f "$f" ] || return 0
-	# 幂等：先清理旧注入
 	sed -i '/luci-static\/n5000\/\(mascot\|quicks\|menuver\)\.js/d' "$f" 2>/dev/null
-	grep -q '{% endif %}' "$f" || return 0
-	sed -i '/{% endif %}/i <script type="text/javascript" src="/luci-static/n5000/menuver.js"></script>\n<script type="text/javascript" src="/luci-static/n5000/mascot.js"></script>' "$f"
 }
 
-inject /usr/share/ucode/luci/template/themes/argon/page_scripts.ut
-inject /usr/share/ucode/luci/template/themes/carbon/page_scripts.ut
+cleanup /usr/share/ucode/luci/template/themes/argon/page_scripts.ut
+cleanup /usr/share/ucode/luci/template/themes/carbon/page_scripts.ut
 
 exit 0
