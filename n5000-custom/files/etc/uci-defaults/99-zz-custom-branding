@@ -1,8 +1,8 @@
 #!/bin/sh
-# 去厂化 / 去标识 / Docker 数据目录 —— 首次启动执行一次
+# ??? / ??? / Docker ???? ?? ????????
 [ "$(board_name)" = "nradio,n5000" ] || exit 0
 
-# 1) 系统标识
+# 1) ????
 uci set system.@system[0].hostname='OpenWrt'
 uci set system.@system[0].description='OpenWrt'
 uci set system.@system[0].timezone='CST-8'
@@ -10,30 +10,34 @@ uci set system.@system[0].zonename='Asia/Shanghai'
 uci commit system
 printf 'OpenWrt\n' > /etc/banner
 
-# 2) Argon 主题
+# 2) Argon ??
 uci set luci.main.mediaurlbase='/luci-static/argon'
 uci commit luci
 
-# 3) 无线名称去掉 NRadio 标识
-uci -q show wireless 2>/dev/null | grep '\.ssid=' | cut -d. -f1-2 | while read -r s; do
-	band="$(uci -q get "$s.band")"
+# 3) ?????? NRadio ??
+#    ???band ??? wifi-device?wireless.radioN????? wifi-iface ??
+#    ?????? iface ? device ?? band?
+for iface in $(uci -q show wireless 2>/dev/null | sed -n 's/^wireless\.\([^.=]*\)=wifi-iface$/\1/p'); do
+	dev="$(uci -q get "wireless.$iface.device")"
+	band="$(uci -q get "wireless.$dev.band")"
 	case "$band" in
-		2g) uci set "$s.ssid=OpenWrt-2G" ;;
-		5g) uci set "$s.ssid=OpenWrt-5G" ;;
+		2g) uci set "wireless.$iface.ssid=OpenWrt-2G" ;;
+		5g) uci set "wireless.$iface.ssid=OpenWrt-5G" ;;
+		6g) uci set "wireless.$iface.ssid=OpenWrt-6G" ;;
 	esac
 done
 uci commit wireless 2>/dev/null
 
-# 4) Docker 数据目录指向 USB 外挂盘（绝不放在 TF 卡）
+# 4) Docker ?????? USB ???????? TF ??
 if [ -f /etc/config/dockerd ]; then
 	uci set dockerd.globals.data_root='/mnt/sda1/docker'
 	uci commit dockerd
 fi
 
-# 5) 启用每次启动的品牌清理脚本
+# 5) ?????????????
 [ -x /etc/init.d/n5000-debrand ] && /etc/init.d/n5000-debrand enable >/dev/null 2>&1
 
-# 6) 改 LAN 网段，避免与 TR3600（192.168.1.1）冲突
+# 6) ? LAN ?????? TR3600?192.168.1.1???
 if uci -q get network.lan >/dev/null 2>&1; then
 	uci set network.lan.ipaddr='192.168.88.1'
 	uci set network.lan.netmask='255.255.255.0'
@@ -45,3 +49,4 @@ if uci -q get network.lan >/dev/null 2>&1; then
 fi
 
 exit 0
+
