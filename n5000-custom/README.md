@@ -118,3 +118,35 @@ files/                         # 注入固件的自定义文件
 - 本项目是**云编译工程**，需要你自己的 GitHub 账号运行 Actions；首次构建可能因上游 feed 变动需要小修（日志在 Artifacts 的 `build-log`）。
 - 板级支持来源于 [veildawn/nradio-n5000](https://github.com/veildawn/nradio-n5000)（DTS 逆向自原厂 NROS-2.3.9），上游 OpenWrt 官方尚未合并 N5000 设备。
 - 刷机有风险，请保留原厂系统分区（双系统机制可回退）。
+
+## AI 助手（网页聊天）
+
+- 打开 `http://192.168.88.1/aichat.html`（仪表盘右上角 AI 按钮也可进入）
+- 首次使用：点「设置」→ 填 API 地址和 Key
+  - DeepSeek：`https://api.deepseek.com`，Key 在 https://platform.deepseek.com 申请，模型填 `deepseek-chat`
+  - 其它 OpenAI 兼容服务同理
+- 支持：多轮对话、中英界面、路由器状态上下文、工具调用（重启路由器 / 重启 WiFi / 改 WiFi 密码）
+- 配置保存在路由器的 `/etc/config/aichat`，不会上传到任何服务器
+
+## 微信机器人（公众号）
+
+> 微信个人号没有官方机器人接口；这里用**微信公众号**做合法接入。
+
+1. 注册微信公众号（订阅号即可）：https://mp.weixin.qq.com
+2. 公众号后台 → 设置与开发 → 基本配置 → 服务器配置：
+   - URL：`http://你的公网地址/cgi-bin/wechat`
+   - Token：自己随便填一个字符串（比如 `n5000ai123`）
+   - 消息加解密方式：明文模式
+3. 回到本固件 `http://192.168.88.1/aichat.html` → 设置 → 微信机器人：
+   - 填同样的 Token → 保存
+4. 微信里给公众号发消息即可对话，还支持快捷指令：
+   - `状态` / `status`：直接返回路由器状态
+   - `重启` / `reboot`：重启路由器
+   - `重启wifi`：重启 WiFi
+   - `改密码 新密码`：修改 WiFi 密码
+
+**没有公网 IP 怎么办**：路由器在 NAT 后面时，微信服务器访问不到。方案：
+- 用 ngrok/cloudflared 内网穿透，把本地 80 端口映射出去，获得公网 URL 填到公众号
+- 或使用有公网 IP 的 VPS 做 frp 反向代理
+
+> 微信公众号回调要求 5 秒内回复，AI 生成太慢会超时；本实现已做超时处理（超时会提示再发一次）。如需稳定异步回复，需要认证服务号的客服消息接口。
