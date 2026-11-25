@@ -40,7 +40,7 @@ var N5CSS = [
 	'.n5-value small{font-size:12px;font-weight:500;opacity:.7;margin-left:4px}',
 	'.n5-note{font-size:11.5px;opacity:.6;line-height:1.45}',
 	'.n5-bar{height:5px;border-radius:3px;background:rgba(127,127,127,.22);overflow:hidden;margin-top:6px}',
-	'.n5-bar>i{display:block;height:100%;border-radius:3px;background:var(--primary,#4C7DFF)}',
+	'.n5-bar>i{display:block;height:100%;border-radius:3px;background:var(--primary,#48A9C5)}',
 	'.n5-row{display:flex;align-items:center;gap:10px;font-size:12.5px;margin-bottom:7px}',
 	'.n5-row .name{width:110px;flex:0 0 auto;opacity:.75;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
 	'.n5-row .bar{flex:1;margin:0}',
