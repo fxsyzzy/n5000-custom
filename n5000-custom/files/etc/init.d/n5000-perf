@@ -1,0 +1,10 @@
+#!/bin/sh /etc/rc.common
+# N5000 性能调优：CPU 调频策略 schedutil（按需升降频，降低发热）
+START=19
+STOP=10
+
+start() {
+	for c in /sys/devices/system/cpu/cpu[0-9]*/cpufreq/scaling_governor; do
+		[ -w "$c" ] && echo schedutil > "$c" 2>/dev/null
+	done
+}
