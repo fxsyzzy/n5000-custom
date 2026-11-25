@@ -76,7 +76,14 @@ var NPCSS = [
 	'.np-brand{font-size:16px}',
 	'.np-signal{width:30px;height:30px;font-size:16px}',
 	'.np-badge{font-size:12px;padding:3px 10px}',
-	'.np-chip{font-size:13px;padding:5px 13px}',
+	'.np-chip{display:inline-flex;align-items:center;gap:7px;padding:6px 14px;border-radius:999px;',
+	'border:1px solid rgba(131,217,220,.26);background:linear-gradient(180deg,rgba(200,244,249,.10),rgba(13,44,84,.40));',
+	'backdrop-filter:blur(12px) saturate(150%);-webkit-backdrop-filter:blur(12px) saturate(150%);',
+	'font-size:12px;color:rgba(200,244,249,.62);box-shadow:0 2px 10px rgba(0,10,22,.18);white-space:nowrap}',
+	'.np-chip .ico{font-size:13px;line-height:1;opacity:.9}',
+	'.np-chip .k{font-size:11.5px;letter-spacing:.03em}',
+	'.np-chip b{font-size:13.5px;font-weight:700;color:#C8F4F9;letter-spacing:.2px;font-variant-numeric:tabular-nums}',
+	'.np-chip .dot{width:7px;height:7px;border-radius:50%;background:#35c48a;display:inline-block;box-shadow:0 0 6px rgba(53,196,138,.6)}',
 	'.np-main{grid-template-columns:1fr 400px;gap:14px}',
 	'.np-hero{min-height:520px;padding:20px}',
 	'.np-art{width:min(520px,94%)}',
@@ -216,10 +223,10 @@ return view.extend({
 							}
 						}, [isDark ? '☀ 晨光模式' : '🌙 暗夜模式']);
 					})(),
-					E('span', { 'class': 'np-chip', 'id': 'np-chip-temp' }, ['温度 --']),
-					E('span', { 'class': 'np-chip', 'id': 'np-chip-load' }, ['负载 --']),
-					E('span', { 'class': 'np-chip', 'id': 'np-chip-uptime' }, ['运行 --']),
-					E('span', { 'class': 'np-chip', 'id': 'np-chip-wan' }, ['WAN --'])
+					E('span', { 'class': 'np-chip' }, [E('span', { 'class': 'ico' }, ['🌡']), E('span', { 'class': 'k' }, ['温度']), E('b', { 'id': 'np-chip-temp' }, ['--'])]),
+					E('span', { 'class': 'np-chip' }, [E('span', { 'class': 'ico' }, ['📊']), E('span', { 'class': 'k' }, ['负载']), E('b', { 'id': 'np-chip-load' }, ['--'])]),
+					E('span', { 'class': 'np-chip' }, [E('span', { 'class': 'ico' }, ['⏱']), E('span', { 'class': 'k' }, ['运行']), E('b', { 'id': 'np-chip-uptime' }, ['--'])]),
+					E('span', { 'class': 'np-chip' }, [E('span', { 'class': 'dot', 'id': 'np-wandot' }), E('span', { 'class': 'k' }, ['WAN']), E('b', { 'id': 'np-chip-wan' }, ['--'])])
 				])
 			]),
 			E('div', { 'class': 'np-main' }, [hero, side]),
@@ -269,10 +276,14 @@ return view.extend({
 			document.getElementById('np-heroip').textContent = 'WAN ' + (d2.wan_ip || '--');
 			document.getElementById('np-wifi').textContent = 'WiFi ' + (d2.ssid || '--');
 			document.getElementById('np-link').textContent = 'WAN ' + (d2.wan_ip ? '已连接' : '未连接');
-			document.getElementById('np-chip-temp').textContent = '温度 ' + tv.toFixed(1) + '°C';
-			document.getElementById('np-chip-load').textContent = '负载 ' + load1.toFixed(2);
-			document.getElementById('np-chip-uptime').textContent = '运行 ' + npUptime(d2.uptime);
-			document.getElementById('np-chip-wan').textContent = 'WAN ' + (d2.wan_ip || '--');
+			var chipTemp = document.getElementById('np-chip-temp');
+			chipTemp.textContent = tv.toFixed(1) + '°C';
+			chipTemp.style.color = tv >= 80 ? '#ff8fa3' : (tv >= 70 ? '#ffc46b' : '#83D9DC');
+			document.getElementById('np-chip-load').textContent = load1.toFixed(2);
+			document.getElementById('np-chip-uptime').textContent = npUptime(d2.uptime);
+			document.getElementById('np-chip-wan').textContent = d2.wan_ip || '--';
+			var wdot = document.getElementById('np-wandot');
+			if (wdot) wdot.style.background = d2.wan_ip ? '#35c48a' : '#e05a5a';
 
 			/* CPU */
 			var cpuPct = Math.min(100, Math.round(load1 / 2 * 100));
