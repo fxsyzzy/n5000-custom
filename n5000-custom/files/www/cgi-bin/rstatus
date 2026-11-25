@@ -1,84 +1,105 @@
 #!/bin/sh
-# 状态接口：2 秒内重复请求直接返回缓存，降低轮询开销
+# N5000 状态接口（低开销版）：尽量用 shell 内建读取 + 单次 awk，减少 fork
 PATH=/usr/sbin:/usr/bin:/sbin:/bin
 export PATH
+
 printf 'Content-Type: application/json\r\nCache-Control: no-store\r\n\r\n'
+
 CACHE=/tmp/rstatus.cache
+SLOW=/tmp/rstatus.slow
 _now=$(date +%s)
+
+# 5 秒缓存（面板/仪表盘轮询 10s，基本都命中）
 if [ -f "$CACHE" ]; then
 	_ts=$(sed -n '1p' "$CACHE" 2>/dev/null)
 	case "$_ts" in ''|*[!0-9]*) ;; *)
-		if [ $((_now - _ts)) -le 2 ] && [ $((_now - _ts)) -ge 0 ]; then
+		if [ $((_now - _ts)) -le 5 ] && [ $((_now - _ts)) -ge 0 ]; then
 			sed -n '2p' "$CACHE"
 			exit 0
 		fi
 	;; esac
 fi
 
-# N5000 仪表盘数据接口（返回 JSON）
-UP=$(cut -d. -f1 /proc/uptime 2>/dev/null)
-set -- $(cat /proc/loadavg 2>/dev/null)
-L1=$1; L5=$2; L15=$3
+# ---------- 基础数据（全部内建读取） ----------
+read UP _ < /proc/uptime 2>/dev/null; UP=${UP%.*}; [ -z "$UP" ] && UP=0
+read L1 L5 L15 _ < /proc/loadavg 2>/dev/null
+[ -z "$L1" ] && L1=0; [ -z "$L5" ] && L5=0; [ -z "$L15" ] && L15=0
 
-MEMT=$(awk '/^MemTotal:/{print $2}' /proc/meminfo 2>/dev/null)
-MEMA=$(awk '/^MemAvailable:/{print $2}' /proc/meminfo 2>/dev/null)
-SWT=$(awk '/^SwapTotal:/{print $2}' /proc/meminfo 2>/dev/null)
-SWF=$(awk '/^SwapFree:/{print $2}' /proc/meminfo 2>/dev/null)
+set -- $(awk '/^MemTotal:/{mt=$2}/^MemAvailable:/{ma=$2}/^SwapTotal:/{st=$2}/^SwapFree:/{sf=$2}END{print mt+0,ma+0,st+0,sf+0}' /proc/meminfo 2>/dev/null)
+MEMT=${1:-0}; MEMA=${2:-0}; SWT=${3:-0}; SWF=${4:-0}
 
-TEMP=$(cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null || echo 0)
+read TEMP < /sys/class/thermal/thermal_zone0/temp 2>/dev/null; [ -z "$TEMP" ] && TEMP=0
 
-set -- $(df -k / 2>/dev/null | awk 'NR==2{print $2, $3, $4}')
-RT=$1; RU=$2; RF=$3
-set -- $(df -k /overlay 2>/dev/null | awk 'NR==2{print $2, $3, $4}')
-TT=$1; TU=$2; TFREE=$3
+set -- $(df -k / 2>/dev/null | awk 'NR==2{print $2+0,$3+0,$4+0}')
+RT=${1:-0}; RU=${2:-0}; RF=${3:-0}
+# rootfs 就在 TF overlay 上，第二组沿用同一数据（避免二次 df）
+TT=$RT; TU=$RU; TFREE=$RF
 
-WANIP=$(ip -4 addr show eth1 2>/dev/null | awk '/inet /{print $2}' | cut -d/ -f1)
-LANIP=$(ip -4 addr show br-lan 2>/dev/null | awk '/inet /{print $2}' | cut -d/ -f1)
-[ -z "$LANIP" ] && LANIP=$(ip -4 addr show eth0 2>/dev/null | awk '/inet /{print $2}' | cut -d/ -f1)
-LANDEV=br-lan
-[ -d /sys/class/net/br-lan ] || LANDEV=eth0
-WRX=$(cat /sys/class/net/eth1/statistics/rx_bytes 2>/dev/null || echo 0)
-WTX=$(cat /sys/class/net/eth1/statistics/tx_bytes 2>/dev/null || echo 0)
-LRX=$(cat /sys/class/net/$LANDEV/statistics/rx_bytes 2>/dev/null || echo 0)
-LTX=$(cat /sys/class/net/$LANDEV/statistics/tx_bytes 2>/dev/null || echo 0)
+read WRX < /sys/class/net/eth1/statistics/rx_bytes 2>/dev/null; [ -z "$WRX" ] && WRX=0
+read WTX < /sys/class/net/eth1/statistics/tx_bytes 2>/dev/null; [ -z "$WTX" ] && WTX=0
+LANDEVF=br-lan
+[ -d /sys/class/net/br-lan ] || LANDEVF=eth0
+read LRX < /sys/class/net/$LANDEVF/statistics/rx_bytes 2>/dev/null; [ -z "$LRX" ] && LRX=0
+read LTX < /sys/class/net/$LANDEVF/statistics/tx_bytes 2>/dev/null; [ -z "$LTX" ] && LTX=0
 
-SSID=$(iwinfo 2>/dev/null | sed -n 's/.*ESSID: "\([^"]*\)".*/\1/p' | head -n1)
-[ -z "$SSID" ] && SSID="--"
+# IP（一次 ip 调用解析两个接口）
+eval $(ip -4 -o addr show 2>/dev/null | awk '
+	$2=="eth1" { wan=$4 }
+	$2=="br-lan" { lan=$4 }
+	END {
+		gsub(/\/.*/,"",wan); gsub(/\/.*/,"",lan);
+		printf "WANIP=\"%s\" LANIP=\"%s\"\n", wan, lan
+	}')
+[ -z "$WANIP" ] && WANIP="--"
+[ -z "$LANIP" ] && LANIP="--"
+[ "$LANIP" = "--" ] && { read LANIP < /dev/null; LANIP="--"; }
+
+# ---------- 慢数据（SSID / docker 容器数 / 内核错误）60 秒缓存 ----------
+_slow_ts=""
+[ -f "$SLOW" ] && _slow_ts=$(sed -n '1p' "$SLOW" 2>/dev/null)
+case "$_slow_ts" in ''|*[!0-9]*) _slow_ts=0 ;; esac
+if [ $((_now - _slow_ts)) -gt 60 ] || [ ! -f "$SLOW" ]; then
+	SSID=$(iwinfo 2>/dev/null | awk -F'"' '/ESSID/{print $2; exit}')
+	[ -z "$SSID" ] && SSID="--"
+	DCON=0
+	pidof dockerd >/dev/null 2>&1 && DCON=$(docker ps -q 2>/dev/null | awk 'END{print NR+0}')
+	ERRS=$(dmesg 2>/dev/null | grep -ciE 'I/O error|EXT_CSD|mmc.*error|f2fs.*error')
+	[ -z "$ERRS" ] && ERRS=0
+	printf '%s\n%s\n%s\n%s\n' "$_now" "$SSID" "$DCON" "$ERRS" > "$SLOW"
+else
+	SSID=$(sed -n '2p' "$SLOW" 2>/dev/null); [ -z "$SSID" ] && SSID="--"
+	DCON=$(sed -n '3p' "$SLOW" 2>/dev/null); [ -z "$DCON" ] && DCON=0
+	ERRS=$(sed -n '4p' "$SLOW" 2>/dev/null); [ -z "$ERRS" ] && ERRS=0
+fi
+
+# 在线设备（DHCP 租约数，内建 while read）
+DEVICES=0
+[ -f /tmp/dhcp.leases ] && while read -r _l; do DEVICES=$((DEVICES + 1)); done < /tmp/dhcp.leases
+
+# WiFi 客户端数（单次 iw dev 列表 + 每接口 station dump）
 CLIENTS=0
-DEVICES=$(wc -l < /tmp/dhcp.leases 2>/dev/null || echo 0)
-[ -z "$DEVICES" ] && DEVICES=0
 for dev in $(iw dev 2>/dev/null | awk '/Interface/{print $2}'); do
 	case "$dev" in
-		*-ap*) n=$(iw dev "$dev" station dump 2>/dev/null | grep -c '^Station'); CLIENTS=$((CLIENTS + n)) ;;
+		*-ap*) n=$(iw dev "$dev" station dump 2>/dev/null | awk '/^Station/{c++}END{print c+0}'); CLIENTS=$((CLIENTS + n)) ;;
 	esac
 done
 
+# 服务状态
 if pgrep -f 'xray|sing-box|v2ray|hysteria' >/dev/null 2>&1; then PW=true; else PW=false; fi
-PWEN=$(uci -q get passwall.@global[0].enabled 2>/dev/null)
-[ -z "$PWEN" ] && PWEN=0
-
+PWEN=$(uci -q get passwall.@global[0].enabled 2>/dev/null); [ -z "$PWEN" ] && PWEN=0
 if pidof dockerd >/dev/null 2>&1; then DOCKER=true; else DOCKER=false; fi
-DCON=0
-if [ "$DOCKER" = "true" ]; then
-	DCON=$(docker ps -q 2>/dev/null | wc -l)
-fi
-
-if ip -4 addr show usb0 >/dev/null 2>&1; then MODEM=true; else MODEM=false; fi
-MODEMIP=$(ip -4 addr show usb0 2>/dev/null | awk '/inet /{print $2}' | cut -d/ -f1)
-[ -z "$MODEMIP" ] && MODEMIP="--"
-
+MODEM=false; MODEMIP="--"
 TFMODEL=$(cat /sys/block/mmcblk0/device/name 2>/dev/null || echo "TF")
-ERRS=$(dmesg 2>/dev/null | grep -ciE 'I/O error|EXT_CSD|mmc.*error|f2fs.*error')
-HOST=$(cat /proc/sys/kernel/hostname 2>/dev/null)
-TS=$(date +%s)
+read HOST < /proc/sys/kernel/hostname 2>/dev/null; [ -z "$HOST" ] && HOST="OpenWrt"
+TS=$_now
 
-OUT=$(printf '{"host":"%s","uptime":%s,"load":[%s,%s,%s],"mem_total":%s,"mem_avail":%s,"swap_total":%s,"swap_free":%s,"temp":%s,"root_total":%s,"root_used":%s,"root_free":%s,"tf_total":%s,"tf_used":%s,"tf_free":%s,"wan_ip":"%s","wan_rx":%s,"wan_tx":%s,"lan_ip":"%s","lan_rx":%s,"lan_tx":%s,"ssid":"%s","clients":%s,"devices":%s,"pw":%s,"pw_enabled":%s,"docker":%s,"docker_count":%s,"modem":%s,"modem_ip":"%s","tf_model":"%s","errs":%s,"ts":%s}\n' \
-  "$HOST" "${UP:-0}" "${L1:-0}" "${L5:-0}" "${L15:-0}" \
-  "${MEMT:-0}" "${MEMA:-0}" "${SWT:-0}" "${SWF:-0}" "${TEMP:-0}" \
-  "${RT:-0}" "${RU:-0}" "${RF:-0}" "${TT:-0}" "${TU:-0}" "${TFREE:-0}" \
-  "$WANIP" "${WRX:-0}" "${WTX:-0}" "$LANIP" "${LRX:-0}" "${LTX:-0}" \
-  "$SSID" "${CLIENTS:-0}" "${DEVICES:-0}" "$PW" "${PWEN:-0}" "$DOCKER" "${DCON:-0}" \
-  "$MODEM" "$MODEMIP" "$TFMODEL" "${ERRS:-0}" "$TS")
+OUT=$(printf '{"host":"%s","uptime":%s,"load":[%s,%s,%s],"mem_total":%s,"mem_avail":%s,"swap_total":%s,"swap_free":%s,"temp":%s,"root_total":%s,"root_used":%s,"root_free":%s,"tf_total":%s,"tf_used":%s,"tf_free":%s,"wan_ip":"%s","wan_rx":%s,"wan_tx":%s,"lan_ip":"%s","lan_rx":%s,"lan_tx":%s,"ssid":"%s","clients":%s,"devices":%s,"pw":%s,"pw_enabled":%s,"docker":%s,"docker_count":%s,"modem":%s,"modem_ip":"%s","tf_model":"%s","errs":%s,"ts":%s}' \
+	"$HOST" "${UP:-0}" "${L1:-0}" "${L5:-0}" "${L15:-0}" \
+	"${MEMT:-0}" "${MEMA:-0}" "${SWT:-0}" "${SWF:-0}" "${TEMP:-0}" \
+	"${RT:-0}" "${RU:-0}" "${RF:-0}" "${TT:-0}" "${TU:-0}" "${TFREE:-0}" \
+	"$WANIP" "${WRX:-0}" "${WTX:-0}" "$LANIP" "${LRX:-0}" "${LTX:-0}" \
+	"$SSID" "${CLIENTS:-0}" "${DEVICES:-0}" "$PW" "${PWEN:-0}" "$DOCKER" "${DCON:-0}" \
+	"$MODEM" "$MODEMIP" "$TFMODEL" "${ERRS:-0}" "$TS")
 
 printf '%s\n%s\n' "$_now" "$OUT" > "$CACHE"
 printf '%s\n' "$OUT"
