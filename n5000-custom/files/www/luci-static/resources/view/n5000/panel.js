@@ -184,10 +184,10 @@ return view.extend({
 
 		var actions = E('div', { 'class': 'np-actions' }, [
 			E('a', { 'class': 'np-act', 'href': url('admin/network/wireless') }, [E('span', { 'class': 'i' }, ['📶']), E('span', {}, ['无线设置'])]),
-			E('a', { 'class': 'np-act', 'href': url('admin/n5000-filter') }, [E('span', { 'class': 'i' }, ['🧱']), E('span', {}, ['应用过滤'])]),
-			E('a', { 'class': 'np-act', 'href': url('admin/n5000-fav') }, [E('span', { 'class': 'i' }, ['⭐']), E('span', {}, ['收藏夹'])]),
-			E('a', { 'class': 'np-act', 'href': url('admin/n5000-ai') }, [E('span', { 'class': 'i' }, ['🤖']), E('span', {}, ['AI 助手'])]),
-			E('a', { 'class': 'np-act', 'href': url('admin/n5000-traffic') }, [E('span', { 'class': 'i' }, ['📈']), E('span', {}, ['流量仪表盘'])]),
+			E('a', { 'class': 'np-act', 'href': url('admin/n5000/appfilter') }, [E('span', { 'class': 'i' }, ['🧱']), E('span', {}, ['应用过滤'])]),
+			E('a', { 'class': 'np-act', 'href': url('admin/n5000/favorites') }, [E('span', { 'class': 'i' }, ['⭐']), E('span', {}, ['收藏夹'])]),
+			E('a', { 'class': 'np-act', 'href': url('admin/n5000/ai') }, [E('span', { 'class': 'i' }, ['🤖']), E('span', {}, ['AI 助手'])]),
+			E('a', { 'class': 'np-act', 'href': url('admin/n5000/dashboard') }, [E('span', { 'class': 'i' }, ['📈']), E('span', {}, ['流量仪表盘'])]),
 			E('a', { 'class': 'np-act', 'href': url('admin/status/syslog') }, [E('span', { 'class': 'i' }, ['📋']), E('span', {}, ['系统日志'])]),
 			E('a', { 'class': 'np-act', 'href': url('admin/status/overview') }, [E('span', { 'class': 'i' }, ['🗂']), E('span', {}, ['系统概览'])]),
 			E('a', { 'class': 'np-act', 'href': url('admin/system/reboot') }, [E('span', { 'class': 'i' }, ['⟳']), E('span', {}, ['重启设备'])]),
