@@ -6,56 +6,119 @@
 <title>N5000 Dashboard</title>
 <style>
   :root{
-    --bg:#070b10; --card:#0f1620; --line:#1d2a3a; --text:#e6f1ff; --dim:#7f8fa6;
-    --green:#33ff9e; --cyan:#38d9ff; --orange:#ffb020; --red:#ff5c5c;
+    --text:#eef4ff; --dim:rgba(226,236,255,.62);
+    --mint:#5ef2c0; --cyan:#6fd6ff; --amber:#ffc46b; --rose:#ff7f9c; --violet:#b49bff;
+    --glass:rgba(255,255,255,.075);
+    --glass-strong:rgba(255,255,255,.12);
+    --stroke:rgba(255,255,255,.17);
+    --stroke-soft:rgba(255,255,255,.09);
   }
   *{box-sizing:border-box}
-  html,body{margin:0;height:100%;background:var(--bg);color:var(--text);
-    font-family:"Consolas","JetBrains Mono",ui-monospace,"Microsoft YaHei",monospace;overflow:hidden}
-  .wrap{height:100vh;display:flex;flex-direction:column;padding:20px 24px;gap:14px}
-  header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
-  header h1{font-size:24px;margin:0;font-weight:700;letter-spacing:1px;color:var(--green);
-    text-shadow:0 0 12px rgba(51,255,158,.35)}
-  header .sub{color:var(--dim);font-size:14px}
-  .clock{font-size:20px;color:var(--dim);font-variant-numeric:tabular-nums;margin-left:auto}
-  header a{color:var(--cyan);text-decoration:none;font-size:13px}
-  #lang{background:transparent;border:1px solid var(--line);color:var(--green);font-family:inherit;
-    font-size:13px;padding:3px 10px;border-radius:4px;cursor:pointer}
-  #lang:hover{border-color:var(--green)}
-  #aiBtn{color:var(--green);text-decoration:none;border:1px solid var(--line);padding:3px 10px;border-radius:4px;font-size:13px}
-  #aiBtn:hover{border-color:var(--green)}
-  .grid{flex:1;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(3,1fr);gap:14px;min-height:0}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;
-    display:flex;flex-direction:column;gap:8px;position:relative;overflow:hidden;min-height:0}
-  .card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--green);opacity:.5}
+  html,body{margin:0;height:100%;overflow:hidden;color:var(--text);
+    font-family:"SF Pro Display","Segoe UI Variable","Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased}
+  /* ---------- 液态玻璃背景 ---------- */
+  .bg{position:fixed;inset:0;z-index:-2;background:
+      radial-gradient(1200px 800px at 12% 8%, #1b3a5c 0%, transparent 60%),
+      radial-gradient(1000px 700px at 88% 12%, #3a2260 0%, transparent 62%),
+      radial-gradient(1200px 900px at 70% 95%, #0f4a4a 0%, transparent 60%),
+      radial-gradient(900px 700px at 20% 90%, #241a45 0%, transparent 65%),
+      linear-gradient(160deg,#0a0f18 0%,#0b1220 45%,#0a0d16 100%);
+  }
+  .bg::before,.bg::after{content:"";position:absolute;border-radius:50%;filter:blur(70px);opacity:.55;mix-blend-mode:screen}
+  .bg::before{width:52vw;height:52vw;left:-10vw;top:-12vw;
+    background:radial-gradient(circle at 30% 30%,rgba(94,242,192,.45),rgba(111,214,255,.18) 45%,transparent 70%);
+    animation:float1 26s ease-in-out infinite alternate}
+  .bg::after{width:46vw;height:46vw;right:-8vw;bottom:-14vw;
+    background:radial-gradient(circle at 60% 40%,rgba(180,155,255,.42),rgba(255,127,156,.16) 50%,transparent 72%);
+    animation:float2 32s ease-in-out infinite alternate}
+  @keyframes float1{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(6vw,4vh,0) scale(1.12)}}
+  @keyframes float2{from{transform:translate3d(0,0,0) scale(1.05)}to{transform:translate3d(-5vw,-4vh,0) scale(.95)}}
+  .noise{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.05;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E")}
+  /* ---------- 布局 ---------- */
+  .wrap{height:100vh;display:flex;flex-direction:column;padding:20px 24px;gap:16px;position:relative}
+  header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+    padding:12px 18px;border-radius:999px;
+    background:linear-gradient(135deg,rgba(255,255,255,.12),rgba(255,255,255,.04));
+    border:1px solid var(--stroke);
+    backdrop-filter:blur(22px) saturate(170%);-webkit-backdrop-filter:blur(22px) saturate(170%);
+    box-shadow:0 12px 34px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.28), inset 0 -1px 0 rgba(255,255,255,.06)}
+  header h1{font-size:21px;margin:0;font-weight:700;letter-spacing:.5px;
+    background:linear-gradient(100deg,#a9ffe4,#6fd6ff 55%,#b49bff);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 0 14px rgba(111,214,255,.35))}
+  header .sub{color:var(--dim);font-size:13px;letter-spacing:.3px}
+  .clock{font-size:19px;color:var(--dim);font-variant-numeric:tabular-nums;margin-left:auto;
+    letter-spacing:1px;font-weight:500}
+  .hbtn{color:var(--text);text-decoration:none;font-size:12.5px;padding:6px 14px;border-radius:999px;
+    background:rgba(255,255,255,.08);border:1px solid var(--stroke-soft);cursor:pointer;
+    transition:all .25s ease;backdrop-filter:blur(8px)}
+  .hbtn:hover{background:rgba(255,255,255,.16);border-color:var(--stroke);transform:translateY(-1px)}
+  #lang{font-family:inherit}
+  #aiBtn{color:#a9ffe4;border-color:rgba(120,255,214,.35);
+    box-shadow:0 0 18px rgba(94,242,192,.18)}
+  /* ---------- 卡片 ---------- */
+  .grid{flex:1;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(3,1fr);gap:16px;min-height:0}
+  .card{position:relative;display:flex;flex-direction:column;gap:8px;min-height:0;overflow:hidden;
+    padding:18px 20px;border-radius:22px;
+    background:linear-gradient(145deg,rgba(255,255,255,.11) 0%,rgba(255,255,255,.045) 45%,rgba(255,255,255,.02) 100%);
+    border:1px solid var(--stroke);
+    backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%);
+    box-shadow:0 18px 44px rgba(0,0,0,.36), inset 0 1px 0 rgba(255,255,255,.30), inset 0 -1px 0 rgba(255,255,255,.05);
+    transition:transform .3s cubic-bezier(.2,.8,.2,1), box-shadow .3s ease, border-color .3s ease}
+  .card::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+    background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.10) 45%,transparent 60%);
+    transform:translateX(-120%);transition:transform .8s ease}
+  .card:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.26);
+    box-shadow:0 24px 56px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.36), inset 0 -1px 0 rgba(255,255,255,.06)}
+  .card:hover::after{transform:translateX(120%)}
   .card.wide{grid-column:span 2}
-  .label{color:var(--dim);font-size:12.5px;letter-spacing:1px;text-transform:uppercase}
-  .big{font-size:38px;font-weight:700;line-height:1.05;font-variant-numeric:tabular-nums}
-  .unit{font-size:14px;color:var(--dim);font-weight:500;margin-left:6px}
+  .label{color:var(--dim);font-size:11.5px;letter-spacing:1.6px;text-transform:uppercase;font-weight:600}
+  .big{font-size:38px;font-weight:650;line-height:1.05;font-variant-numeric:tabular-nums;letter-spacing:-.5px}
+  .big.sm{font-size:27px}
+  .unit{font-size:13px;color:var(--dim);font-weight:500;margin-left:6px}
   .row{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
-  .chip{font-size:13px;padding:2px 10px;border-radius:4px;border:1px solid var(--line);color:var(--dim)}
-  .ok{color:var(--green)} .warn{color:var(--orange)} .bad{color:var(--red)} .info{color:var(--cyan)}
-  .bar{height:6px;border-radius:3px;background:#16202c;overflow:hidden;margin-top:auto}
-  .bar > i{display:block;height:100%;width:0;background:var(--green);transition:width .4s}
-  .mini{font-size:12.5px;color:var(--dim);line-height:1.5}
-  .val{font-size:20px;font-weight:600;font-variant-numeric:tabular-nums}
+  .chip{font-size:12.5px;padding:4px 12px;border-radius:999px;color:var(--dim);
+    background:rgba(255,255,255,.07);border:1px solid var(--stroke-soft);backdrop-filter:blur(8px)}
+  .ok{color:var(--mint);text-shadow:0 0 18px rgba(94,242,192,.35)}
+  .warn{color:var(--amber);text-shadow:0 0 18px rgba(255,196,107,.3)}
+  .bad{color:var(--rose);text-shadow:0 0 18px rgba(255,127,156,.3)}
+  .info{color:var(--cyan)}
+  .bar{height:6px;border-radius:999px;background:rgba(255,255,255,.09);overflow:hidden;margin-top:auto;
+    box-shadow:inset 0 1px 2px rgba(0,0,0,.35)}
+  .bar > i{display:block;height:100%;width:0;border-radius:999px;transition:width .5s ease;
+    background:linear-gradient(90deg,var(--mint),var(--cyan))}
+  .mini{font-size:12.5px;color:var(--dim);line-height:1.55}
+  .val{font-size:19px;font-weight:600;font-variant-numeric:tabular-nums}
   canvas.spark{width:100%;height:100%;min-height:70px;display:block}
   .spark-wrap{flex:1;min-height:80px;position:relative}
-  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
-  .err{position:fixed;left:50%;top:10px;transform:translateX(-50%);background:#3a1520;color:#ffb3b3;
-    border:1px solid #6b2233;padding:8px 16px;border-radius:6px;font-size:13px;display:none}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle;
+    box-shadow:0 0 10px currentColor}
+  .err{position:fixed;left:50%;top:14px;transform:translateX(-50%);color:#ffd9e3;font-size:13px;display:none;
+    padding:9px 18px;border-radius:999px;border:1px solid rgba(255,127,156,.45);
+    background:rgba(255,127,156,.14);backdrop-filter:blur(14px);z-index:5}
+  @media(max-width:1100px){ .grid{grid-template-columns:repeat(2,1fr);grid-template-rows:auto} .card.wide{grid-column:span 2} }
+  @media(max-width:640px){
+    .wrap{padding:12px;gap:12px}
+    .grid{grid-template-columns:1fr;gap:12px}
+    .card.wide{grid-column:span 1}
+    .big{font-size:30px}
+    header{padding:10px 14px}
+  }
 </style>
 </head>
 <body>
+<div class="bg"></div><div class="noise"></div>
 <div class="err" id="err">连接断开</div>
 <div class="wrap">
   <header>
     <h1>N5000</h1>
     <span class="sub" id="sub">OpenWrt</span>
     <span class="clock" id="clock">--:--:--</span>
-    <button id="lang" title="切换语言 / Switch language">EN</button>
-    <a href="/aichat.html" id="aiBtn" title="AI 助手 / AI Assistant">AI</a>
-    <a href="/cgi-bin/luci/" data-i18n="luci">进入 LuCI 管理 →</a>
+    <button id="lang" class="hbtn" title="切换语言 / Switch language">EN</button>
+    <a href="/aichat.html" id="aiBtn" class="hbtn" title="AI 助手 / AI Assistant">AI</a>
+    <a href="/cgi-bin/luci/" class="hbtn" data-i18n="luci">进入 LuCI 管理 →</a>
   </header>
 
   <div class="grid">
@@ -69,7 +132,7 @@
       <div class="label" data-i18n="load">CPU 负载</div>
       <div class="row"><div class="big" id="load1">--</div><span class="unit" data-i18n="min1">1 分钟</span></div>
       <div class="mini" id="loadavg">--</div>
-      <div class="bar"><i id="loadbar" style="background:var(--cyan)"></i></div>
+      <div class="bar"><i id="loadbar"></i></div>
     </div>
 
     <div class="card">
@@ -88,8 +151,8 @@
     <div class="card wide">
       <div class="label"><span data-i18n="wan">WAN 实时流量</span> · <span id="wanip">--</span></div>
       <div class="row" style="gap:24px">
-        <div><span class="dot" style="background:var(--green)"></span><b class="val" id="down">0.00</b><span class="unit" data-i18n="down">Mbps 下行</span></div>
-        <div><span class="dot" style="background:var(--cyan)"></span><b class="val" id="up">0.00</b><span class="unit" data-i18n="up">Mbps 上行</span></div>
+        <div><span class="dot" style="background:var(--mint);color:var(--mint)"></span><b class="val" id="down">0.00</b><span class="unit" data-i18n="down">Mbps 下行</span></div>
+        <div><span class="dot" style="background:var(--cyan);color:var(--cyan)"></span><b class="val" id="up">0.00</b><span class="unit" data-i18n="up">Mbps 上行</span></div>
         <div class="mini" id="total" style="margin-left:auto">--</div>
       </div>
       <div class="spark-wrap"><canvas class="spark" id="spark"></canvas></div>
@@ -113,25 +176,25 @@
 
     <div class="card">
       <div class="label">PassWall</div>
-      <div class="row"><div class="big" id="pw" style="font-size:28px">--</div></div>
+      <div class="row"><div class="big sm" id="pw">--</div></div>
       <div class="mini" id="pwnote">--</div>
     </div>
 
     <div class="card">
       <div class="label">Docker</div>
-      <div class="row"><div class="big" id="docker" style="font-size:28px">--</div></div>
+      <div class="row"><div class="big sm" id="docker">--</div></div>
       <div class="mini" id="dockernote">--</div>
     </div>
 
     <div class="card">
       <div class="label" data-i18n="modem">5G 模组</div>
-      <div class="row"><div class="big" id="modem" style="font-size:28px">--</div></div>
+      <div class="row"><div class="big sm" id="modem">--</div></div>
       <div class="mini" id="modemnote">--</div>
     </div>
 
     <div class="card">
       <div class="label" data-i18n="health">TF 卡健康</div>
-      <div class="row"><div class="big" id="errs" style="font-size:28px">--</div></div>
+      <div class="row"><div class="big sm" id="errs">--</div></div>
       <div class="mini" id="errsnote">--</div>
     </div>
   </div>
@@ -221,7 +284,7 @@
     var ctx = c.getContext("2d");
     ctx.setTransform(dpr,0,0,dpr,0,0);
     ctx.clearRect(0,0,w,h);
-    ctx.strokeStyle = "rgba(51,255,158,0.08)"; ctx.lineWidth = 1;
+    ctx.strokeStyle = "rgba(255,255,255,0.07)"; ctx.lineWidth = 1;
     for (var i=1;i<4;i++){ var y = h*i/4; ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
     if (samples.length < 2) return;
     var maxV = 1;
@@ -234,7 +297,7 @@
         var y = h - (s[key]/maxV)*h*0.92 - 2;
         if (idx === 0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
       });
-      ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
+      ctx.strokeStyle = color; ctx.lineWidth = 2.2; ctx.lineJoin = "round"; ctx.stroke();
       if (fill){
         ctx.lineTo((samples.length-1)/(MAX-1)*w, h);
         ctx.lineTo(0, h); ctx.closePath();
@@ -243,8 +306,8 @@
         ctx.fillStyle = g; ctx.fill();
       }
     }
-    line("down", "#33ff9e", "rgba(51,255,158,0.25)");
-    line("up", "#38d9ff", null);
+    line("down", "#5ef2c0", "rgba(94,242,192,0.22)");
+    line("up", "#6fd6ff", null);
   }
 
   function render(d){
@@ -257,7 +320,7 @@
     $("loadavg").textContent = t('d5') + Number(d.load[1]).toFixed(2) + t('d15') + Number(d.load[2]).toFixed(2);
     var lp = clamp(d.load[0]/2*100, 2, 100);
     $("loadbar").style.width = lp + "%";
-    $("loadbar").style.background = d.load[0] > 1.5 ? "var(--red)" : d.load[0] > 0.8 ? "var(--orange)" : "var(--cyan)";
+    $("loadbar").style.background = d.load[0] > 1.5 ? "var(--rose)" : d.load[0] > 0.8 ? "var(--amber)" : "linear-gradient(90deg,var(--cyan),var(--violet))";
 
     var tv = d.temp/1000;
     $("temp").textContent = tv.toFixed(1);
@@ -271,14 +334,14 @@
     var swapUsed = Math.max(0, d.swap_total - d.swap_free);
     $("memnote").textContent = t('used') + fmtGB(memUsed) + " / " + fmtGB(d.mem_total) + " GB · " + t('swap') + (swapUsed/1024).toFixed(1) + " GB";
     $("membar").style.width = mp + "%";
-    $("membar").style.background = mp >= 85 ? "var(--red)" : mp >= 70 ? "var(--orange)" : "var(--green)";
+    $("membar").style.background = mp >= 85 ? "var(--rose)" : mp >= 70 ? "linear-gradient(90deg,var(--amber),var(--rose))" : "linear-gradient(90deg,var(--mint),var(--cyan))";
 
     var tp = d.tf_total ? d.tf_used/d.tf_total*100 : 0;
     $("tf").textContent = tp.toFixed(0);
     $("tf").className = "big " + (tp >= 90 ? "bad" : tp >= 75 ? "warn" : "ok");
     $("tfnote").textContent = t('used') + fmtGB(d.tf_used) + " / " + fmtGB(d.tf_total) + " GB";
     $("tfbar").style.width = tp + "%";
-    $("tfbar").style.background = tp >= 90 ? "var(--red)" : tp >= 75 ? "var(--orange)" : "var(--green)";
+    $("tfbar").style.background = tp >= 90 ? "var(--rose)" : tp >= 75 ? "linear-gradient(90deg,var(--amber),var(--rose))" : "linear-gradient(90deg,var(--mint),var(--cyan))";
 
     $("wanip").textContent = d.wan_ip || "--";
     var down = 0, up = 0;
@@ -301,19 +364,19 @@
     $("laninfo").textContent = t('lan') + (d.lan_ip || "--") + " · " + t('total') + fmtTraffic(d.lan_rx) + " ↑" + fmtTraffic(d.lan_tx);
 
     $("pw").textContent = d.pw ? t('running') : t('stopped');
-    $("pw").className = "big " + (d.pw ? "ok" : "bad");
+    $("pw").className = "big sm " + (d.pw ? "ok" : "bad");
     $("pwnote").textContent = Number(d.pw_enabled) === 1 ? t('enabled_on') : t('disabled');
 
     $("docker").textContent = d.docker ? t('running') : t('stopped');
-    $("docker").className = "big " + (d.docker ? "ok" : "bad");
+    $("docker").className = "big sm " + (d.docker ? "ok" : "bad");
     $("dockernote").textContent = d.docker ? (t('containers') + d.docker_count + t('containers_unit')) : t('no_usb');
 
     $("modem").textContent = d.modem ? t('connected') : t('notfound');
-    $("modem").className = "big " + (d.modem ? "ok" : "warn");
+    $("modem").className = "big sm " + (d.modem ? "ok" : "warn");
     $("modemnote").textContent = d.modem ? (t('modem_ip') + d.modem_ip) : t('modem_off');
 
     $("errs").textContent = d.errs;
-    $("errs").className = "big " + (d.errs > 0 ? "bad" : "ok");
+    $("errs").className = "big sm " + (d.errs > 0 ? "bad" : "ok");
     $("errsnote").textContent = d.errs > 0 ? t('err_bad') : (t('err_ok') + (d.tf_model || "TF"));
   }
 
@@ -344,4 +407,3 @@
 </script>
 </body>
 </html>
-
