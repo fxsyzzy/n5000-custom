@@ -1,0 +1,27 @@
+#!/bin/sh
+# Install the Liquid Glass skin into the installed LuCI themes.
+[ -f /www/luci-static/glass.css ] || exit 0
+
+GLASS='@import url("/luci-static/glass.css");'
+
+inject() {
+	f="$1"
+	[ -f "$f" ] || return 0
+	grep -q 'luci-static/glass.css' "$f" 2>/dev/null && return 0
+	tmp="/tmp/.glass.$$"
+	printf '%s\n' "$GLASS" > "$tmp"
+	cat "$f" >> "$tmp"
+	mv -f "$tmp" "$f" 2>/dev/null || rm -f "$tmp"
+}
+
+# Argon (default theme)
+for f in /www/luci-static/argon/css/base.css \
+         /www/luci-static/argon/css/cascade.css \
+         /www/luci-static/argon/css/admin.css; do
+	inject "$f"
+done
+
+# Carbon (alternative theme)
+inject /www/luci-static/carbon/carbon.css
+
+exit 0
