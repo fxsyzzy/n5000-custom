@@ -222,3 +222,16 @@ files/                         # 注入固件的自定义文件
 - 每 5 秒自动刷新，样式跟随 Argon 玻璃主题（克莱因蓝）
 - 页面底部有快捷入口：应用过滤页、独立大屏仪表盘
 - 实现：`/www/luci-static/resources/view/n5000/panel.js` + 菜单 `/usr/share/luci/menu.d/luci-app-n5000-panel.json` + ACL
+
+## LuCI 菜单结构（v5 起）
+
+```
+N5000 面板（登录后默认首页）
+ ├─ 应用过滤      ← 分类/网站/设备流量 + 按设备封禁（原生 LuCI 页面）
+ └─ 流量仪表盘    ← 大卡片 + WAN 实时速率曲线 + 分类/网站/设备统计
+```
+
+- 顶层「N5000 面板」置顶，原「状态 → N5000 面板」重复入口已移除
+- 应用过滤与流量仪表盘均已改为 LuCI 原生视图（非 iframe）
+- 原独立页面 `/appfilter.html`、`/dashboard.html` 仍保留，可继续直接访问
+- 实现文件：`www/luci-static/resources/view/n5000/{panel,appfilter,dashboard}.js` + `menu.d/luci-app-n5000-panel.json`
