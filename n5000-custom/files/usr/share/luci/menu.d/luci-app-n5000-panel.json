@@ -7,7 +7,9 @@
 			"path": "n5000/panel"
 		},
 		"depends": {
-			"acl": [ "luci-app-n5000-panel" ]
+			"acl": [
+				"luci-app-n5000-panel"
+			]
 		}
 	},
 	"admin/n5000/favorites": {
@@ -18,7 +20,9 @@
 			"path": "n5000/favorites"
 		},
 		"depends": {
-			"acl": [ "luci-app-n5000-panel" ]
+			"acl": [
+				"luci-app-n5000-panel"
+			]
 		}
 	},
 	"admin/n5000/ai": {
@@ -29,7 +33,9 @@
 			"path": "n5000/ai"
 		},
 		"depends": {
-			"acl": [ "luci-app-n5000-panel" ]
+			"acl": [
+				"luci-app-n5000-panel"
+			]
 		}
 	},
 	"admin/n5000/appfilter": {
@@ -40,7 +46,9 @@
 			"path": "n5000/appfilter"
 		},
 		"depends": {
-			"acl": [ "luci-app-n5000-panel" ]
+			"acl": [
+				"luci-app-n5000-panel"
+			]
 		}
 	},
 	"admin/n5000/dashboard": {
@@ -51,7 +59,22 @@
 			"path": "n5000/dashboard"
 		},
 		"depends": {
-			"acl": [ "luci-app-n5000-panel" ]
+			"acl": [
+				"luci-app-n5000-panel"
+			]
+		}
+	},
+	"admin/n5000/vault": {
+		"title": "密码本",
+		"order": 99,
+		"action": {
+			"type": "view",
+			"path": "n5000/vault"
+		},
+		"depends": {
+			"acl": [
+				"luci-app-n5000-panel"
+			]
 		}
 	}
 }
