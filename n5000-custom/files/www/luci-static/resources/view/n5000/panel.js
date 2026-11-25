@@ -107,7 +107,7 @@ return view.extend({
 				E('span', { 'id': 'np-herostatus' }, ['在线']),
 				E('span', { 'style': 'margin-left:auto', 'id': 'np-heroip' }, [' '])
 			]),
-			E('img', { 'class': 'np-art', 'src': '/luci-static/n5000/router.svg', 'alt': 'N5000' }),
+			E('img', { 'class': 'np-art', 'src': '/luci-static/n5000/router.svg?v=4', 'alt': 'N5000' }),
 			E('div', { 'class': 'np-name' }, ['NRadio N5000']),
 			E('div', { 'class': 'np-sub' }, ['MT7987A 四核 ARM · WiFi 7 BE5000 · 1GB RAM · 双 2.5G']),
 			E('div', { 'class': 'np-callouts' }, [
@@ -273,7 +273,7 @@ return view.extend({
 			te.textContent = tv.toFixed(0) + '°C';
 			te.className = 'v ' + (tv >= 80 ? 'np-bad' : tv >= 65 ? 'np-warn' : 'np-ok');
 			document.getElementById('np-st-uptime').textContent = npUptime(d2.uptime);
-			document.getElementById('np-st-clients').textContent = (d2.clients || 0) + ' 台';
+			document.getElementById('np-st-clients').textContent = (d2.devices || d2.clients || 0) + ' 台';
 
 			/* 活跃应用 TOP5 */
 			var devs = (af2 && af2.devices) || [];
