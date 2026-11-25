@@ -1,15 +1,14 @@
 #!/bin/sh
-# 全局挂件：注入 Argon/Carbon 主题页面脚本（大肥鱼 + 顶部快捷面板入口）
+# 大肥鱼全局挂件：注入 Argon/Carbon 主题页面脚本（所有已登录 LuCI 页面左下角常驻）
 [ -f /www/luci-static/n5000/mascot.js ] || exit 0
-[ -f /www/luci-static/n5000/quicks.js ] || exit 0
 
 inject() {
 	f="$1"
 	[ -f "$f" ] || return 0
-	# 先清掉旧注入，保证幂等
+	# 幂等：先清理旧注入
 	sed -i '/luci-static\/n5000\/\(mascot\|quicks\)\.js/d' "$f" 2>/dev/null
 	grep -q '{% endif %}' "$f" || return 0
-	sed -i '/{% endif %}/i <script type="text/javascript" src="/luci-static/n5000/mascot.js"></script>\n<script type="text/javascript" src="/luci-static/n5000/quicks.js"></script>' "$f"
+	sed -i '/{% endif %}/i <script type="text/javascript" src="/luci-static/n5000/mascot.js"></script>' "$f"
 }
 
 inject /usr/share/ucode/luci/template/themes/argon/page_scripts.ut
