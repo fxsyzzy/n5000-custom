@@ -117,6 +117,8 @@ config)
 		[ -n "$v" ] && uci set "aichat.main.allow_tools=$v"
 		v=$(printf '%s' "$DATA" | jq -r 'if .enabled == true then "1" elif .enabled == false then "0" else empty end')
 		[ -n "$v" ] && uci set "aichat.main.enabled=$v"
+		v=$(printf '%s' "$DATA" | jq -r 'if .mascot_ai == true then "1" elif .mascot_ai == false then "0" else empty end')
+		[ -n "$v" ] && uci set "aichat.main.mascot_ai=$v"
 		uci commit aichat 2>/dev/null
 		send_json
 		jq -n '{code:0}'
@@ -128,9 +130,29 @@ config)
 		jq -n --arg base "$(uciget main.api_base)" --arg model "$(uciget main.model)" \
 			--arg prompt "$(uciget main.system_prompt)" --arg lang "$(uciget main.language)" \
 			--arg tools "$(uciget main.allow_tools)" --arg enabled "$(uciget main.enabled)" \
-			--argjson haskey "$has_key" \
-			'{code:0,api_base:$base,model:$model,system_prompt:$prompt,language:$lang,allow_tools:($tools=="1"),enabled:($enabled!="0"),has_key:$haskey}'
+			--argjson haskey "$has_key" --arg ma "$(uciget main.mascot_ai)" \
+			'{code:0,api_base:$base,model:$model,system_prompt:$prompt,language:$lang,allow_tools:($tools=="1"),enabled:($enabled!="0"),has_key:$haskey,mascot_ai:($ma != "0")}'
 	fi
+	;;
+line)
+	KEY=$(uciget main.api_key)
+	[ -z "$KEY" ] && { send_json; jq -n '{code:-1,error:"no_key"}'; exit 0; }
+	[ "$(uciget main.mascot_ai)" = "0" ] && { send_json; jq -n '{code:-1,error:"disabled"}'; exit 0; }
+	BASE=$(trim_base "$(uciget main.api_base)"); [ -z "$BASE" ] && BASE="https://api.deepseek.com"
+	MODEL=$(uciget main.model); [ -z "$MODEL" ] && MODEL="deepseek-chat"
+	STATUS=$(snapshot)
+	SYS="你是 N5000 路由器上的吉祥物「大肥鱼」——DeepSeek 鲸鱼娘：蓝发、鲸鱼尾、女仆装、呆毛，性格傲娇、爱吃白饭、爱摸鱼、偶尔 DeepSleep。
+根据下面的路由器实时状态，用一句不超过 35 个字的中文傲娇/吐槽语录回应，可以带一点白饭或摸鱼梗。只输出这一句话本身，不要引号、不要解释、不要前缀。
+路由器状态：$STATUS"
+	PAYLOAD=$(jq -n -c --arg m "$MODEL" --arg sys "$SYS" '{model:$m, messages:[{role:"system",content:$sys},{role:"user",content:"来一句"}], temperature:1.0, max_tokens:60, stream:false}' 2>/dev/null)
+	RESP=$(curl -sS -m 20 -H 'Content-Type: application/json' -H "Authorization: Bearer $KEY" -d "$PAYLOAD" "$BASE/chat/completions" 2>/dev/null)
+	LINE=$(printf '%s' "$RESP" | jq -r '.choices[0].message.content // empty' 2>/dev/null | tr -d '\n' | sed 's/^["“]//; s/["”]$//' | cut -c1-80)
+	if [ -z "$LINE" ]; then
+		ERR=$(printf '%s' "$RESP" | jq -r '.error.message // empty' 2>/dev/null)
+		send_json; jq -n --arg e "${ERR:-AI 无返回}" '{code:-1,error:$e}'
+		exit 0
+	fi
+	send_json; jq -n --arg l "$LINE" '{code:0,line:$l}'
 	;;
 snapshot)
 	send_json
