@@ -123,13 +123,14 @@ return view.extend({
 	load: function() {
 		return Promise.all([
 			fetch('/cgi-bin/rstatus?t=' + Date.now(), { cache: 'no-store' }).then(function(r) { return r.json(); }).catch(function() { return null; }),
-			fetch('/cgi-bin/appfilter?action=state', { cache: 'no-store' }).then(function(r) { return r.json(); }).catch(function() { return null; })
+			fetch('/cgi-bin/appfilter?action=state', { cache: 'no-store' }).then(function(r) { return r.json(); }).catch(function() { return null; }),
+			fetch('/cgi-bin/traffic?action=summary', { cache: 'no-store' }).then(function(r) { return r.json(); }).catch(function() { return null; })
 		]);
 	},
 
 	renderInner: function(data) {
 		var self = this;
-		var d = data[0] || {}, af = data[1] || {};
+		var d = data[0] || {}, af = data[1] || {}, tr = data[2] || {};
 		var samples = [], prev = null;
 
 		function url(p) { return (typeof L !== 'undefined' && L.url) ? L.url(p) : '/cgi-bin/luci/' + p; }
@@ -227,6 +228,7 @@ return view.extend({
 							}
 						}, [isDark ? '☀ 晨光模式' : '🌙 暗夜模式']);
 					})(),
+					E('span', { 'class': 'np-chip' }, [E('span', { 'class': 'ico' }, ['📶']), E('span', { 'class': 'k' }, ['今日']), E('b', { 'id': 'np-chip-today' }, ['--'])]),
 					E('span', { 'class': 'np-chip' }, [E('span', { 'class': 'ico' }, ['🌡']), E('span', { 'class': 'k' }, ['温度']), E('b', { 'id': 'np-chip-temp' }, ['--'])]),
 					E('span', { 'class': 'np-chip' }, [E('span', { 'class': 'ico' }, ['📊']), E('span', { 'class': 'k' }, ['负载']), E('b', { 'id': 'np-chip-load' }, ['--'])]),
 					E('span', { 'class': 'np-chip' }, [E('span', { 'class': 'ico' }, ['⏱']), E('span', { 'class': 'k' }, ['运行']), E('b', { 'id': 'np-chip-uptime' }, ['--'])]),
@@ -284,6 +286,8 @@ return view.extend({
 			chipTemp.textContent = tv.toFixed(1) + '°C';
 			chipTemp.style.color = tv >= 80 ? '#b3261e' : (tv >= 70 ? '#8a6a00' : (npIsLight() ? '#111111' : '#83D9DC'));
 			document.getElementById('np-chip-load').textContent = load1.toFixed(2);
+			var tEl = document.getElementById('np-chip-today');
+			if (tEl) tEl.textContent = npFmt(((tr.today || {}).total) || 0);
 			document.getElementById('np-chip-uptime').textContent = npUptime(d2.uptime);
 			document.getElementById('np-chip-wan').textContent = d2.wan_ip || '--';
 			var wdot = document.getElementById('np-wandot');
@@ -379,8 +383,9 @@ return view.extend({
 		poll.add(function() {
 			return Promise.all([
 				fetch('/cgi-bin/rstatus?t=' + Date.now(), { cache: 'no-store' }).then(function(r) { return r.json(); }).catch(function() { return null; }),
-				fetch('/cgi-bin/appfilter?action=state', { cache: 'no-store' }).then(function(r) { return r.json(); }).catch(function() { return null; })
-			]).then(function(res) { paint(res[0] || d, res[1] || af); });
+				fetch('/cgi-bin/appfilter?action=state', { cache: 'no-store' }).then(function(r) { return r.json(); }).catch(function() { return null; }),
+				fetch('/cgi-bin/traffic?action=summary', { cache: 'no-store' }).then(function(r) { return r.json(); }).catch(function() { return null; })
+			]).then(function(res) { if (res[2]) tr = res[2]; paint(res[0] || d, res[1] || af); });
 		}, 5);
 
 		return root;
