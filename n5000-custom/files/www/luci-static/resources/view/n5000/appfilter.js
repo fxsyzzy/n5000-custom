@@ -129,18 +129,7 @@ return view.extend({
 			document.getElementById('af-devs').textContent = devs.length;
 			document.getElementById('af-sites').textContent = siteCount;
 			document.getElementById('af-rules').textContent = rules.length;
-			if (afM) {
-				var ap = rules.length ? [
-					'哼，' + rules.length + ' 条规则都归本鱼管，坏网站见一个吃一个。',
-					'本鱼在守规矩，别想偷偷溜去看坏网站哦。',
-					'规则都盯好了…才不是因为关心你。'
-				] : [
-					'一条规则都没有？那本鱼先摸会儿鱼。',
-					'哼，不设规则，出事了别找本鱼哭。',
-					'闲着也是闲着…白饭什么时候开饭？'
-				];
-				afM.textContent = ap[Math.floor(Math.random() * ap.length)];
-			}			var tb = document.getElementById('af-toggle');
+			var tb = document.getElementById('af-toggle');
 			if (tb) {
 				tb.textContent = state.block_enabled ? '停用拦截' : '启用拦截';
 				tb.className = 'btn cbi-button' + (state.block_enabled ? ' cbi-button-save' : '');
