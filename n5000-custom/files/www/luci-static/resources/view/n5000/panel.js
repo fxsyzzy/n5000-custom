@@ -117,7 +117,7 @@ function npIsLight() {
 	return document.documentElement.getAttribute('data-argon-mode') === 'light';
 }
 
-var NP_COLORS = ['#48A9C5', '#83D9DC', '#1E5B8C', '#7FA8FF', '#5ef2c0'];
+var NP_COLORS = ['#E8E8E8', '#BDBDBD', '#D4D4D4', '#9E9E9E', '#C9C9C9'];
 
 return view.extend({
 	load: function() {
@@ -263,8 +263,8 @@ return view.extend({
 				});
 				ctx.strokeStyle = color; ctx.lineWidth = 1.8; ctx.stroke();
 			}
-			line('down', npIsLight() ? '#1A1A1A' : '#48A9C5');
-			line('up', npIsLight() ? '#888888' : '#83D9DC');
+			line('down', npIsLight() ? '#1A1A1A' : '#F0F0F0');
+			line('up', npIsLight() ? '#888888' : '#9E9E9E');
 		}
 
 		function paint(d2, af2) {
@@ -283,14 +283,14 @@ return view.extend({
 			document.getElementById('np-link').textContent = 'WAN ' + (d2.wan_ip ? '已连接' : '未连接');
 			var chipTemp = document.getElementById('np-chip-temp');
 			chipTemp.textContent = tv.toFixed(1) + '°C';
-			chipTemp.style.color = tv >= 80 ? '#b3261e' : (tv >= 70 ? '#8a6a00' : (npIsLight() ? '#111111' : '#83D9DC'));
+			chipTemp.style.color = tv >= 80 ? (npIsLight() ? '#111111' : '#FFFFFF') : (tv >= 70 ? (npIsLight() ? '#555555' : '#BDBDBD') : (npIsLight() ? '#111111' : '#F5F5F5'));
 			document.getElementById('np-chip-load').textContent = load1.toFixed(2);
 			var tEl = document.getElementById('np-chip-today');
 			if (tEl) tEl.textContent = npFmt(((tr.today || {}).total) || 0);
 			document.getElementById('np-chip-uptime').textContent = npUptime(d2.uptime);
 			document.getElementById('np-chip-wan').textContent = d2.wan_ip || '--';
 			var wdot = document.getElementById('np-wandot');
-			if (wdot) wdot.style.background = d2.wan_ip ? '#35c48a' : '#e05a5a';
+			if (wdot) wdot.style.background = d2.wan_ip ? '#F5F5F5' : '#6E6E6E';
 
 			/* CPU */
 			var cpuPct = Math.min(100, Math.round(load1 / 2 * 100));
