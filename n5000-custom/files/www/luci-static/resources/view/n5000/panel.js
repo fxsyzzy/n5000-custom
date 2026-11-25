@@ -131,11 +131,11 @@ return view.extend({
 		]);
 
 		var links = E('div', { 'class': 'cbi-section' }, [
-			E('a', { 'class': 'btn cbi-button', 'href': '/appfilter.html', 'target': '_blank' },
-				[_s('打开应用过滤 / 流量详情 →', 'Open app filter / traffic details →')]),
+			E('a', { 'class': 'btn cbi-button', 'href': (typeof L !== 'undefined' && L.url) ? L.url('admin/n5000/appfilter') : '/cgi-bin/luci/admin/n5000/appfilter' },
+				[_s('应用过滤 →', 'App filter →')]),
 			' ',
-			E('a', { 'class': 'btn cbi-button', 'href': '/dashboard.html', 'target': '_blank' },
-				[_s('打开大屏仪表盘 →', 'Open full dashboard →')])
+			E('a', { 'class': 'btn cbi-button', 'href': (typeof L !== 'undefined' && L.url) ? L.url('admin/n5000/dashboard') : '/cgi-bin/luci/admin/n5000/dashboard' },
+				[_s('流量仪表盘 →', 'Traffic dashboard →')])
 		]);
 
 		var root = E('div', {}, [
