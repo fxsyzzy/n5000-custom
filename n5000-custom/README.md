@@ -526,3 +526,14 @@ N5000              order 0   分组（展开）
 - 需要恢复时：
   - 重新开启磨砂：`uci set argon.@global[0].main_glass='1'; uci set argon.@global[0].blur_dark='8'; uci commit argon`
   - 重新开启大肥鱼：在 `93-mascot-inject` 里恢复注入 mascot.js 即可（或手动在 page_scripts.ut 加 `<script src="/luci-static/n5000/mascot.js"></script>`）
+
+## v3.3 移除 AI 助手与微信接口
+
+- 已删除：
+  - LuCI「AI 助手」页面与菜单项（`ai.js`、`/cgi-bin/aichat`、`/etc/config/aichat`、`aichat.html`）
+  - 微信回调（`/cgi-bin/wechat`、`/etc/init.d/n5000-wechat-http`、`/www-wechat` 专用端口 8081）
+  - 微信相关隧道（Tailscale Funnel、`n5000-tunnel-up`、`91-tailscale-wechat`）与 tailscale 固件包
+  - 大肥鱼中的 AI 语录接口调用
+- 当前设备：以上均已在 overlay 移除；Tailscale 已停止并关闭自启，Funnel/8081 已关闭
+- 注意：已发布的 v5.0.0 固件镜像里仍包含这些功能（历史版本）；下次重新编译（v6）将默认不含
+- 恢复方式：从 git 历史或 v5.0.0 release 取回对应文件即可
