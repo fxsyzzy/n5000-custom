@@ -111,6 +111,18 @@ var NPCSS = [
 	'@media(max-width:1100px){.np-main{grid-template-columns:1fr 360px}}',
 	'@media(max-width:1100px){.np-main{grid-template-columns:1fr}.np-actions{grid-template-columns:repeat(5,1fr)}.np-stats{grid-template-columns:repeat(3,1fr)}}',
 	'@media(max-width:640px){.np-actions{grid-template-columns:repeat(4,1fr)}.np-stats{grid-template-columns:repeat(2,1fr)}}'
+	/* ---- 线稿风格面板排版 ---- */',
+	'.np-art{filter:none}',
+	'html[data-argon-mode="dark"] .np-art{filter:invert(1)}',
+	'.np-name{text-transform:uppercase;letter-spacing:.22em;font-size:20px;font-weight:700;border-bottom:1px solid rgba(127,127,127,.28);padding-bottom:10px;margin-top:8px}',
+	'.np-sub{text-transform:uppercase;letter-spacing:.14em;font-size:10.5px;margin-top:10px;font-weight:500}',
+	'.np-call{text-transform:uppercase;letter-spacing:.14em;font-size:10px;font-weight:600}',
+	'.np-hero-head{text-transform:uppercase;letter-spacing:.14em;font-size:10px}',
+	'.np-badge{text-transform:uppercase;letter-spacing:.12em}',
+	'.np-rate{text-transform:uppercase;letter-spacing:.1em;font-size:11px}',
+	'.np-rate b{font-size:15px;letter-spacing:.02em}',
+	'.np-hero{min-height:480px}',
+	'.np-art{width:min(500px,92%)}',
 ].join('\n');
 
 function npIsLight() {
@@ -150,7 +162,7 @@ return view.extend({
 				E('span', { 'id': 'np-herostatus' }, ['在线']),
 				E('span', { 'style': 'margin-left:auto', 'id': 'np-heroip' }, [' '])
 			]),
-			E('img', { 'class': 'np-art', 'src': '/luci-static/n5000/router.svg?v=4', 'alt': 'N5000' }),
+			E('img', { 'class': 'np-art', 'src': '/luci-static/n5000/router.svg?v=5', 'alt': 'N5000' }),
 			E('div', { 'class': 'np-name' }, ['NRadio N5000']),
 			E('div', { 'class': 'np-sub' }, ['MT7987A 四核 ARM · WiFi 7 BE5000 · 1GB RAM · 双 2.5G']),
 			E('div', { 'class': 'np-callouts' }, [
