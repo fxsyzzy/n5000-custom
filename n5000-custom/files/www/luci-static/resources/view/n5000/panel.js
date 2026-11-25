@@ -109,7 +109,7 @@ return view.extend({
 			]),
 			E('img', { 'class': 'np-art', 'src': '/luci-static/n5000/router.svg', 'alt': 'N5000' }),
 			E('div', { 'class': 'np-name' }, ['NRadio N5000']),
-			E('div', { 'class': 'np-sub' }, ['MT7987A · WiFi 7 · 1GB RAM · OpenWrt']),
+			E('div', { 'class': 'np-sub' }, ['MT7987A 四核 ARM · WiFi 7 BE5000 · 1GB RAM · 双 2.5G']),
 			E('div', { 'class': 'np-callouts' }, [
 				E('span', { 'class': 'np-call' }, ['WAN 2.5G']),
 				E('span', { 'class': 'np-call' }, ['LAN 2.5G · 192.168.88.1']),
