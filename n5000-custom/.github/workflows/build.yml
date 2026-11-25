@@ -1,0 +1,162 @@
+name: N5000 Custom OpenWrt Build
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 350
+
+    steps:
+      - name: 检出仓库
+        uses: actions/checkout@v4
+
+      - name: 释放磁盘空间
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+                      /opt/hostedtoolcache/CodeQL /usr/local/share/boost 2>/dev/null || true
+          df -h /
+
+      - name: 安装编译依赖
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential clang flex bison g++ gawk gettext \
+            git libncurses-dev libssl-dev python3 python3-setuptools rsync swig \
+            unzip zlib1g-dev file wget xsltproc ccache time
+          df -h /
+
+      - name: 克隆 OpenWrt 源码
+        run: |
+          git clone --depth 1 https://github.com/openwrt/openwrt.git openwrt
+          cd openwrt
+          git log -1 --format='%H %s'
+
+      - name: 集成主题包（Argon / Carbon）
+        run: |
+          set -e
+          git clone --depth 1 https://github.com/jerrykuku/luci-theme-argon.git /tmp/argon
+          mkdir -p openwrt/package/luci-theme-argon
+          cp -a /tmp/argon/. openwrt/package/luci-theme-argon/
+          rm -rf openwrt/package/luci-theme-argon/.git
+          if [ -d /tmp/argon/compat/luci-app-argon-config ]; then
+            cp -a /tmp/argon/compat/luci-app-argon-config openwrt/package/
+          fi
+          git clone --depth 1 https://github.com/mrjoechen/luci-theme-carbon.git /tmp/carbon
+          mkdir -p openwrt/package/luci-theme-carbon
+          cp -a /tmp/carbon/. openwrt/package/luci-theme-carbon/
+          rm -rf openwrt/package/luci-theme-carbon/.git
+          ls openwrt/package/luci-theme-argon/Makefile openwrt/package/luci-theme-carbon/Makefile
+
+      - name: 添加第三方 feed（PassWall）
+        run: |
+          cd openwrt
+          {
+            echo ""
+            echo "src-git passwall https://github.com/Openwrt-Passwall/openwrt-passwall.git;main"
+            echo "src-git passwall_packages https://github.com/Openwrt-Passwall/openwrt-passwall-packages.git;main"
+          } >> feeds.conf.default
+          cat feeds.conf.default
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+
+      - name: 注入 N5000 板级支持（DTS / 设备定义 / 板级脚本）
+        run: python3 n5000-custom/board/apply.py openwrt
+
+      - name: 验证板级补丁（防止 02_network 被破坏）
+        run: |
+          set -e
+          NET=openwrt/target/linux/mediatek/filogic/base-files/etc/board.d/02_network
+          grep -q 'ucidef_set_interfaces_lan_wan "eth0" "eth1"' "$NET"
+          grep -q '. /lib/functions/nradio-n5000.sh' "$NET"
+          grep -q 'openembed,som7981' "$NET"
+          grep -q 'nradio,c8-668gl' "$NET"
+          echo "02_network 检查通过：n5000 块数 $(grep -c 'nradio,n5000)' "$NET")"
+          test -f openwrt/target/linux/mediatek/filogic/base-files/lib/preinit/35_nradio_tf_overlay
+          test -f openwrt/target/linux/mediatek/filogic/base-files/etc/board.d/06-nradio-n5000-wifi
+          echo "板级文件检查通过"
+
+      - name: 应用定制配置
+        run: |
+          cp n5000-custom/configs/n5000-custom.config openwrt/.config
+          cd openwrt
+          make defconfig
+
+      - name: 注入自定义文件（Docker / Swap / 去标识）
+        run: |
+          mkdir -p openwrt/files
+          cp -a n5000-custom/files/. openwrt/files/
+          chmod +x openwrt/files/etc/init.d/* \
+                   openwrt/files/etc/uci-defaults/* \
+                   openwrt/files/etc/hotplug.d/block/20-n5000-docker \
+                   openwrt/files/www/cgi-bin/rstatus \
+                   openwrt/files/www/cgi-bin/aichat \
+                   openwrt/files/www/cgi-bin/wechat \
+                   openwrt/files/www/cgi-bin/appfilter \
+                   openwrt/files/www/cgi-bin/favorites \
+                   openwrt/files/www/cgi-bin/vault \
+                   openwrt/files/www/cgi-bin/theme \
+                   openwrt/files/www/cgi-bin/traffic \
+                   openwrt/files/usr/sbin/trafficd \
+                   openwrt/files/usr/sbin/appfilter \
+                   openwrt/files/etc/init.d/appfilter \
+                   openwrt/files/etc/uci-defaults/94-appfilter \
+                   openwrt/files/etc/uci-defaults/91-tailscale-wechat \
+                   openwrt/files/etc/init.d/n5000-wechat-http \
+                   openwrt/files/usr/sbin/n5000-tunnel-up \
+                   openwrt/files/usr/sbin/theme
+          find openwrt/files -type f -exec ls -l {} \;
+
+      - name: 下载软件包源码
+        run: |
+          cd openwrt
+          make -j"$(nproc)" download || make -j"$(nproc)" download
+
+      - name: 编译固件
+        run: |
+          cd openwrt
+          set -o pipefail
+          make -j"$(nproc)" V=s > /tmp/build.log 2>&1 || {
+            echo "===== 编译失败，日志尾部 ====="
+            tail -n 400 /tmp/build.log
+            exit 1
+          }
+          tail -n 50 /tmp/build.log
+
+      - name: 收集产物
+        if: success()
+        run: |
+          mkdir -p out
+          cp -v openwrt/bin/targets/mediatek/filogic/*nradio_n5000*sysupgrade.bin out/ || true
+          cp -v openwrt/bin/targets/mediatek/filogic/*nradio_n5000.manifest out/ || true
+          cp -v openwrt/bin/targets/mediatek/filogic/profiles.json out/ || true
+          cd out
+          ls -lh
+          sha256sum * > sha256sums.txt
+          cat sha256sums.txt
+
+      - name: 上传固件
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: n5000-custom-firmware
+          path: out/
+
+      - name: 上传编译日志（失败时排查用）
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: /tmp/build.log
+
+
+
+
+
+
