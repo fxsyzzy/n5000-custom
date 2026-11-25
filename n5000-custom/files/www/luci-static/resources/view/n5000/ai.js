@@ -65,6 +65,8 @@ return view.extend({
 		this.f.tools.checked = !!this.cfg.allow_tools;
 		this.f.enabled = E('input', { 'type': 'checkbox' });
 		this.f.enabled.checked = this.cfg.enabled !== false;
+		this.f.mascot = E('input', { 'type': 'checkbox' });
+		this.f.mascot.checked = this.cfg.mascot_ai !== false;
 
 		var settings = E('div', { 'class': 'ai-settings', 'id': 'ai-settings' }, [
 			mkRow('API 地址（OpenAI 兼容）', this.f.base, 'DeepSeek 填 https://api.deepseek.com'),
@@ -73,6 +75,7 @@ return view.extend({
 			mkRow('系统提示词', this.f.prompt),
 			E('div', { 'class': 'chk' }, [this.f.tools, E('span', {}, ['允许 AI 执行路由器操作（重启 / 重启 WiFi / 改 WiFi 密码）'])]),
 			E('div', { 'class': 'chk' }, [this.f.enabled, E('span', {}, ['启用 AI 助手'])]),
+			E('div', { 'class': 'chk' }, [this.f.mascot, E('span', {}, ['让大肥鱼用 AI 生成语录（每隔几分钟一句，消耗少量 token）'])]),
 			E('div', { 'class': 'actions' }, [
 				E('button', { 'class': 'btn cbi-button', 'id': 'ai-cancel', click: function() { self.toggleSettings(false); } }, ['取消']),
 				E('button', { 'class': 'btn cbi-button cbi-button-save', 'id': 'ai-save', click: function() { self.saveSettings(); } }, ['保存'])
@@ -144,7 +147,8 @@ return view.extend({
 			model: (this.f.model.value || '').trim(),
 			system_prompt: this.f.prompt.value || '',
 			allow_tools: !!this.f.tools.checked,
-			enabled: !!this.f.enabled.checked
+			enabled: !!this.f.enabled.checked,
+			mascot_ai: !!this.f.mascot.checked
 		};
 		var k = (this.f.key.value || '').trim();
 		if (k) d.api_key = k;
@@ -156,7 +160,7 @@ return view.extend({
 			if (j && j.code === 0) {
 				self.cfg = {
 					api_base: d.api_base, model: d.model, system_prompt: d.system_prompt,
-					allow_tools: d.allow_tools, enabled: d.enabled,
+					allow_tools: d.allow_tools, enabled: d.enabled, mascot_ai: d.mascot_ai,
 					has_key: !!k || self.cfg.has_key
 				};
 				self.f.key.value = '';
