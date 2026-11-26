@@ -102,6 +102,8 @@ jobs:
                    openwrt/files/www/cgi-bin/theme \
                    openwrt/files/www/cgi-bin/menuver \
                    openwrt/files/www/cgi-bin/traffic \
+                   openwrt/files/www/cgi-bin/gameaccel \
+                   openwrt/files/usr/sbin/gameaccel-apply \
                    openwrt/files/usr/sbin/trafficd \
                    openwrt/files/usr/sbin/appfilter \
                    openwrt/files/etc/init.d/appfilter \
