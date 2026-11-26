@@ -1,0 +1,195 @@
+#!/bin/sh
+# 游戏加速管理接口
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+
+send_json() { printf 'Content-Type: application/json; charset=utf-8\r\nCache-Control: no-store\r\n\r\n'; }
+fail() { send_json; jq -n --arg e "$1" '{code:-1,error:$e}'; exit 0; }
+read_body() { len="${CONTENT_LENGTH:-0}"; [ "$len" -gt 0 ] 2>/dev/null && head -c "$len"; }
+parse_qs() { printf '%s' "$QUERY_STRING" | tr '&' '\n' | sed -n "s/^$1=//p" | head -n1; }
+
+apply_rules() { [ -x /usr/sbin/gameaccel-apply ] && /usr/sbin/gameaccel-apply >/dev/null 2>&1; }
+
+gameaccel_sections() {
+	uci -q show gameaccel 2>/dev/null | sed -n "s/^gameaccel\.\([^=]*\)=device$/\1/p"
+}
+fw_redirect_sections() {
+	uci -q show firewall 2>/dev/null | sed -n "s/^firewall\.\([^=]*\)=redirect$/\1/p"
+}
+
+dump_status() {
+	send_json
+
+	FLOW=$(uci -q get firewall.@defaults[0].flow_offloading 2>/dev/null); [ -z "$FLOW" ] && FLOW=0
+	FLOWHW=$(uci -q get firewall.@defaults[0].flow_offloading_hw 2>/dev/null); [ -z "$FLOWHW" ] && FLOWHW=0
+	SQME=$(uci -q get sqm.eth1.enabled 2>/dev/null); [ -z "$SQME" ] && SQME=0
+	SQMD=$(uci -q get sqm.eth1.download 2>/dev/null); [ -z "$SQMD" ] && SQMD=0
+	SQMU=$(uci -q get sqm.eth1.upload 2>/dev/null); [ -z "$SQMU" ] && SQMU=0
+	SQMS=$(uci -q get sqm.eth1.script 2>/dev/null); [ -z "$SQMS" ] && SQMS="piece_of_cake.qos"
+	MODE=$(uci -q get gameaccel.settings.mode 2>/dev/null); [ -z "$MODE" ] && MODE="speed"
+	PPE=0
+	[ -r /sys/kernel/debug/ppe0/entries ] && PPE=$(wc -l < /sys/kernel/debug/ppe0/entries 2>/dev/null)
+	case "$PPE" in ''|*[!0-9]*) PPE=0 ;; esac
+
+	DEVS=""
+	for sec in $(gameaccel_sections); do
+		ip=$(uci -q get "gameaccel.$sec.ip" 2>/dev/null); [ -z "$ip" ] && continue
+		name=$(uci -q get "gameaccel.$sec.name" 2>/dev/null)
+		mac=$(uci -q get "gameaccel.$sec.mac" 2>/dev/null)
+		item=$(jq -n -c --arg ip "$ip" --arg name "$name" --arg mac "$mac" '{ip:$ip,name:$name,mac:$mac}')
+		if [ -z "$DEVS" ]; then DEVS="$item"; else DEVS="$DEVS,$item"; fi
+	done
+
+	PORTS=""
+	for sec in $(fw_redirect_sections); do
+		nm=$(uci -q get "firewall.$sec.name" 2>/dev/null)
+		case "$nm" in gameaccel_*) ;; *) continue ;; esac
+		proto=$(uci -q get "firewall.$sec.proto" 2>/dev/null)
+		ext=$(uci -q get "firewall.$sec.src_dport" 2>/dev/null)
+		dip=$(uci -q get "firewall.$sec.dest_ip" 2>/dev/null)
+		dport=$(uci -q get "firewall.$sec.dest_port" 2>/dev/null)
+		item=$(jq -n -c --arg name "$nm" --arg proto "$proto" --arg ext "$ext" --arg ip "$dip" --arg int "$dport" '{name:$name,proto:$proto,ext:$ext,ip:$ip,int:$int}')
+		if [ -z "$PORTS" ]; then PORTS="$item"; else PORTS="$PORTS,$item"; fi
+	done
+
+	LEASES=""
+	if [ -f /tmp/dhcp.leases ]; then
+		while read -r _ts mac ip lname _rest; do
+			[ -z "$mac" ] && continue
+			[ "$lname" = "*" ] && lname=""
+			item=$(jq -n -c --arg mac "$mac" --arg ip "$ip" --arg name "$lname" '{mac:$mac,ip:$ip,name:$name}')
+			if [ -z "$LEASES" ]; then LEASES="$item"; else LEASES="$LEASES,$item"; fi
+		done < /tmp/dhcp.leases
+	fi
+
+	jq -n -c \
+		--arg mode "$MODE" --arg flow "$FLOW" --arg flowhw "$FLOWHW" \
+		--arg sqme "$SQME" --arg sqmd "$SQMD" --arg sqmu "$SQMU" --arg sqms "$SQMS" \
+		--argjson ppe "$PPE" \
+		--argjson devs "[${DEVS}]" --argjson ports "[${PORTS}]" --argjson leases "[${LEASES}]" \
+		'{code:0,mode:$mode,
+		  firewall:{flow:($flow=="1"),flow_hw:($flowhw=="1")},
+		  sqm:{enabled:($sqme=="1"),download:($sqmd|tonumber? // 0),upload:($sqmu|tonumber? // 0),script:$sqms},
+		  ppe:$ppe,devices:$devs,ports:$ports,leases:$leases}'
+}
+
+ACTION=$(parse_qs action)
+[ -z "$ACTION" ] && ACTION=status
+
+case "$ACTION" in
+status) dump_status ;;
+mode)
+	DATA=$(read_body)
+	M=$(printf '%s' "$DATA" | jq -r '.mode // empty' 2>/dev/null)
+	DL=$(printf '%s' "$DATA" | jq -r '.download // empty' 2>/dev/null)
+	UL=$(printf '%s' "$DATA" | jq -r '.upload // empty' 2>/dev/null)
+	case "$M" in
+	speed)
+		uci -q set firewall.@defaults[0].flow_offloading='1'
+		uci -q set firewall.@defaults[0].flow_offloading_hw='1'
+		uci -q commit firewall
+		uci -q set sqm.eth1.enabled='0'; uci -q commit sqm
+		/etc/init.d/sqm stop >/dev/null 2>&1
+		/etc/init.d/firewall restart >/dev/null 2>&1
+		uci -q set gameaccel.settings.mode='speed'; uci -q commit gameaccel
+		;;
+	lowlatency)
+		uci -q set firewall.@defaults[0].flow_offloading='0'
+		uci -q set firewall.@defaults[0].flow_offloading_hw='0'
+		uci -q commit firewall
+		[ -n "$DL" ] && uci -q set "sqm.eth1.download=$DL"
+		[ -n "$UL" ] && uci -q set "sqm.eth1.upload=$UL"
+		[ -f /usr/lib/sqm/layer_cake.qos ] && uci -q set sqm.eth1.script='layer_cake.qos'
+		uci -q set sqm.eth1.enabled='1'
+		uci -q commit sqm
+		/etc/init.d/firewall restart >/dev/null 2>&1
+		/etc/init.d/sqm restart >/dev/null 2>&1
+		uci -q set gameaccel.settings.mode='lowlatency'; uci -q commit gameaccel
+		;;
+	*) fail "mode 必须是 speed 或 lowlatency" ;;
+	esac
+	dump_status
+	;;
+bw)
+	DATA=$(read_body)
+	DL=$(printf '%s' "$DATA" | jq -r '.download // empty' 2>/dev/null)
+	UL=$(printf '%s' "$DATA" | jq -r '.upload // empty' 2>/dev/null)
+	case "$DL" in ''|*[!0-9]*) fail "下行带宽必须是数字(kbps)" ;; esac
+	case "$UL" in ''|*[!0-9]*) fail "上行带宽必须是数字(kbps)" ;; esac
+	[ "$DL" -lt 1000 ] 2>/dev/null && fail "下行带宽太小"
+	uci -q set "sqm.eth1.download=$DL"
+	uci -q set "sqm.eth1.upload=$UL"
+	uci -q commit sqm
+	[ "$(uci -q get sqm.eth1.enabled)" = "1" ] && /etc/init.d/sqm restart >/dev/null 2>&1
+	dump_status
+	;;
+dev_add)
+	DATA=$(read_body)
+	IP=$(printf '%s' "$DATA" | jq -r '.ip // empty' 2>/dev/null)
+	NAME=$(printf '%s' "$DATA" | jq -r '.name // empty' 2>/dev/null)
+	MAC=$(printf '%s' "$DATA" | jq -r '.mac // empty' 2>/dev/null)
+	case "$IP" in 192.168.*) ;; *) fail "IP 必须是 192.168.x.x" ;; esac
+	for sec in $(gameaccel_sections); do
+		cur=$(uci -q get "gameaccel.$sec.ip" 2>/dev/null)
+		[ "$cur" = "$IP" ] && fail "该设备已在列表中"
+	done
+	uci -q add gameaccel device >/dev/null
+	uci -q set "gameaccel.@device[-1].ip=$IP"
+	[ -n "$NAME" ] && uci -q set "gameaccel.@device[-1].name=$NAME"
+	[ -n "$MAC" ] && uci -q set "gameaccel.@device[-1].mac=$MAC"
+	uci -q set "gameaccel.@device[-1].enabled='1'"
+	uci -q commit gameaccel
+	apply_rules
+	dump_status
+	;;
+dev_del)
+	DATA=$(read_body)
+	IP=$(printf '%s' "$DATA" | jq -r '.ip // empty' 2>/dev/null)
+	[ -z "$IP" ] && fail "缺少 ip"
+	for sec in $(gameaccel_sections); do
+		cur=$(uci -q get "gameaccel.$sec.ip" 2>/dev/null)
+		[ "$cur" = "$IP" ] && uci -q delete "gameaccel.$sec" 2>/dev/null
+	done
+	uci -q commit gameaccel
+	apply_rules
+	dump_status
+	;;
+port_add)
+	DATA=$(read_body)
+	PROTO=$(printf '%s' "$DATA" | jq -r '.proto // "udp"' 2>/dev/null)
+	EXT=$(printf '%s' "$DATA" | jq -r '.ext // empty' 2>/dev/null)
+	DIP=$(printf '%s' "$DATA" | jq -r '.ip // empty' 2>/dev/null)
+	INT=$(printf '%s' "$DATA" | jq -r '.int // empty' 2>/dev/null)
+	case "$EXT" in ''|*[!0-9]*) fail "外部端口必须是数字" ;; esac
+	case "$INT" in ''|*[!0-9]*) INT=$EXT ;; esac
+	case "$DIP" in 192.168.*) ;; *) fail "目标 IP 必须是 192.168.x.x" ;; esac
+	case "$PROTO" in udp|tcp|tcpudp) ;; *) fail "协议必须是 udp/tcp/tcpudp" ;; esac
+	uci -q add firewall redirect >/dev/null
+	uci -q set "firewall.@redirect[-1].name=gameaccel_${PROTO}_${EXT}"
+	uci -q set "firewall.@redirect[-1].target=DNAT"
+	uci -q set "firewall.@redirect[-1].proto=$PROTO"
+	uci -q set "firewall.@redirect[-1].src=wan"
+	uci -q set "firewall.@redirect[-1].src_dport=$EXT"
+	uci -q set "firewall.@redirect[-1].dest_ip=$DIP"
+	uci -q set "firewall.@redirect[-1].dest_port=$INT"
+	uci -q set "firewall.@redirect[-1].enabled='1'"
+	uci -q commit firewall
+	/etc/init.d/firewall restart >/dev/null 2>&1
+	dump_status
+	;;
+port_del)
+	DATA=$(read_body)
+	NAME=$(printf '%s' "$DATA" | jq -r '.name // empty' 2>/dev/null)
+	[ -z "$NAME" ] && fail "缺少 name"
+	for sec in $(fw_redirect_sections); do
+		cur=$(uci -q get "firewall.$sec.name" 2>/dev/null)
+		[ "$cur" = "$NAME" ] && uci -q delete "firewall.$sec" 2>/dev/null
+	done
+	uci -q commit firewall
+	/etc/init.d/firewall restart >/dev/null 2>&1
+	dump_status
+	;;
+*)
+	fail "unknown action"
+	;;
+esac
