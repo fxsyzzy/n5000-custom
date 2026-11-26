@@ -1,0 +1,5 @@
+#!/bin/sh
+# 首次启动：启用游戏加速规则服务（DSCP 标记）
+[ -x /etc/init.d/gameaccel ] && /etc/init.d/gameaccel enable >/dev/null 2>&1
+[ -x /etc/init.d/gameaccel ] && /etc/init.d/gameaccel start >/dev/null 2>&1
+exit 0
