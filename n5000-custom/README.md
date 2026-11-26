@@ -630,3 +630,22 @@ N5000              order 0   分组（展开）
   - `etc/uci-defaults/88-gameaccel`（首启启用）
   - `view/n5000/gameaccel.js`（页面）
 - 面板快捷入口「🎮 游戏加速」
+
+## 隐私加固（v4.2）
+
+### 已启用
+- **加密 DNS（DoH）**：dnscrypt-proxy 监听 127.0.0.1:5353，上游仅用无日志解析器（Cloudflare / AdGuard DNS / Mullvad），dnsmasq 只转发到它，不再使用 223.5.5.5 等明文 DNS
+- **DNS 泄漏防护**：LAN 客户端 53 端口被劫持到路由器，防止设备自带 DNS 明文外泄
+- **IPv6 临时地址**：`use_tempaddr=2`，对外连接使用临时地址，减少稳定标识
+- **DNS 失败即断（fail-closed）**：dnscrypt 停止则 DNS 不可用，避免静默回退明文
+
+### 可选/需要你决定
+- **WAN MAC 随机化**：`uci set network.wan.macaddr=<本地管理地址>`（可能影响上游 DHCP 绑定）
+- **主机名伪装**：`uci set system.@system[0].hostname=...`（当前为 OpenWrt）
+- **关闭本地 DNS 查询日志**：appfilter 依赖 dnsmasq 日志做网站识别，关闭后流量统计的域名会变少；日志只在内存，重启清空
+- **隐藏目的地（防 ISP 看到访问哪个网站）**：需要 PassWall 代理节点或 Tor，DNS 加密做不到这点
+
+### 真实边界（重要）
+- 加密 DNS 只隐藏「查询内容」，上游仍能看到你连接的 IP、SNI、流量特征
+- 要隐藏访问目的地，必须走 VPN/代理/Tor；且代理/VPN 提供方能看到你的流量
+- 本机/上游路由器管理员仍能看到设备在线情况
