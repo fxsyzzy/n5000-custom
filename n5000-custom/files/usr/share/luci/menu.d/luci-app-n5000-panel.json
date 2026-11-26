@@ -75,5 +75,18 @@
 				"luci-app-n5000-panel"
 			]
 		}
+	},
+	"admin/n5000/gameaccel": {
+		"title": "游戏加速",
+		"order": 5,
+		"action": {
+			"type": "view",
+			"path": "n5000/gameaccel"
+		},
+		"depends": {
+			"acl": [
+				"luci-app-n5000-panel"
+			]
+		}
 	}
 }
