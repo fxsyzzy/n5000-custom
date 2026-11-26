@@ -226,6 +226,20 @@ return view.extend({
 				]),
 				E('div', { 'class': 'np-chips' }, [
 
+					(function() {
+						var cur = document.documentElement.getAttribute('data-argon-mode') || 'dark';
+						var isDark = cur !== 'light';
+						return E('button', {
+							'class': 'np-chip',
+							'style': 'cursor:pointer;color:inherit;font:inherit',
+							click: function() {
+								fetch('/cgi-bin/theme?to=' + (isDark ? 'light' : 'dark'), { cache: 'no-store' })
+									.then(function(r) { return r.json(); })
+									.then(function() { location.reload(); })
+									.catch(function() { location.reload(); });
+							}
+						}, [isDark ? '☀ 晨光模式' : '🌙 暗夜模式']);
+					})(),
 					E('span', { 'class': 'np-chip' }, [E('span', { 'class': 'ico' }, ['📶']), E('span', { 'class': 'k' }, ['今日']), E('b', { 'id': 'np-chip-today' }, ['--'])]),
 					E('span', { 'class': 'np-chip' }, [E('span', { 'class': 'ico' }, ['🌡']), E('span', { 'class': 'k' }, ['温度']), E('b', { 'id': 'np-chip-temp' }, ['--'])]),
 					E('span', { 'class': 'np-chip' }, [E('span', { 'class': 'ico' }, ['📊']), E('span', { 'class': 'k' }, ['负载']), E('b', { 'id': 'np-chip-load' }, ['--'])]),
