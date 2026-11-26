@@ -595,3 +595,11 @@ N5000              order 0   分组（展开）
 - 主题参数：blur=00（无模糊，性能优先）
 - 回滚：`uci set luci.main.mediaurlbase='/luci-static/argon'; uci commit luci; /etc/init.d/uhttpd restart`
 - 构建：workflow 自动克隆 alpha 主题源码并 patch 掉 luci-app-alpha-config 依赖；`CONFIG_PACKAGE_luci-theme-alpha=y`
+
+## 撤回 Alpha 主题（v3.9.1）
+
+- 已撤回 luci-theme-alpha：恢复 `luci.main.mediaurlbase=/luci-static/argon`
+- 设备上删除 Alpha 主题文件（`/www/luci-static/alpha`、ucode/lua 模板、`menu-alpha.js`、`/etc/config/alpha`）
+- 面板恢复☀/🌙主题切换按钮（Argon 暗夜/晨光单色）
+- 固件仓库回滚：移除 build 中的 alpha 克隆、`CONFIG_PACKAGE_luci-theme-alpha`、`98-alpha-theme`
+- 如需再次安装：见 git 历史中的 alpha 安装步骤（或联系我重新部署）
