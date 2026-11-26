@@ -1,0 +1,21 @@
+#!/bin/sh
+# 应用游戏加速规则：为「游戏设备」打 DSCP EF 标记（转发方向）
+# 规则来源：/etc/config/gameaccel 的 device 段
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+
+nft delete table inet gameaccel 2>/dev/null
+nft add table inet gameaccel 2>/dev/null || exit 0
+nft add chain inet gameaccel forward '{ type filter hook forward priority 10; policy accept; }' 2>/dev/null
+
+COUNT=0
+for sec in $(uci -q show gameaccel 2>/dev/null | sed -n "s/^gameaccel\.\([^=]*\)=device$/\1/p"); do
+	ip=$(uci -q get "gameaccel.$sec.ip" 2>/dev/null)
+	case "$ip" in
+		192.168.*) ;;
+		*) continue ;;
+	esac
+	nft add rule inet gameaccel forward ip saddr "$ip" ip dscp set 46 comment "\"gameaccel-$ip\"" 2>/dev/null && COUNT=$((COUNT + 1))
+done
+
+echo "gameaccel rules applied for $COUNT device(s)"
