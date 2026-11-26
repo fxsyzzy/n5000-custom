@@ -52,13 +52,6 @@ jobs:
           mkdir -p openwrt/package/luci-theme-carbon
           cp -a /tmp/carbon/. openwrt/package/luci-theme-carbon/
           rm -rf openwrt/package/luci-theme-carbon/.git
-          git clone --depth 1 https://github.com/derisamedia/luci-theme-alpha.git /tmp/alpha
-          mkdir -p openwrt/package/luci-theme-alpha
-          cp -a /tmp/alpha/. openwrt/package/luci-theme-alpha/
-          rm -rf openwrt/package/luci-theme-alpha/.git
-          # 去掉对 luci-app-alpha-config 的依赖（我们直接提供默认配置）
-          sed -i 's/+luci-app-alpha-config//' openwrt/package/luci-theme-alpha/Makefile
-          ls openwrt/package/luci-theme-alpha/Makefile
           ls openwrt/package/luci-theme-argon/Makefile openwrt/package/luci-theme-carbon/Makefile
 
       - name: 添加第三方 feed（PassWall）
