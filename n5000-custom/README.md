@@ -613,3 +613,20 @@ N5000              order 0   分组（展开）
 - **PassWall 游戏模式**：可在 LuCI → 服务 → PassWall → 游戏模式 中为国外游戏配置 UDP 代理
 - **网易 UU 加速器插件**：未集成（闭源二进制，需官方适配版本，风险较高）
 - 硬件加速与 SQM 的关系：高速模式（HNAT on + SQM off）适合大流量；低延迟模式（SQM on + HNAT off）适合游戏防跳 ping
+
+## 游戏加速页面（v4.1）
+
+- 新增 LuCI 页面：N5000 → 游戏加速（`/admin/n5000/gameaccel`）
+- 功能：
+  - 模式切换：高速模式（HNAT 硬件加速，SQM 关闭）/ 低延迟模式（SQM cake + DSCP 分级，硬件加速关闭）
+  - SQM 带宽配置（kbps），低延迟模式生效
+  - 游戏设备优先：从 DHCP 租约选择设备，自动打 DSCP EF 标记（nftables 表 `inet gameaccel`）
+  - 游戏端口映射：UDP/TCP 端口 DNAT 到内网设备，改善部分游戏 NAT 类型（内核无 fullcone 模块，不支持全锥形 NAT）
+- 实现文件：
+  - `www/cgi-bin/gameaccel`（管理接口）
+  - `usr/sbin/gameaccel-apply`（nft DSCP 规则应用）
+  - `etc/init.d/gameaccel`（开机/防火墙重载后应用）
+  - `etc/config/gameaccel`（模式与设备配置）
+  - `etc/uci-defaults/88-gameaccel`（首启启用）
+  - `view/n5000/gameaccel.js`（页面）
+- 面板快捷入口「🎮 游戏加速」
