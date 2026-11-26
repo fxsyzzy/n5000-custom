@@ -1,0 +1,34 @@
+#!/bin/sh
+# 首次启动：启用 Alpha 主题并自定义底部快捷导航（N5000 页面）
+[ -d /www/luci-static/alpha ] || exit 0
+
+uci -q set luci.themes.Alpha='/luci-static/alpha'
+uci -q set luci.main.mediaurlbase='/luci-static/alpha'
+uci -q commit luci
+
+# alpha 主题参数：无模糊（性能）
+uci -q set alpha.@theme[0].blur='00' 2>/dev/null
+uci -q set alpha.@theme[0].color='#2222359a' 2>/dev/null
+
+# 底部导航替换为 N5000 页面
+while uci -q delete alpha.@navbar[0]; do :; done
+add_nav() {
+	uci -q add alpha navbar >/dev/null
+	local idx
+	idx=$(uci show alpha | sed -n "s/^alpha\.@navbar\[\([0-9]*\)\]=navbar$/\1/p" | tail -n1)
+	[ -z "$idx" ] && idx=0
+	uci -q set "alpha.@navbar[$idx].name=$1"
+	uci -q set "alpha.@navbar[$idx].enable=Enable"
+	uci -q set "alpha.@navbar[$idx].line=$2"
+	uci -q set "alpha.@navbar[$idx].newtab=No"
+	uci -q set "alpha.@navbar[$idx].icon=$3"
+	uci -q set "alpha.@navbar[$idx].address=$4"
+}
+ICON=/www/luci-static/alpha/gaya/icon/navbar
+add_nav "N5000 面板" 1 "$ICON/overview.png" "/cgi-bin/luci/admin/n5000/panel"
+add_nav "流量仪表盘" 2 "$ICON/network.png" "/cgi-bin/luci/admin/n5000/dashboard"
+add_nav "应用过滤" 3 "$ICON/modem.png" "/cgi-bin/luci/admin/n5000/appfilter"
+add_nav "收藏夹" 4 "$ICON/neko.png" "/cgi-bin/luci/admin/n5000/favorites"
+uci -q commit alpha
+
+exit 0
