@@ -1,0 +1,32 @@
+#!/bin/sh
+# 首次启动：隐私加固（加密 DNS + DNS 劫持 + IPv6 临时地址）
+# 1) DNS 走本机 dnscrypt-proxy（DoH，无日志解析器）
+while uci -q del_list dhcp.@dnsmasq[0].server; do :; done
+uci -q set dhcp.@dnsmasq[0].noresolv='1'
+uci -q add_list dhcp.@dnsmasq[0].server='127.0.0.1#5353'
+uci -q commit dhcp
+
+[ -x /etc/init.d/dnscrypt-proxy ] && {
+	/etc/init.d/dnscrypt-proxy enable >/dev/null 2>&1
+	/etc/init.d/dnscrypt-proxy restart >/dev/null 2>&1
+}
+
+# 2) LAN 客户端 53 端口强制走路由器（防止明文 DNS 泄漏）
+uci -q delete firewall.dns_hijack 2>/dev/null
+uci -q set firewall.dns_hijack=redirect
+uci -q set firewall.dns_hijack.name='DNS hijack'
+uci -q set firewall.dns_hijack.src='lan'
+uci -q set firewall.dns_hijack.proto='tcp udp'
+uci -q set firewall.dns_hijack.src_dport='53'
+uci -q set firewall.dns_hijack.dest_ip='192.168.88.1'
+uci -q set firewall.dns_hijack.dest_port='53'
+uci -q set firewall.dns_hijack.target='DNAT'
+uci -q commit firewall
+
+# 3) IPv6 临时地址（避免稳定地址暴露）
+sysctl -w net.ipv6.conf.all.use_tempaddr=2 >/dev/null 2>&1
+sysctl -w net.ipv6.conf.default.use_tempaddr=2 >/dev/null 2>&1
+
+/etc/init.d/dnsmasq restart >/dev/null 2>&1
+/etc/init.d/firewall reload >/dev/null 2>&1
+exit 0
