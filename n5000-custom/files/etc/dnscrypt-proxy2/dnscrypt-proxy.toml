@@ -1,0 +1,32 @@
+listen_addresses = ['127.0.0.1:5353']
+server_names = ['cloudflare', 'adguard-dns-doh', 'mullvad-all-doh']
+ipv4_servers = true
+ipv6_servers = false
+doh_servers = true
+dnscrypt_servers = false
+odoh_servers = false
+require_dnssec = false
+require_nolog = false
+require_nofilter = false
+cache = true
+cache_size = 4096
+cache_min_ttl = 2400
+cache_max_ttl = 86400
+cache_neg_min_ttl = 60
+cache_neg_max_ttl = 600
+timeout = 5000
+keepalive = 30
+netprobe_timeout = 0
+log_level = 2
+
+[sources]
+  [sources.public-resolvers]
+  urls = [
+    'https://raw.githubusercontent.com/DNSCrypt/dnscrypt-resolvers/master/v3/public-resolvers.md',
+    'https://download.dnscrypt.info/resolvers-list/v3/public-resolvers.md',
+    'https://cdn.jsdelivr.net/gh/DNSCrypt/dnscrypt-resolvers@master/v3/public-resolvers.md'
+  ]
+  cache_file = '/etc/dnscrypt-proxy2/public-resolvers.md'
+  minisign_key = 'RWQf6LRCGA9i53mlYecO4IzT51TGPpvWucNSCh1CBM0QTaLn73Y7GFO3'
+  refresh_delay = 73
+  prefix = ''
