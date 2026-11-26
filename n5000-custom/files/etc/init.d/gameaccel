@@ -1,0 +1,11 @@
+#!/bin/sh /etc/rc.common
+# 游戏加速规则应用（开机/防火墙重载后）
+START=94
+STOP=10
+
+start() {
+	[ -x /usr/sbin/gameaccel-apply ] && /usr/sbin/gameaccel-apply >/dev/null 2>&1
+}
+reload() {
+	start
+}
