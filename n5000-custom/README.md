@@ -603,3 +603,13 @@ N5000              order 0   分组（展开）
 - 面板恢复☀/🌙主题切换按钮（Argon 暗夜/晨光单色）
 - 固件仓库回滚：移除 build 中的 alpha 克隆、`CONFIG_PACKAGE_luci-theme-alpha`、`98-alpha-theme`
 - 如需再次安装：见 git 历史中的 alpha 安装步骤（或联系我重新部署）
+
+## 游戏加速能力（v4.0）
+
+- **已开启硬件流量加速（MTK HNAT/PPE）**：`flow_offloading=1` + `flow_offloading_hw=1`，`/sys/kernel/debug/ppe0/entries` 有加速条目，降低转发延迟/CPU 占用
+- 新增首次启动脚本 `89-flow-offload`，刷机后默认开启硬件加速
+- **SQM（cake）**：已安装但默认关闭（`sqm.eth1.enabled=0`），用于抑制缓冲膨胀、防游戏跳 ping；与硬件加速互斥（二选一）
+  - 开启前先在 LuCI → 网络 → SQM QoS 按实际带宽设置上下行，再启用
+- **PassWall 游戏模式**：可在 LuCI → 服务 → PassWall → 游戏模式 中为国外游戏配置 UDP 代理
+- **网易 UU 加速器插件**：未集成（闭源二进制，需官方适配版本，风险较高）
+- 硬件加速与 SQM 的关系：高速模式（HNAT on + SQM off）适合大流量；低延迟模式（SQM on + HNAT off）适合游戏防跳 ping
