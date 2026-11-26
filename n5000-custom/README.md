@@ -583,3 +583,15 @@ N5000              order 0   分组（展开）
   - 菜单文件版本变化时，自动 `ui.menu.flushCache()` 并刷新一次
   - 仅接受合法 32 位 md5 响应；sessionStorage 守卫防循环刷新
 - 手动兜底：清空 192.168.88.1 的站点数据，或退出登录重新登录
+
+
+## 主题切换为 luci-theme-alpha（v3.9）
+
+- 参考：https://www.cnblogs.com/cyhms/p/18160875（Alpha 主题）
+- 上游：https://github.com/derisamedia/luci-theme-alpha（Material 风格，Lua/ucode 双模板，适配 LuCI 26）
+- 安装：主题静态资源 `/www/luci-static/alpha/`、ucode 模板 `/usr/share/ucode/luci/template/themes/alpha/`、Lua 模板 `usr/lib/lua/luci/view/themes/alpha/`、菜单 JS `/luci-static/resources/menu-alpha.js`、配置 `/etc/config/alpha`
+- 启用：`luci.main.mediaurlbase=/luci-static/alpha`，`luci.themes.Alpha=/luci-static/alpha`
+- 底部导航自定义为：N5000 面板 / 流量仪表盘 / 应用过滤 / 收藏夹
+- 主题参数：blur=00（无模糊，性能优先）
+- 回滚：`uci set luci.main.mediaurlbase='/luci-static/argon'; uci commit luci; /etc/init.d/uhttpd restart`
+- 构建：workflow 自动克隆 alpha 主题源码并 patch 掉 luci-app-alpha-config 依赖；`CONFIG_PACKAGE_luci-theme-alpha=y`
