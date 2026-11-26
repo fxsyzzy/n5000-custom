@@ -111,7 +111,6 @@ var NPCSS = [
 	'@media(max-width:1100px){.np-main{grid-template-columns:1fr 360px}}',
 	'@media(max-width:1100px){.np-main{grid-template-columns:1fr}.np-actions{grid-template-columns:repeat(5,1fr)}.np-stats{grid-template-columns:repeat(3,1fr)}}',
 	'@media(max-width:640px){.np-actions{grid-template-columns:repeat(4,1fr)}.np-stats{grid-template-columns:repeat(2,1fr)}}'
-	/* ---- 线稿风格面板排版 ---- */',
 	'.np-art{filter:none}',
 	'html[data-argon-mode="dark"] .np-art{filter:invert(1)}',
 	'.np-name{text-transform:uppercase;letter-spacing:.22em;font-size:20px;font-weight:700;border-bottom:1px solid rgba(127,127,127,.28);padding-bottom:10px;margin-top:8px}',
