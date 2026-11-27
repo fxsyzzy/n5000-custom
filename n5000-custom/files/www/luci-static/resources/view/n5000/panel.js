@@ -237,6 +237,24 @@ return view.extend({
 							}
 						}, [isDark ? '☀ 晨光模式' : '🌙 暗夜模式']);
 					})(),
+					(function() {
+						var eye = false;
+						try { eye = localStorage.getItem('n5000-eye') === '1'; } catch (e) {}
+						return E('button', {
+							'class': 'np-chip',
+							'style': 'cursor:pointer;color:inherit;font:inherit',
+							click: function() {
+								eye = !eye;
+								if (window.npEyeCare) window.npEyeCare.set(eye);
+								else {
+									try { localStorage.setItem('n5000-eye', eye ? '1' : '0'); } catch (e) {}
+									if (eye) document.documentElement.setAttribute('data-np-eye', '1');
+									else document.documentElement.removeAttribute('data-np-eye');
+								}
+								this.textContent = eye ? '🌿 护眼已开' : '🌿 护眼';
+							}
+						}, [eye ? '🌿 护眼已开' : '🌿 护眼']);
+					})(),
 					E('span', { 'class': 'np-chip' }, [E('span', { 'class': 'ico' }, ['📶']), E('span', { 'class': 'k' }, ['今日']), E('b', { 'id': 'np-chip-today' }, ['--'])]),
 					E('span', { 'class': 'np-chip' }, [E('span', { 'class': 'ico' }, ['🌡']), E('span', { 'class': 'k' }, ['温度']), E('b', { 'id': 'np-chip-temp' }, ['--'])]),
 					E('span', { 'class': 'np-chip' }, [E('span', { 'class': 'ico' }, ['📊']), E('span', { 'class': 'k' }, ['负载']), E('b', { 'id': 'np-chip-load' }, ['--'])]),
