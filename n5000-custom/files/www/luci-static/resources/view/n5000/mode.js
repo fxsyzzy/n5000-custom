@@ -99,9 +99,10 @@ return view.extend({
 		var gov = st.governor || '--';
 		var freq = st.max_freq ? (st.max_freq / 1000) + ' MHz' : '--';
 		var sqm = st.sqm && st.sqm.enabled ? ('开（' + (st.sqm.download || 0) + ' / ' + (st.sqm.upload || 0) + ' kbps）') : '关';
+		var warn = (st.warn ? '<div style="margin-top:8px;padding:8px 10px;border:1px solid #c98a00;background:#fff7e0;color:#7a5a00;font-size:12px;line-height:1.6">⚠ ' + st.warn + '</div>' : '');
 		el.innerHTML = '当前：<b>' + (names[st.mode] || st.mode || '--') + '</b><span class="md-cur">' + (st.mode || '') + '</span><br>' +
 			'CPU 调速：<b>' + gov + '</b> · 最高频率：<b>' + freq + '</b> · 温度：<b>' + (st.temp || '--') + '°C</b>' +
-			'<br>硬件加速：<b>' + (st.hnat ? '开启' : '关闭') + '</b> · SQM：<b>' + sqm + '</b> · PPE 条目：<b>' + (st.ppe || 0) + '</b>';
+			'<br>硬件加速：<b>' + (st.hnat ? '开启' : '关闭') + '</b> · SQM：<b>' + sqm + '</b> · PPE 条目：<b>' + (st.ppe || 0) + '</b>' + warn;
 	},
 
 	render: function(data) {
