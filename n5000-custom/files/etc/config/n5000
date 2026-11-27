@@ -5,3 +5,6 @@ config health 'health'
 
 config backup 'backup'
 	option enabled '1'
+
+config mode 'mode'
+	option current 'entertainment'
