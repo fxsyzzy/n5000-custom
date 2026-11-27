@@ -101,5 +101,18 @@
 				"luci-app-n5000-panel"
 			]
 		}
+	},
+	"admin/n5000/safebrowse": {
+		"title": "安全浏览",
+		"order": 7,
+		"action": {
+			"type": "view",
+			"path": "n5000/safebrowse"
+		},
+		"depends": {
+			"acl": [
+				"luci-app-n5000-panel"
+			]
+		}
 	}
 }
