@@ -3,6 +3,14 @@
 'require poll';
 
 var MCSS = [
+	'.md-card{background:#fff;color:#111}',
+	'html[data-argon-mode="dark"] .md-card, html[data-np-dark="1"] .md-card{background:#141a21;border-color:#2a3440;color:#e6e6e6}',
+	'html[data-argon-mode="dark"] .md-card .desc, html[data-np-dark="1"] .md-card .desc{color:rgba(230,230,230,.62)}',
+	'html[data-argon-mode="dark"] .md-card .tag, html[data-np-dark="1"] .md-card .tag{border-color:#39424d;color:rgba(230,230,230,.75)}',
+	'html[data-argon-mode="dark"] .md-btn, html[data-np-dark="1"] .md-btn{background:#1a222b;border-color:#39424d;color:#e6e6e6}',
+	'html[data-argon-mode="dark"] .md-btn.on, html[data-np-dark="1"] .md-btn.on{background:#e6e6e6;border-color:#e6e6e6;color:#111}',
+	'html[data-argon-mode="dark"] .md-status, html[data-np-dark="1"] .md-status{background:#0f141a;border-color:#2a3440;color:#e6e6e6}',
+	'html[data-argon-mode="dark"] .md-cur, html[data-np-dark="1"] .md-cur{background:#e6e6e6;color:#111}',
 	'.md-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:14px}',
 	'@media(max-width:900px){.md-grid{grid-template-columns:1fr}}',
 	'.md-card{padding:16px 18px;border:1px solid #d9d9d9;background:#fff;border-radius:2px;transition:border-color .2s}',
@@ -47,6 +55,14 @@ return view.extend({
 
 	renderInner: function(st) {
 		var self = this;
+		try {
+			var _c = getComputedStyle(document.body).color || '';
+			var _m = _c.match(/(\d+)/g);
+			if (_m && _m.length >= 3) {
+				var _l = 0.299 * +_m[0] + 0.587 * +_m[1] + 0.114 * +_m[2];
+				document.documentElement.setAttribute('data-np-dark', _l > 160 ? '1' : '');
+			}
+		} catch (e) {}
 		this.st = st || {};
 		this.btns = {};
 
