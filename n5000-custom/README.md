@@ -668,3 +668,14 @@ N5000              order 0   分组（展开）
 - 无 UPS 硬件监测
 - 远程 syslog 需要自备日志服务器（可后续加 rsyslog）
 - TF 卡寿命只能靠 I/O 错误计数告警、无法预测
+
+## 页面切换性能优化（v4.4）
+
+- 原因：N5000 自定义页面在 `load()` 中阻塞等待 rstatus / appfilter / traffic 三个 CGI，冷启动时 rstatus 需 ~290ms，导致切页先白屏约 0.3~0.4s
+- 优化：
+  - `rstatus` 缓存 TTL 5s → 60s
+  - `/cgi-bin/traffic?action=summary` 增加 60s 缓存
+  - `/cgi-bin/appfilter?action=state` 增加 60s 缓存
+  - cron 每分钟/每两分钟预热三个缓存（wget 到 127.0.0.1），保证页面加载全部命中缓存
+- 效果（实测）：面板三路 CGI 并行 **300ms → 18ms**；rstatus 冷启动 291ms / 命中 8ms；页面 HTML 88ms
+- 注意：页面数据最多有 60s 延迟（状态/流量属于展示数据，可接受）
