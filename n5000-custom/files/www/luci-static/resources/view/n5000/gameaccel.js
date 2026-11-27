@@ -3,6 +3,10 @@
 'require poll';
 
 var GACSS = [
+	'.ga-btn, .ga-mini{background:#fff;color:#111}',
+	'html[data-argon-mode="dark"] .ga-btn, html[data-np-dark="1"] .ga-btn, html[data-argon-mode="dark"] .ga-mini, html[data-np-dark="1"] .ga-mini{background:#1a222b;border-color:#39424d;color:#e6e6e6}',
+	'html[data-argon-mode="dark"] .ga-btn.on, html[data-np-dark="1"] .ga-btn.on{background:#e6e6e6;border-color:#e6e6e6;color:#111}',
+	'html[data-argon-mode="dark"] .ga-form input, html[data-np-dark="1"] .ga-form input, html[data-argon-mode="dark"] .ga-form select, html[data-np-dark="1"] .ga-form select{background:#1a222b;border-color:#39424d;color:#e6e6e6}',
 	'.ga-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px}',
 	'.ga-card{padding:14px 16px}',
 	'.ga-label{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;opacity:.6;font-weight:600}',
@@ -43,6 +47,14 @@ return view.extend({
 
 	renderInner: function(st) {
 		var self = this;
+		try {
+			var _c = getComputedStyle(document.body).color || '';
+			var _m = _c.match(/(\d+)/g);
+			if (_m && _m.length >= 3) {
+				var _l = 0.299 * +_m[0] + 0.587 * +_m[1] + 0.114 * +_m[2];
+				document.documentElement.setAttribute('data-np-dark', _l > 160 ? '1' : '');
+			}
+		} catch (e) {}
 		this.st = st || {};
 
 		this.fDown = E('input', { 'type': 'text', 'placeholder': '下行 kbps，如 500000' });
