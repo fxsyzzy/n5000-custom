@@ -1,0 +1,13 @@
+#!/bin/sh /etc/rc.common
+# 开机应用上次选择的运行模式
+START=95
+STOP=10
+
+start() {
+	MODE=$(uci -q get n5000.mode.current 2>/dev/null)
+	[ -z "$MODE" ] && MODE=entertainment
+	[ -x /usr/sbin/n5000-mode-apply ] && /usr/sbin/n5000-mode-apply "$MODE" >/dev/null 2>&1
+}
+reload() {
+	start
+}
