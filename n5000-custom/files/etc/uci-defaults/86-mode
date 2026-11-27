@@ -1,0 +1,6 @@
+#!/bin/sh
+# 首次启动：启用运行模式服务，默认娱乐模式
+[ -x /etc/init.d/n5000-mode ] && /etc/init.d/n5000-mode enable >/dev/null 2>&1
+MODE=$(uci -q get n5000.mode.current 2>/dev/null); [ -z "$MODE" ] && MODE=entertainment
+[ -x /usr/sbin/n5000-mode-apply ] && /usr/sbin/n5000-mode-apply "$MODE" >/dev/null 2>&1
+exit 0
