@@ -679,3 +679,20 @@ N5000              order 0   分组（展开）
   - cron 每分钟/每两分钟预热三个缓存（wget 到 127.0.0.1），保证页面加载全部命中缓存
 - 效果（实测）：面板三路 CGI 并行 **300ms → 18ms**；rstatus 冷启动 291ms / 命中 8ms；页面 HTML 88ms
 - 注意：页面数据最多有 60s 延迟（状态/流量属于展示数据，可接受）
+
+
+## 运行模式（v4.5）
+
+新增 LuCI 页面：N5000 → 运行模式（`/admin/n5000/mode`），四种预设一键切换：
+
+| 模式 | CPU | 硬件加速 | SQM | 适用 |
+|---|---|---|---|---|
+| 高速运行 | performance 满频 2.0GHz | 开 | 关 | 大流量下载/最大转发性能 |
+| 低速运行（省电） | powersave 限频 1.3GHz | 开 | 关 | 夜间/轻负载，省电降温 |
+| 娱乐模式（默认） | schedutil 按需 | 开 | 关 | 视频/日常，性能功耗平衡 |
+| 游戏模式 | performance 满频 | 关 | 开（cake + DSCP） | 网络满载时防游戏跳 ping |
+
+- 实现：`/usr/sbin/n5000-mode-apply`、`/etc/init.d/n5000-mode`（开机恢复上次模式）、`/www/cgi-bin/mode`、`view/n5000/mode.js`
+- 切换会重载防火墙/SQM，网络中断 1~2 秒；游戏模式需先在「游戏加速」页设置正确 SQM 带宽
+- 与游戏加速页状态双向同步（gameaccel.settings.mode ↔ n5000.mode.current）
+- 默认模式：娱乐模式
