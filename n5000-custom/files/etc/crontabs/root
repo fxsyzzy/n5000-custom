@@ -1,0 +1,3 @@
+*/5 * * * * /usr/sbin/n5000-healthcheck >/dev/null 2>&1
+0 * * * * /usr/sbin/n5000-logarchive >/dev/null 2>&1
+30 3 * * 0 /usr/sbin/n5000-backup >/dev/null 2>&1
