@@ -1,0 +1,102 @@
+#!/bin/sh
+# N5000 健康检查 + 告警
+# 配置：/etc/config/n5000
+#   config health 'health'
+#       option alert_url ''   # 通用 webhook（POST JSON {"text": "..."}）
+#       option bark_url ''    # Bark 推送（iOS）
+#       option alert_min '30' # 持续异常的最短重复告警间隔（分钟）
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+
+get() { uci -q get "n5000.$1" 2>/dev/null; }
+ALERT_URL=$(get health.alert_url)
+BARK_URL=$(get health.bark_url)
+ALERT_MIN=$(get health.alert_min); [ -z "$ALERT_MIN" ] && ALERT_MIN=30
+
+STATE=/tmp/n5000-health.json
+PREV=/tmp/n5000-health.prev
+LASTALERT=/tmp/n5000-health.lastalert
+LOG_DIR=/root/logs
+LOG="$LOG_DIR/health.log"
+mkdir -p "$LOG_DIR"
+
+ts=$(date +%s)
+now=$(date '+%F %T')
+issues=""
+add() { issues="$issues|$1"; }
+
+# 1) 关键服务
+for svc in uhttpd dnsmasq dnscrypt-proxy appfilter trafficd collectd; do
+	case "$svc" in
+		collectd) pidof collectd >/dev/null 2>&1 || add "svc:collectd" ;;
+		dnscrypt-proxy) pidof dnscrypt-proxy >/dev/null 2>&1 || add "svc:dnscrypt" ;;
+		*) pidof "$svc" >/dev/null 2>&1 || add "svc:$svc" ;;
+	esac
+done
+
+# 2) DNS / 外网
+nslookup www.baidu.com 127.0.0.1 >/dev/null 2>&1 || add "dns"
+ping -c 1 -W 2 223.5.5.5 >/dev/null 2>&1 || ping -c 1 -W 2 114.114.114.114 >/dev/null 2>&1 || add "internet"
+
+# 3) 温度
+temp=$(cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null); temp=${temp:-0}
+[ "$temp" -ge 85000 ] 2>/dev/null && add "temp:$((temp/1000))C"
+
+# 4) overlay 空间（<200MB 告警）
+free_kb=$(df -k /overlay 2>/dev/null | awk 'NR==2{print $4+0}')
+[ -n "$free_kb" ] && [ "$free_kb" -lt 204800 ] 2>/dev/null && add "overlay_low:${free_kb}KB"
+
+# 5) TF/存储错误
+errs=$(dmesg 2>/dev/null | grep -ciE 'I/O error|mmc.*error|f2fs.*error'); errs=${errs:-0}
+[ "$errs" -gt 0 ] 2>/dev/null && add "tf_errors:$errs"
+
+# 6) 备份新鲜度（超过 8 天告警）
+if [ -d /root/backups ]; then
+	newest=$(ls -t /root/backups/*.enc 2>/dev/null | head -n1)
+	if [ -z "$newest" ]; then
+		add "no_backup"
+	else
+		mtime=$(date -r "$newest" +%s 2>/dev/null)
+		[ -n "$mtime" ] && [ $(( (ts - mtime) / 86400 )) -ge 8 ] && add "backup_old:$(( (ts - mtime) / 86400 ))d"
+	fi
+fi
+
+# 状态
+if [ -z "$issues" ]; then state=ok; else state=bad; fi
+printf '{"ts":%s,"state":"%s","issues":"%s","temp":%s,"overlay_kb":%s,"tf_errors":%s}\n' \
+	"$ts" "$state" "${issues#|}" "${temp:-0}" "${free_kb:-0}" "${errs:-0}" > "$STATE"
+
+# 审计日志（带轮转）
+[ -f "$LOG" ] && [ "$(wc -c < "$LOG" 2>/dev/null || echo 0)" -gt 524288 ] && mv -f "$LOG" "$LOG.1"
+echo "$now state=$state issues=${issues#|}" >> "$LOG"
+
+# 告警（状态变化 或 持续异常超过间隔才发，避免轰炸）
+prev=""
+[ -f "$PREV" ] && prev=$(cat "$PREV" 2>/dev/null)
+lastalert=0
+[ -f "$LASTALERT" ] && lastalert=$(cat "$LASTALERT" 2>/dev/null)
+cur="$state:${issues#|}"
+echo "$cur" > "$PREV"
+
+need=0
+if [ "$state" = "bad" ]; then
+	if [ "$prev" != "$cur" ]; then
+		need=1
+	elif [ $((ts - lastalert)) -ge $((ALERT_MIN * 60)) ]; then
+		need=1
+	fi
+fi
+if [ "$need" = "1" ]; then
+	msg="N5000 告警: ${issues#|} | 温度 $((temp/1000))°C"
+	if [ -n "$ALERT_URL" ]; then
+		curl -sS -m 10 -H 'Content-Type: application/json' \
+			-d "{\"text\":\"$msg\"}" "$ALERT_URL" >/dev/null 2>&1
+	fi
+	if [ -n "$BARK_URL" ]; then
+		curl -sS -m 10 -G --data-urlencode "title=N5000 告警" \
+			--data-urlencode "body=$msg" "$BARK_URL" >/dev/null 2>&1
+	fi
+	echo "$ts" > "$LASTALERT"
+fi
+
+echo "$now state=$state${issues:+ issues=${issues#|}}"
