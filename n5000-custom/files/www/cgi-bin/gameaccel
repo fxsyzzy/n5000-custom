@@ -92,6 +92,7 @@ mode)
 		/etc/init.d/sqm stop >/dev/null 2>&1
 		/etc/init.d/firewall restart >/dev/null 2>&1
 		uci -q set gameaccel.settings.mode='speed'; uci -q commit gameaccel
+		uci -q set n5000.mode.current='entertainment'; uci -q commit n5000
 		;;
 	lowlatency)
 		uci -q set firewall.@defaults[0].flow_offloading='0'
@@ -105,6 +106,7 @@ mode)
 		/etc/init.d/firewall restart >/dev/null 2>&1
 		/etc/init.d/sqm restart >/dev/null 2>&1
 		uci -q set gameaccel.settings.mode='lowlatency'; uci -q commit gameaccel
+		uci -q set n5000.mode.current='game'; uci -q commit n5000
 		;;
 	*) fail "mode 必须是 speed 或 lowlatency" ;;
 	esac
