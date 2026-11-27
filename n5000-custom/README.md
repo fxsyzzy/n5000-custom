@@ -746,3 +746,12 @@ N5000              order 0   分组（展开）
 - 开启后全站叠加暖色滤镜（降低蓝光刺激），适合晨光/浅色主题；设置保存在浏览器 localStorage，跨页面保持
 - 实现：`luci-static/n5000/eyecare.js`（全局加载，见 argon `page_scripts.ut` 覆盖）、`view/n5000/panel.js` 按钮
 - 兼容所有 Argon 页面；Bootstrap/Carbon 主题下按钮仍可切换，但全局滤镜只在 Argon 主题生效
+
+
+## DeepWrt 品牌与密码（v4.9）
+
+- 系统品牌统一为 **DeepWrt**：主机名 `DeepWrt`、`/etc/openwrt_release` / `/etc/os-release` 显示名、SSH 登录 banner、LuCI 标题与页脚、`/www/index.html` / `dashboard.html` 等自定义页面
+- 保持 `DISTRIB_RELEASE/REVISION/ARCH` 等兼容字段不变（不影响 sysupgrade / 包管理）
+- 固件默认 root 密码预置为 `YUDI`（`board/files/etc/uci-defaults/98-nradio-n5000-rootpw`）
+- 首发脚本：`files/etc/uci-defaults/99-branding`；banner：`files/etc/banner`
+- ⚠️ 密码 `YUDI` 强度很低，建议自行在 LuCI 修改为强密码
