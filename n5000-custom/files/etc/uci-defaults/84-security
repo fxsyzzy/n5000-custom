@@ -1,0 +1,57 @@
+#!/bin/sh
+# 首次启动：安全加固 + 访客网络 + 防暴破
+# HTTPS 强制
+uci -q set uhttpd.main.redirect_https='1'
+uci -q commit uhttpd
+
+# 防火墙加固
+uci -q set firewall.@defaults[0].syn_flood='1'
+uci -q set firewall.@defaults[0].drop_invalid='1'
+uci -q commit firewall
+
+# 访客网络（独立网段 192.168.89.0/24，隔离仅上网）
+uci -q set network.guest=interface
+uci -q set network.guest.proto='static'
+uci -q set network.guest.device='br-guest'
+uci -q set network.guest.ipaddr='192.168.89.1'
+uci -q set network.guest.netmask='255.255.255.0'
+uci -q set network.br_guest=device
+uci -q set network.br_guest.name='br-guest'
+uci -q set network.br_guest.type='bridge'
+uci -q set dhcp.guest=dhcp
+uci -q set dhcp.guest.interface='guest'
+uci -q set dhcp.guest.start='100'
+uci -q set dhcp.guest.limit='100'
+uci -q set dhcp.guest.leasetime='2h'
+uci -q set firewall.guest=zone
+uci -q set firewall.guest.name='guest'
+uci -q set firewall.guest.network='guest'
+uci -q set firewall.guest.input='REJECT'
+uci -q set firewall.guest.output='ACCEPT'
+uci -q set firewall.guest.forward='REJECT'
+uci -q set firewall.guest.masq='1'
+uci -q set firewall.guest.mtu_fix='1'
+uci -q set firewall.guest_wan=forwarding
+uci -q set firewall.guest_wan.src='guest'
+uci -q set firewall.guest_wan.dest='wan'
+uci -q commit network
+uci -q commit dhcp
+uci -q commit firewall
+
+# 访客 WiFi（双频隔离）
+for band in 0 1; do
+	uci -q set wireless.guest_radio$band=wifi-iface
+	uci -q set wireless.guest_radio$band.device=radio$band
+	uci -q set wireless.guest_radio$band.network=guest
+	uci -q set wireless.guest_radio$band.mode=ap
+	uci -q set wireless.guest_radio$band.ssid='N5000-Guest'
+	uci -q set wireless.guest_radio$band.encryption='sae-mixed'
+	uci -q set wireless.guest_radio$band.key='N5000@Guest'
+	uci -q set wireless.guest_radio$band.isolate='1'
+	uci -q set wireless.guest_radio$band.disabled='0'
+done
+uci -q commit wireless
+
+# 防暴破
+[ -x /etc/init.d/cron ] && /etc/init.d/cron enable >/dev/null 2>&1
+exit 0
