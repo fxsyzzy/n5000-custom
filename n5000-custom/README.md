@@ -703,3 +703,18 @@ N5000              order 0   分组（展开）
 - 判定「未配置」的条件：`n5000.mode.bw_configured != 1`，或下载/上传为 0/空/占位值 85000&10000
 - 在「游戏加速」页保存带宽后自动标记 `n5000.mode.bw_configured=1`；若当前是游戏模式会自动重新应用（启用 SQM）
 - 新固件默认 `sqm` 带宽为 0（未配置状态）
+
+
+## 安全浏览模式（v4.6）
+
+新增 N5000 → 安全浏览 页面，一键开关（路由器级“无痕”）：
+
+- 开启时：
+  - 启用内置广告/跟踪域名拦截列表（StevenBlack hosts，约 8 万条，随固件打包 `/etc/privacy/hosts.block`）
+  - 关闭 dnsmasq 查询日志并清空现有日志（不再记录访问域名）
+  - 暂停流量统计（trafficd）与应用识别（appfilter）
+  - 确保加密 DNS（dnscrypt-proxy DoH）与 LAN DNS 劫持在线
+- 关闭时恢复日志与统计服务
+- 「清除本地记录」可手动清空 DNS 日志与流量统计历史
+- 局限：不隐藏出口 IP/ISP 可见流量；浏览器 Cookie/历史需浏览器无痕模式配合
+- 文件：`usr/sbin/n5000-safebrowse`、`www/cgi-bin/safebrowse`、`view/n5000/safebrowse.js`、`etc/privacy/hosts.block`
