@@ -104,9 +104,11 @@ jobs:
                    openwrt/files/www/cgi-bin/traffic \
                    openwrt/files/www/cgi-bin/gameaccel \
                    openwrt/files/www/cgi-bin/mode \
+                   openwrt/files/www/cgi-bin/safebrowse \
                    openwrt/files/usr/sbin/gameaccel-apply \
                    openwrt/files/usr/sbin/trafficd \
                    openwrt/files/usr/sbin/n5000-mode-apply \
+                   openwrt/files/usr/sbin/n5000-safebrowse \
                    openwrt/files/usr/sbin/n5000-healthcheck \
                    openwrt/files/usr/sbin/n5000-backup \
                    openwrt/files/usr/sbin/n5000-logarchive \
