@@ -121,8 +121,15 @@ bw)
 	[ "$DL" -lt 1000 ] 2>/dev/null && fail "下行带宽太小"
 	uci -q set "sqm.eth1.download=$DL"
 	uci -q set "sqm.eth1.upload=$UL"
+	uci -q set n5000.mode.bw_configured='1'
 	uci -q commit sqm
-	[ "$(uci -q get sqm.eth1.enabled)" = "1" ] && /etc/init.d/sqm restart >/dev/null 2>&1
+	uci -q commit n5000
+	# 若当前处于游戏模式，带宽配置好后自动重新应用（启用 SQM）
+	if [ "$(uci -q get n5000.mode.current 2>/dev/null)" = "game" ] && [ -x /usr/sbin/n5000-mode-apply ]; then
+		/usr/sbin/n5000-mode-apply game >/dev/null 2>&1
+	elif [ "$(uci -q get sqm.eth1.enabled)" = "1" ]; then
+		/etc/init.d/sqm restart >/dev/null 2>&1
+	fi
 	dump_status
 	;;
 dev_add)
