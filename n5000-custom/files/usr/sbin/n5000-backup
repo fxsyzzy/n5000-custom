@@ -1,0 +1,80 @@
+#!/bin/sh
+# N5000 配置自动备份（AES-256 加密）
+# 用法：n5000-backup [backup|verify|list]
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+
+KEY=/etc/n5000-backup.key
+DIR=/root/backups
+STAMP=$(date +%Y%m%d-%H%M%S)
+TMP=/tmp/n5000-backup.$$
+mkdir -p "$DIR" /root/logs
+chmod 700 "$DIR"
+
+ensure_key() {
+	if [ ! -f "$KEY" ]; then
+		head -c 32 /dev/urandom | base64 > "$KEY"
+		chmod 600 "$KEY"
+		echo "已生成备份密钥: $KEY（请另行保存，丢失将无法解密备份）"
+	fi
+}
+
+do_backup() {
+	ensure_key
+	rm -rf "$TMP"; mkdir -p "$TMP/root"
+	# 配置与自定义文件
+	tar -czf "$TMP/payload.tar.gz" \
+		/etc/config /etc/collectd.conf /etc/dnscrypt-proxy2 \
+		/etc/crontabs /etc/uci-defaults /etc/sysctl.d \
+		/etc/fw_env.config /www/cgi-bin /usr/sbin/n5000-* 2>/dev/null
+	apk list --installed 2>/dev/null > "$TMP/packages.txt"
+	uci export > "$TMP/uci-export.txt" 2>/dev/null
+	cp /etc/openwrt_release "$TMP/" 2>/dev/null
+	cat /proc/mtd > "$TMP/mtd.txt" 2>/dev/null
+	tar -czf "$TMP/bundle.tar.gz" -C "$TMP" payload.tar.gz packages.txt uci-export.txt openwrt_release mtd.txt
+
+	out="$DIR/n5000-$STAMP.tar.gz.enc"
+	openssl enc -aes-256-cbc -pbkdf2 -iter 100000 -salt -md sha256 \
+		-pass "file:$KEY" -in "$TMP/bundle.tar.gz" -out "$out" || { rm -rf "$TMP"; echo "备份失败"; exit 1; }
+	sha256sum "$out" > "$out.sha256"
+	rm -rf "$TMP"
+	# 复制到 TF 数据分区（若已挂载）
+	if [ -d /mnt/sda1 ]; then
+		mkdir -p /mnt/sda1/backups 2>/dev/null
+		cp -f "$out" /mnt/sda1/backups/ 2>/dev/null
+	fi
+	# 保留最近 8 份
+	ls -1t "$DIR"/*.enc 2>/dev/null | tail -n +9 | while read -r old; do
+		rm -f "$old" "$old.sha256"
+	done
+	echo "备份完成: $out ($(du -h "$out" | awk '{print $1}'))"
+	echo "[$(date '+%F %T')] backup $out" >> /root/logs/health.log
+}
+
+do_verify() {
+	newest=$(ls -1t "$DIR"/*.enc 2>/dev/null | head -n1)
+	[ -z "$newest" ] && { echo "没有备份可验证"; exit 1; }
+	echo "验证: $newest"
+	# 校验 sha256
+	if [ -f "$newest.sha256" ]; then
+		sha256sum -c "$newest.sha256" >/dev/null 2>&1 && echo "  sha256 OK" || { echo "  sha256 校验失败"; exit 1; }
+	fi
+	# 解密并测试 tar 完整性
+	tmp="/tmp/n5000-verify.$$"
+	openssl enc -d -aes-256-cbc -pbkdf2 -iter 100000 -md sha256 -pass "file:$KEY" -in "$newest" -out "$tmp.bundle" 2>/dev/null || { echo "  解密失败"; exit 1; }
+	tar -tzf "$tmp.bundle" >/dev/null 2>&1 && echo "  解密+解包 OK ✅" || echo "  解包失败 ❌"
+	rm -f "$tmp.bundle"
+	echo "恢复方式: openssl enc -d -aes-256-cbc -pbkdf2 -iter 100000 -md sha256 -pass file:/etc/n5000-backup.key -in <备份> -out bundle.tar.gz && tar -xzf bundle.tar.gz"
+}
+
+do_list() {
+	ls -lh "$DIR"/*.enc 2>/dev/null | awk '{print $5, $9}'
+	[ -f "$KEY" ] && echo "密钥: $KEY" || echo "密钥尚未生成"
+}
+
+case "${1:-backup}" in
+backup) do_backup ;;
+verify) do_verify ;;
+list) do_list ;;
+*) echo "用法: $0 {backup|verify|list}"; exit 1 ;;
+esac
