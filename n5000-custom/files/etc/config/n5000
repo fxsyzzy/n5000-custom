@@ -1,0 +1,7 @@
+config health 'health'
+	option alert_url ''
+	option bark_url ''
+	option alert_min '30'
+
+config backup 'backup'
+	option enabled '1'
