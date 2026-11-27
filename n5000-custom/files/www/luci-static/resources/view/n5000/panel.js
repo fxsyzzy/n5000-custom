@@ -34,7 +34,7 @@ var NPCSS = [
 	'.np-panel{border:1px solid rgba(131,217,220,.24);border-radius:16px;',
 	'background:linear-gradient(180deg,rgba(200,244,249,.06),rgba(13,44,84,.28));',
 	'backdrop-filter:blur(14px) saturate(160%);-webkit-backdrop-filter:blur(14px) saturate(160%)}',
-	'.np-hero{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;padding:16px;min-height:440px}',
+	'.np-hero{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;padding:16px}',
 	'.np-hero-head{width:100%;display:flex;align-items:center;gap:8px;font-size:12px;opacity:.75}',
 	'.np-art{width:min(420px,86%);height:auto;margin:6px auto 2px;filter:drop-shadow(0 18px 30px rgba(0,0,0,.35))}',
 	'.np-name{font-size:22px;font-weight:700;letter-spacing:.4px;margin-top:2px}',
@@ -85,7 +85,7 @@ var NPCSS = [
 	'.np-chip b{font-size:13.5px;font-weight:700;color:#C8F4F9;letter-spacing:.2px;font-variant-numeric:tabular-nums}',
 	'.np-chip .dot{width:7px;height:7px;border-radius:50%;background:#35c48a;display:inline-block;box-shadow:0 0 6px rgba(53,196,138,.6)}',
 	'.np-main{grid-template-columns:1fr 400px;gap:14px}',
-	'.np-hero{min-height:520px;padding:20px}',
+	'.np-hero{padding:20px}',
 	'.np-art{width:min(520px,94%)}',
 	'.np-name{font-size:28px}',
 	'.np-sub{font-size:13px}',
@@ -107,7 +107,7 @@ var NPCSS = [
 	'.np-actions{gap:10px;padding-top:14px}',
 	'.np-act{font-size:11.5px;gap:6px}',
 	'.np-act .i{font-size:20px}',
-	'@media(min-width:1600px){.np-main{grid-template-columns:1fr 440px}.np-hero{min-height:560px}.np-art{width:min(600px,94%)}}',
+	'@media(min-width:1600px){.np-main{grid-template-columns:1fr 440px}}',
 	'@media(max-width:1100px){.np-main{grid-template-columns:1fr 360px}}',
 	'@media(max-width:1100px){.np-main{grid-template-columns:1fr}.np-actions{grid-template-columns:repeat(5,1fr)}.np-stats{grid-template-columns:repeat(3,1fr)}}',
 	'@media(max-width:640px){.np-actions{grid-template-columns:repeat(4,1fr)}.np-stats{grid-template-columns:repeat(2,1fr)}}',
@@ -120,7 +120,6 @@ var NPCSS = [
 	'.np-badge{text-transform:uppercase;letter-spacing:.12em}',
 	'.np-rate{text-transform:uppercase;letter-spacing:.1em;font-size:11px}',
 	'.np-rate b{font-size:15px;letter-spacing:.02em}',
-	'.np-hero{min-height:480px}',
 	'.np-art{width:min(500px,92%)}',
 ].join('\n');
 
@@ -161,7 +160,6 @@ return view.extend({
 				E('span', { 'id': 'np-herostatus' }, ['在线']),
 				E('span', { 'style': 'margin-left:auto', 'id': 'np-heroip' }, [' '])
 			]),
-			E('img', { 'class': 'np-art', 'src': '/luci-static/n5000/router.svg?v=5', 'alt': 'N5000' }),
 			E('div', { 'class': 'np-name' }, ['NRadio N5000']),
 			E('div', { 'class': 'np-sub' }, ['MT7987A 四核 ARM · WiFi 7 BE5000 · 1GB RAM · 双 2.5G']),
 			E('div', { 'class': 'np-callouts' }, [
