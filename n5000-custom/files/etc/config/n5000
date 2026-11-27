@@ -8,3 +8,6 @@ config backup 'backup'
 
 config mode 'mode'
 	option current 'entertainment'
+
+config privacy 'privacy'
+	option enabled '0'
