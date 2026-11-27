@@ -1,0 +1,5 @@
+#!/bin/sh
+# 首次启动：安全浏览默认关闭
+uci -q set n5000.privacy.enabled='0'
+uci -q commit n5000
+exit 0
