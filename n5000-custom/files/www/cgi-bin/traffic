@@ -11,9 +11,7 @@ parse_qs() { printf '%s' "$QUERY_STRING" | tr '&' '\n' | sed -n "s/^$1=//p" | he
 ACTION=$(parse_qs action)
 [ -z "$ACTION" ] && ACTION=summary
 
-case "$ACTION" in
-summary)
-	send_json
+gen_summary() {
 	TODAY=$(date +%F)
 	MONTH=$(date +%Y-%m)
 	RT=/tmp/trafficd/month.json
@@ -58,6 +56,27 @@ summary)
 			days: ($all.days | to_entries | map({date: .key, rx: (.value.rx // 0), tx: (.value.tx // 0), total: ((.value.rx // 0) + (.value.tx // 0))}) | sort_by(.date) | .[-30:])
 		}
 	' $FILES
+}
+
+case "$ACTION" in
+summary)
+	CACHE=/tmp/traffic.summary.cache
+	_now=$(date +%s)
+	if [ -f "$CACHE" ]; then
+		_ts=$(sed -n '1p' "$CACHE" 2>/dev/null)
+		case "$_ts" in
+		''|*[!0-9]*) ;;
+		*) if [ $((_now - _ts)) -le 60 ] && [ $((_now - _ts)) -ge 0 ]; then
+			send_json
+			sed -n '2,$p' "$CACHE"
+			exit 0
+		fi ;;
+		esac
+	fi
+	BODY=$(gen_summary)
+	send_json
+	printf '%s\n' "$BODY"
+	printf '%s\n%s\n' "$_now" "$BODY" > "$CACHE"
 	;;
 *)
 	send_json
