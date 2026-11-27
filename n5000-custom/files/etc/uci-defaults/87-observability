@@ -1,0 +1,20 @@
+#!/bin/sh
+# 首次启动：可观测性（collectd 统计 / SNMP / 定时健康检查与备份）
+mkdir -p /srv/rrd /root/logs /root/backups
+chmod 700 /root/backups
+
+[ -x /etc/init.d/collectd ] && {
+	/etc/init.d/collectd enable >/dev/null 2>&1
+	/etc/init.d/collectd restart >/dev/null 2>&1
+}
+[ -x /etc/init.d/snmpd ] && {
+	/etc/init.d/snmpd enable >/dev/null 2>&1
+	/etc/init.d/snmpd restart >/dev/null 2>&1
+}
+[ -x /etc/init.d/cron ] && {
+	/etc/init.d/cron enable >/dev/null 2>&1
+	/etc/init.d/cron restart >/dev/null 2>&1
+}
+# 立即生成第一份备份
+[ -x /usr/sbin/n5000-backup ] && /usr/sbin/n5000-backup >/dev/null 2>&1 &
+exit 0
