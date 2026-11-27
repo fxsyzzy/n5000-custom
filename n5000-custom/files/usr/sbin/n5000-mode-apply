@@ -1,0 +1,73 @@
+#!/bin/sh
+# N5000 运行模式应用
+# 用法: n5000-mode-apply high|low|entertainment|game
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+
+MODE="$1"
+case "$MODE" in
+high|low|entertainment|game) ;;
+*) echo "unknown mode: $MODE"; exit 1 ;;
+esac
+
+FREQ_MIN=500000
+case "$MODE" in
+high)
+	GOV=performance; FREQ_MAX=2000000; HNAT=1; SQM=0 ;;
+low)
+	GOV=powersave; FREQ_MAX=1300000; HNAT=1; SQM=0 ;;
+entertainment)
+	GOV=schedutil; FREQ_MAX=2000000; HNAT=1; SQM=0 ;;
+game)
+	GOV=performance; FREQ_MAX=2000000; HNAT=0; SQM=1 ;;
+esac
+
+# 1) CPU 调频
+for pol in /sys/devices/system/cpu/cpufreq/policy*; do
+	[ -d "$pol" ] || continue
+	echo "$FREQ_MIN" > "$pol/scaling_min_freq" 2>/dev/null
+	echo "$FREQ_MAX" > "$pol/scaling_max_freq" 2>/dev/null
+	echo "$GOV" > "$pol/scaling_governor" 2>/dev/null
+done
+
+# 2) 流量加速（HNAT）
+uci -q set firewall.@defaults[0].flow_offloading='1'
+uci -q set firewall.@defaults[0].flow_offloading_hw="$HNAT"
+uci -q commit firewall
+
+# 3) SQM（游戏模式启用低延迟整形）
+if [ "$SQM" = "1" ]; then
+	uci -q set sqm.eth1.enabled='1'
+	[ -f /usr/lib/sqm/layer_cake.qos ] && uci -q set sqm.eth1.script='layer_cake.qos'
+else
+	uci -q set sqm.eth1.enabled='0'
+fi
+uci -q commit sqm
+
+# 4) 与游戏加速页状态同步
+if [ "$MODE" = "game" ]; then
+	uci -q set gameaccel.settings.mode='lowlatency'
+else
+	uci -q set gameaccel.settings.mode='speed'
+fi
+uci -q commit gameaccel
+
+# 5) 应用服务
+/etc/init.d/firewall restart >/dev/null 2>&1
+if [ "$SQM" = "1" ]; then
+	/etc/init.d/sqm restart >/dev/null 2>&1
+else
+	/etc/init.d/sqm stop >/dev/null 2>&1
+fi
+
+# 6) WiFi 省电关闭（AP 模式通常无效，容错）
+for d in /sys/class/net/phy0.0-ap0 /sys/class/net/phy0.1-ap0; do
+	[ -d "$d" ] && iw dev "$(basename "$d")" set power_save off 2>/dev/null
+done
+
+# 7) 应用 DSCP 规则并记录模式
+/usr/sbin/gameaccel-apply >/dev/null 2>&1
+uci -q set n5000.mode.current="$MODE"
+uci -q commit n5000
+
+echo "mode=$MODE governor=$GOV max_freq=$FREQ_MAX hnat=$HNAT sqm=$SQM"
