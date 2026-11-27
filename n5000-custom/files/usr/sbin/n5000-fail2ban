@@ -1,0 +1,133 @@
+#!/bin/sh
+# N5000 防暴破（轻量 fail2ban）：扫描登录失败，nft 封禁源 IP
+# 用法: n5000-fail2ban apply|status|unban <ip>|unbanall
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+
+THRESH=5          # 窗口内失败次数阈值
+WINDOW=900        # 统计窗口（秒，扫描日志缓冲区内即可）
+BAN=3600          # 封禁时长（秒）
+STATE=/tmp/n5000-fail2ban.state
+LOG=/root/logs/fail2ban.log
+mkdir -p /root/logs
+
+setup_nft() {
+	nft list table inet f2b >/dev/null 2>&1 && return
+	nft add table inet f2b
+	nft 'add set inet f2b blocked { type ipv4_addr; flags timeout; }'
+	nft 'add chain inet f2b input { type filter hook input priority -10; policy accept; }'
+	nft 'add chain inet f2b forward { type filter hook forward priority -10; policy accept; }'
+	nft 'add rule inet f2b input ip saddr @blocked drop'
+	nft 'add rule inet f2b forward ip saddr @blocked drop'
+}
+
+is_banned() {
+	nft list set inet f2b blocked 2>/dev/null | grep -q "$1"
+}
+
+ban_ip() {
+	ip="$1"
+	reason="$2"
+	case "$ip" in
+		''|127.*|0.0.0.0|192.168.88.1|192.168.89.1) return ;;
+	esac
+	is_banned "$ip" && return
+	nft add element inet f2b blocked "{ $ip timeout ${BAN}s }" 2>/dev/null || return
+	echo "$(date '+%F %T') ban $ip reason=$reason" >> "$LOG"
+}
+
+do_apply() {
+	setup_nft
+	# 统计日志中的失败来源（日志缓冲区有限，够用）
+	nft list set inet f2b blocked 2>/dev/null | grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}' > /tmp/f2b.current 2>/dev/null
+	COUNTED=/tmp/f2b.count
+	: > "$COUNTED"
+	logread 2>/dev/null | grep -iE "bad password attempt|login attempt for nonexistent|rejected login|authentication failure|auth failed" \
+		| grep -oE "from ([0-9]{1,3}\.){3}[0-9]{1,3}|from <([0-9]{1,3}\.){3}[0-9]{1,3}" \
+		| sed -E 's/^from <//; s/^from //' >> "$COUNTED" 2>/dev/null
+	[ -s "$COUNTED" ] || { rm -f "$COUNTED" /tmp/f2b.current; return; }
+	BLOCKED=0
+	for ip in $(sort "$COUNTED" | uniq -c | awk -v t="$THRESH" '$1 >= t {print $2}'); do
+		ban_ip "$ip" "bruteforce"
+		BLOCKED=$((BLOCKED + 1))
+	done
+	rm -f "$COUNTED" /tmp/f2b.current
+	[ "$BLOCKED" -gt 0 ] && echo "$(date '+%F %T') apply: $BLOCKED ip(s) checked" >> "$LOG"
+	# 清理已过期封禁的统计（nft timeout 自动解封，这里仅维护日志）
+	exit 0
+}
+
+do_status() {
+	setup_nft
+	CNT=0
+	[ -x /usr/bin/true ] && CNT=0
+	printf 'Content-Type: application/json; charset=utf-8\r\nCache-Control: no-store\r\n\r\n'
+	BLOCKED_JSON=""
+	nft list set inet f2b blocked 2>/dev/null | grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}' | sort -u > /tmp/f2b.list
+	while read -r ip; do
+		[ -z "$ip" ] && continue
+		item=$(jq -n -c --arg ip "$ip" '{ip:$ip}')
+		if [ -z "$BLOCKED_JSON" ]; then BLOCKED_JSON="$item"; else BLOCKED_JSON="$BLOCKED_JSON,$item"; fi
+	done < /tmp/f2b.list
+	rm -f /tmp/f2b.list
+	# 最近失败统计
+	FAILS=""
+	logread 2>/dev/null | grep -iE "bad password attempt|login attempt for nonexistent|rejected login|authentication failure|auth failed" \
+		| grep -oE "from ([0-9]{1,3}\.){3}[0-9]{1,3}" | sed -E 's/^from //' | sort | uniq -c | sort -rn | head -5 > /tmp/f2b.fails
+	while read -r cnt ip; do
+		[ -z "$ip" ] && continue
+		item=$(jq -n -c --arg ip "$ip" --argjson c "${cnt:-0}" '{ip:$ip,count:$c}')
+		if [ -z "$FAILS" ]; then FAILS="$item"; else FAILS="$FAILS,$item"; fi
+	done < /tmp/f2b.fails
+	rm -f /tmp/f2b.fails
+	BANLOG=$(grep -c " ban " "$LOG" 2>/dev/null)
+	jq -n -c --argjson blocked "[$BLOCKED_JSON]" --argjson fails "[$FAILS]" --argjson total "${BANLOG:-0}" \
+		'{code:0,blocked:$blocked,recent_failures:$fails,bans_total:$total}'
+}
+
+do_unban() {
+	ip="$1"
+	[ -z "$ip" ] && exit 1
+	nft delete element inet f2b blocked "{ $ip }" 2>/dev/null
+	echo "$(date '+%F %T') unban $ip" >> "$LOG"
+	exit 0
+}
+
+do_unbanall() {
+	for ip in $(nft list set inet f2b blocked 2>/dev/null | grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}'); do
+		nft delete element inet f2b blocked "{ $ip }" 2>/dev/null
+	done
+	echo "$(date '+%F %T') unban all" >> "$LOG"
+	exit 0
+}
+
+do_json() {
+	setup_nft
+	BLOCKED_JSON=""
+	nft list set inet f2b blocked 2>/dev/null | grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}' | sort -u > /tmp/f2b.list
+	while read -r ip; do
+		[ -z "$ip" ] && continue
+		item=$(jq -n -c --arg ip "$ip" '{ip:$ip}')
+		if [ -z "$BLOCKED_JSON" ]; then BLOCKED_JSON="$item"; else BLOCKED_JSON="$BLOCKED_JSON,$item"; fi
+	done < /tmp/f2b.list
+	rm -f /tmp/f2b.list
+	FAILS=""
+	logread 2>/dev/null | grep -iE "bad password attempt|login attempt for nonexistent|rejected login|authentication failure|auth failed" \
+		| grep -oE "from ([0-9]{1,3}\.){3}[0-9]{1,3}" | sed -E 's/^from //' | sort | uniq -c | sort -rn | head -5 > /tmp/f2b.fails
+	while read -r cnt ip; do
+		[ -z "$ip" ] && continue
+		item=$(jq -n -c --arg ip "$ip" --argjson c "${cnt:-0}" '{ip:$ip,count:$c}')
+		if [ -z "$FAILS" ]; then FAILS="$item"; else FAILS="$FAILS,$item"; fi
+	done < /tmp/f2b.fails
+	rm -f /tmp/f2b.fails
+	jq -n -c --argjson blocked "[$BLOCKED_JSON]" --argjson fails "[$FAILS]" '{code:0,blocked:$blocked,recent_failures:$fails}'
+}
+
+case "$1" in
+apply) do_apply ;;
+json) do_json ;;
+status) do_status ;;
+unban) do_unban "$2" ;;
+unbanall) do_unbanall ;;
+*) echo "用法: $0 apply|status|unban <ip>|unbanall"; exit 1 ;;
+esac
