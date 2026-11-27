@@ -1,0 +1,40 @@
+config agent
+	option agentaddress 'udp:192.168.88.1:161'
+
+config system
+	option sysLocation 'N5000'
+	option sysContact 'admin@n5000.lan'
+	option sysName 'N5000'
+
+config com2sec public
+	option secname ro
+	option source 192.168.88.0/24
+	option community n5000ro
+
+config group public_v2c
+	option group public
+	option version v2c
+	option secname ro
+
+config group public_v1
+	option group public
+	option version v1
+	option secname ro
+
+config view all
+	option viewname all
+	option type included
+	option oid .1
+
+config access public_access
+	option group public
+	option context none
+	option version any
+	option level noauth
+	option prefix exact
+	option read all
+	option write none
+	option notify none
+
+config snmpd general
+	option enabled '1'
