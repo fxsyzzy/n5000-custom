@@ -1,0 +1,126 @@
+#!/bin/sh
+# N5000 安全浏览模式（路由器侧“无痕”）
+# 用法: n5000-safebrowse on|off|status|clear
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+
+BLOCKLIST=/etc/privacy/hosts.block
+DNSLOG=/var/log/dnsmasq.log
+
+get() { uci -q get "n5000.$1" 2>/dev/null; }
+set_uci() { uci -q set "n5000.$1=$2"; }
+json_esc() { printf '%s' "$1" | tr -d '\n\r"' ; }
+
+svc_enabled() { [ -x "/etc/init.d/$1" ] && /etc/init.d/"$1" enabled >/dev/null 2>&1 && echo 1 || echo 0; }
+
+do_on() {
+	[ -f "$BLOCKLIST" ] || { echo "缺少拦截列表: $BLOCKLIST"; exit 1; }
+
+	# 记录并停用会记录浏览行为的服务（流量统计、应用识别）
+	set_uci privacy.saved_appfilter "$(svc_enabled appfilter)"
+	set_uci privacy.saved_trafficd "$(svc_enabled trafficd)"
+	/etc/init.d/appfilter stop >/dev/null 2>&1
+	/etc/init.d/appfilter disable >/dev/null 2>&1
+	/etc/init.d/trafficd stop >/dev/null 2>&1
+	/etc/init.d/trafficd disable >/dev/null 2>&1
+
+	# 关闭 DNS 查询日志（appfilter 的域名识别来源）
+	uci -q delete dhcp.@dnsmasq[0].logqueries 2>/dev/null
+	uci -q delete dhcp.@dnsmasq[0].logfacility 2>/dev/null
+	: > "$DNSLOG" 2>/dev/null
+	chmod 600 "$DNSLOG" 2>/dev/null
+
+	# 挂载拦截列表
+	uci -q delete dhcp.@dnsmasq[0].addnhosts 2>/dev/null
+	uci -q add_list "dhcp.@dnsmasq[0].addnhosts=$BLOCKLIST"
+	uci -q commit dhcp
+
+	# 确保加密 DNS 与 DNS 劫持在线
+	/etc/init.d/dnscrypt-proxy enable >/dev/null 2>&1
+	/etc/init.d/dnscrypt-proxy restart >/dev/null 2>&1
+	if ! uci -q get firewall.dns_hijack >/dev/null 2>&1; then
+		uci -q set firewall.dns_hijack=redirect
+		uci -q set firewall.dns_hijack.name='DNS hijack'
+		uci -q set firewall.dns_hijack.src='lan'
+		uci -q set firewall.dns_hijack.proto='tcp udp'
+		uci -q set firewall.dns_hijack.src_dport='53'
+		uci -q set firewall.dns_hijack.dest_ip='192.168.88.1'
+		uci -q set firewall.dns_hijack.dest_port='53'
+		uci -q set firewall.dns_hijack.target='DNAT'
+		uci -q commit firewall
+		/etc/init.d/firewall reload >/dev/null 2>&1
+	fi
+
+	/etc/init.d/dnsmasq restart >/dev/null 2>&1
+	set_uci privacy.enabled '1'
+	uci -q commit n5000
+	echo "safe browsing ON (blocked domains: $(grep -cvE '^(#|$)' "$BLOCKLIST" 2>/dev/null))"
+}
+
+do_off() {
+	uci -q delete dhcp.@dnsmasq[0].addnhosts 2>/dev/null
+	uci -q commit dhcp
+
+	# 恢复 DNS 查询日志（流量统计/应用识别需要）
+	uci -q set dhcp.@dnsmasq[0].logqueries='1'
+	uci -q set dhcp.@dnsmasq[0].logfacility="$DNSLOG"
+	uci -q commit dhcp
+
+	# 按之前状态恢复服务
+	sa=$(get privacy.saved_appfilter); [ -z "$sa" ] && sa=1
+	st=$(get privacy.saved_trafficd); [ -z "$st" ] && st=1
+	[ "$sa" = "1" ] && { /etc/init.d/appfilter enable >/dev/null 2>&1; /etc/init.d/appfilter start >/dev/null 2>&1; }
+	[ "$st" = "1" ] && { /etc/init.d/trafficd enable >/dev/null 2>&1; /etc/init.d/trafficd start >/dev/null 2>&1; }
+
+	/etc/init.d/dnsmasq restart >/dev/null 2>&1
+	set_uci privacy.enabled '0'
+	uci -q delete n5000.privacy.saved_appfilter 2>/dev/null
+	uci -q delete n5000.privacy.saved_trafficd 2>/dev/null
+	uci -q commit n5000
+	echo "safe browsing OFF"
+}
+
+do_clear() {
+	: > "$DNSLOG" 2>/dev/null
+	chmod 600 "$DNSLOG" 2>/dev/null
+	rm -f /etc/traffic/*.json 2>/dev/null
+	rm -f /tmp/trafficd/*.json 2>/dev/null
+	rm -f /tmp/rstatus.cache /tmp/traffic.summary.cache /tmp/appfilter.state.cache 2>/dev/null
+	[ -x /usr/sbin/appfilter ] && /usr/sbin/appfilter reset >/dev/null 2>&1
+	echo "local history cleared"
+}
+
+do_status() {
+	EN=$(get privacy.enabled); [ -z "$EN" ] && EN=0
+	BLOCK_N=0
+	[ -f "$BLOCKLIST" ] && BLOCK_N=$(grep -cvE '^(#|$)' "$BLOCKLIST" 2>/dev/null)
+	LOGQ=$(uci -q get dhcp.@dnsmasq[0].logqueries 2>/dev/null); [ -z "$LOGQ" ] && LOGQ=0
+	ADDNH=$(uci -q show dhcp 2>/dev/null | grep -c "addnhosts" )
+	DNSR=0; pidof dnscrypt-proxy >/dev/null 2>&1 && DNSR=1
+	HIJ=0; uci -q get firewall.dns_hijack >/dev/null 2>&1 && HIJ=1
+	AFE=$(svc_enabled appfilter); TDE=$(svc_enabled trafficd)
+	AFR=0; pidof appfilter >/dev/null 2>&1 && AFR=1
+	TDR=0; pidof trafficd >/dev/null 2>&1 && TDR=1
+	LOGSZ=0; [ -f "$DNSLOG" ] && LOGSZ=$(wc -c < "$DNSLOG" 2>/dev/null)
+	printf 'Content-Type: application/json; charset=utf-8\r\nCache-Control: no-store\r\n\r\n'
+	printf '{"code":0,"enabled":%s,"blocklist_entries":%s,"dns_logging":%s,"addnhosts":%s,"encrypted_dns":%s,"dns_hijack":%s,"appfilter_enabled":%s,"trafficd_enabled":%s,"appfilter_running":%s,"trafficd_running":%s,"dns_log_size":%s}\n' \
+		"$([ "$EN" = "1" ] && echo true || echo false)" \
+		"$BLOCK_N" \
+		"$([ "$LOGQ" = "1" ] && echo true || echo false)" \
+		"$ADDNH" \
+		"$([ "$DNSR" = "1" ] && echo true || echo false)" \
+		"$([ "$HIJ" = "1" ] && echo true || echo false)" \
+		"$([ "$AFE" = "1" ] && echo true || echo false)" \
+		"$([ "$TDE" = "1" ] && echo true || echo false)" \
+		"$([ "$AFR" = "1" ] && echo true || echo false)" \
+		"$([ "$TDR" = "1" ] && echo true || echo false)" \
+		"$LOGSZ"
+}
+
+case "$1" in
+on) do_on ;;
+off) do_off ;;
+status) do_status ;;
+clear) do_clear ;;
+*) echo "用法: $0 on|off|status|clear"; exit 1 ;;
+esac
