@@ -739,3 +739,10 @@ N5000              order 0   分组（展开）
 - 防暴破状态：封禁 IP 列表、最近失败来源、解封/全部解封
 - 告警推送配置（Bark / 通用 Webhook）
 - 访客网络开关、密码查看/修改、在线数
+
+## 护眼模式（v4.8）
+
+- 面板右上角新增「🌿 护眼」按钮（主题切换按钮旁）
+- 开启后全站叠加暖色滤镜（降低蓝光刺激），适合晨光/浅色主题；设置保存在浏览器 localStorage，跨页面保持
+- 实现：`luci-static/n5000/eyecare.js`（全局加载，见 argon `page_scripts.ut` 覆盖）、`view/n5000/panel.js` 按钮
+- 兼容所有 Argon 页面；Bootstrap/Carbon 主题下按钮仍可切换，但全局滤镜只在 Argon 主题生效
