@@ -18,15 +18,20 @@ dump_status() {
 	SQMD=$(uci -q get sqm.eth1.download 2>/dev/null); [ -z "$SQMD" ] && SQMD=0
 	SQMU=$(uci -q get sqm.eth1.upload 2>/dev/null); [ -z "$SQMU" ] && SQMU=0
 	TEMP=$(cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null); [ -z "$TEMP" ] && TEMP=0
+	BWCONF=$(uci -q get n5000.mode.bw_configured 2>/dev/null); [ -z "$BWCONF" ] && BWCONF=0
+	WARN=""
+	if [ "$MODE" = "game" ] && [ "$SQME" != "1" ]; then
+		WARN="游戏模式未生效：尚未配置 SQM 带宽，已回退为硬件加速（不限速）。请先到「游戏加速」页设置下行/上行带宽。"
+	fi
 	PPE=0
 	[ -r /sys/kernel/debug/ppe0/entries ] && PPE=$(wc -l < /sys/kernel/debug/ppe0/entries 2>/dev/null)
 	case "$PPE" in ''|*[!0-9]*) PPE=0 ;; esac
 	jq -n -c --arg mode "$MODE" --arg gov "$GOV" --arg maxf "$MAXF" \
 		--arg hnat "$FLOW" --arg sqme "$SQME" --arg sqmd "$SQMD" --arg sqmu "$SQMU" \
-		--argjson temp "$TEMP" --argjson ppe "$PPE" \
+		--argjson temp "$TEMP" --argjson ppe "$PPE" --arg bwconf "$BWCONF" --arg warn "$WARN" \
 		'{code:0,mode:$mode,governor:$gov,max_freq:($maxf|tonumber? // 0),
 		  hnat:($hnat=="1"),sqm:{enabled:($sqme=="1"),download:($sqmd|tonumber? // 0),upload:($sqmu|tonumber? // 0)},
-		  temp:($temp/1000|floor),ppe:$ppe}'
+		  temp:($temp/1000|floor),ppe:$ppe,bw_configured:($bwconf=="1"),warn:$warn}'
 }
 
 ACTION=$(parse_qs action)
