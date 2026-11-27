@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>N5000 Dashboard</title>
+<title>DeepWrt Dashboard</title>
 <link rel="icon" type="image/png" href="/luci-static/n5000/mascot-64.png">
 <style>
 :root{
@@ -71,7 +71,7 @@ canvas.spark{width:100%;height:100%;min-height:66px;display:block}
 <div class="wrap">
   <header>
     <h1>N5000</h1>
-    <span class="sub" id="sub">OpenWrt</span>
+    <span class="sub" id="sub">DeepWrt</span>
     <span class="clock" id="clock">--:--:--</span>
     <button id="lang" class="hbtn" title="切换语言 / Switch language">EN</button>
     
@@ -271,7 +271,7 @@ canvas.spark{width:100%;height:100%;min-height:66px;display:block}
 
   function render(d){
     lastData = d;
-    $("sub").textContent = d.host || "OpenWrt";
+    $("sub").textContent = d.host || "DeepWrt";
     $("uptime").textContent = fmtUptime(d.uptime);
     $("booted").textContent = t('booted') + new Date((d.ts - d.uptime)*1000).toLocaleString(lang === 'zh' ? "zh-CN" : "en-US", {hour12:false});
 
