@@ -1,0 +1,52 @@
+#!/bin/sh
+# 运行模式管理接口
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+
+send_json() { printf 'Content-Type: application/json; charset=utf-8\r\nCache-Control: no-store\r\n\r\n'; }
+fail() { send_json; jq -n --arg e "$1" '{code:-1,error:$e}'; exit 0; }
+read_body() { len="${CONTENT_LENGTH:-0}"; [ "$len" -gt 0 ] 2>/dev/null && head -c "$len"; }
+parse_qs() { printf '%s' "$QUERY_STRING" | tr '&' '\n' | sed -n "s/^$1=//p" | head -n1; }
+
+dump_status() {
+	send_json
+	MODE=$(uci -q get n5000.mode.current 2>/dev/null); [ -z "$MODE" ] && MODE=entertainment
+	GOV=$(cat /sys/devices/system/cpu/cpufreq/policy0/scaling_governor 2>/dev/null)
+	MAXF=$(cat /sys/devices/system/cpu/cpufreq/policy0/scaling_max_freq 2>/dev/null)
+	FLOW=$(uci -q get firewall.@defaults[0].flow_offloading_hw 2>/dev/null); [ -z "$FLOW" ] && FLOW=0
+	SQME=$(uci -q get sqm.eth1.enabled 2>/dev/null); [ -z "$SQME" ] && SQME=0
+	SQMD=$(uci -q get sqm.eth1.download 2>/dev/null); [ -z "$SQMD" ] && SQMD=0
+	SQMU=$(uci -q get sqm.eth1.upload 2>/dev/null); [ -z "$SQMU" ] && SQMU=0
+	TEMP=$(cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null); [ -z "$TEMP" ] && TEMP=0
+	PPE=0
+	[ -r /sys/kernel/debug/ppe0/entries ] && PPE=$(wc -l < /sys/kernel/debug/ppe0/entries 2>/dev/null)
+	case "$PPE" in ''|*[!0-9]*) PPE=0 ;; esac
+	jq -n -c --arg mode "$MODE" --arg gov "$GOV" --arg maxf "$MAXF" \
+		--arg hnat "$FLOW" --arg sqme "$SQME" --arg sqmd "$SQMD" --arg sqmu "$SQMU" \
+		--argjson temp "$TEMP" --argjson ppe "$PPE" \
+		'{code:0,mode:$mode,governor:$gov,max_freq:($maxf|tonumber? // 0),
+		  hnat:($hnat=="1"),sqm:{enabled:($sqme=="1"),download:($sqmd|tonumber? // 0),upload:($sqmu|tonumber? // 0)},
+		  temp:($temp/1000|floor),ppe:$ppe}'
+}
+
+ACTION=$(parse_qs action)
+[ -z "$ACTION" ] && ACTION=status
+
+case "$ACTION" in
+status) dump_status ;;
+set)
+	DATA=$(read_body)
+	M=$(printf '%s' "$DATA" | jq -r '.mode // empty' 2>/dev/null)
+	case "$M" in
+	high|low|entertainment|game) ;;
+	*) fail "mode 必须是 high/low/entertainment/game" ;;
+	esac
+	[ -x /usr/sbin/n5000-mode-apply ] || fail "缺少 n5000-mode-apply"
+	OUT=$(/usr/sbin/n5000-mode-apply "$M" 2>&1)
+	[ $? -ne 0 ] && fail "应用失败: $OUT"
+	dump_status
+	;;
+*)
+	fail "unknown action"
+	;;
+esac
