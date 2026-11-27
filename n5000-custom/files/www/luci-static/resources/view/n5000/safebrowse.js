@@ -3,6 +3,15 @@
 'require poll';
 
 var SCSS = [
+	'.sb-card{background:#fff;color:#111}',
+	'html[data-argon-mode="dark"] .sb-card, html[data-np-dark="1"] .sb-card{background:#141a21;border-color:#2a3440;color:#e6e6e6}',
+	'html[data-argon-mode="dark"] .sb-card .s, html[data-np-dark="1"] .sb-card .s{color:rgba(230,230,230,.6)}',
+	'html[data-argon-mode="dark"] .sb-hero, html[data-np-dark="1"] .sb-hero{background:#0f141a;border-color:#2a3440;color:#e6e6e6}',
+	'html[data-argon-mode="dark"] .sb-hero .txt .sub, html[data-np-dark="1"] .sb-hero .txt .sub{color:rgba(230,230,230,.6)}',
+	'html[data-argon-mode="dark"] .sb-list, html[data-np-dark="1"] .sb-list{background:#141a21;border-color:#2a3440;color:#e6e6e6}',
+	'html[data-argon-mode="dark"] .sb-switch, html[data-np-dark="1"] .sb-switch{background:#1a222b;border-color:#39424d;color:#e6e6e6}',
+	'html[data-argon-mode="dark"] .sb-btn, html[data-np-dark="1"] .sb-btn{background:#1a222b;border-color:#39424d;color:#e6e6e6}',
+	'html[data-argon-mode="dark"] .sb-btn.danger, html[data-np-dark="1"] .sb-btn.danger{border-color:#c05;color:#ff8fab}',
 	'.sb-hero{padding:18px 20px;border:1px solid #d9d9d9;background:#fafafa;border-radius:2px;margin-bottom:14px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}',
 	'.sb-hero .ico{font-size:40px;line-height:1}',
 	'.sb-hero .txt{flex:1;min-width:220px}',
@@ -47,6 +56,14 @@ return view.extend({
 
 	renderInner: function(st) {
 		var self = this;
+		try {
+			var _c = getComputedStyle(document.body).color || '';
+			var _m = _c.match(/(\d+)/g);
+			if (_m && _m.length >= 3) {
+				var _l = 0.299 * +_m[0] + 0.587 * +_m[1] + 0.114 * +_m[2];
+				document.documentElement.setAttribute('data-np-dark', _l > 160 ? '1' : '');
+			}
+		} catch (e) {}
 		this.st = st || {};
 
 		this.elSwitch = E('button', { 'class': 'sb-switch', click: function() {
