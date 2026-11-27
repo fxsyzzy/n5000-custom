@@ -9,11 +9,11 @@ CACHE=/tmp/rstatus.cache
 SLOW=/tmp/rstatus.slow
 _now=$(date +%s)
 
-# 5 秒缓存（面板/仪表盘轮询 10s，基本都命中）
+# 60 秒缓存（cron 每分钟预热，页面加载全部命中）
 if [ -f "$CACHE" ]; then
 	_ts=$(sed -n '1p' "$CACHE" 2>/dev/null)
 	case "$_ts" in ''|*[!0-9]*) ;; *)
-		if [ $((_now - _ts)) -le 5 ] && [ $((_now - _ts)) -ge 0 ]; then
+		if [ $((_now - _ts)) -le 60 ] && [ $((_now - _ts)) -ge 0 ]; then
 			sed -n '2p' "$CACHE"
 			exit 0
 		fi
