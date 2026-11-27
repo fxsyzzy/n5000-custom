@@ -11,8 +11,23 @@ ACTION=$(parse_qs action)
 
 case "$ACTION" in
 state)
+	CACHE=/tmp/appfilter.state.cache
+	_now=$(date +%s)
+	if [ -f "$CACHE" ]; then
+		_ts=$(sed -n '1p' "$CACHE" 2>/dev/null)
+		case "$_ts" in
+		''|*[!0-9]*) ;;
+		*) if [ $((_now - _ts)) -le 60 ] && [ $((_now - _ts)) -ge 0 ]; then
+			send_json
+			sed -n '2,$p' "$CACHE"
+			exit 0
+		fi ;;
+		esac
+	fi
+	BODY=$(/usr/sbin/appfilter state)
 	send_json
-	/usr/sbin/appfilter state
+	printf '%s\n' "$BODY"
+	printf '%s\n%s\n' "$_now" "$BODY" > "$CACHE"
 	;;
 cats)
 	send_json
