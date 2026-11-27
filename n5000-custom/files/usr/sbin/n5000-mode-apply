@@ -22,6 +22,26 @@ game)
 	GOV=performance; FREQ_MAX=2000000; HNAT=0; SQM=1 ;;
 esac
 
+# 游戏模式安全策略：未配置带宽时不做限速（回退为 HNAT，避免误限速）
+SQM_WARN=0
+if [ "$SQM" = "1" ]; then
+	DL=$(uci -q get sqm.eth1.download 2>/dev/null)
+	UL=$(uci -q get sqm.eth1.upload 2>/dev/null)
+	BW_CONF=$(uci -q get n5000.mode.bw_configured 2>/dev/null)
+	unconf=0
+	case "$DL" in ''|0|*[!0-9]*) unconf=1 ;; esac
+	case "$UL" in ''|0|*[!0-9]*) unconf=1 ;; esac
+	# 占位默认值（85M/10M）且未标记已配置，同样视为未配置
+	if [ "$BW_CONF" != "1" ] && [ "$DL" = "85000" ] && [ "$UL" = "10000" ]; then
+		unconf=1
+	fi
+	if [ "$unconf" = "1" ]; then
+		SQM=0
+		HNAT=1
+		SQM_WARN=1
+	fi
+fi
+
 # 1) CPU 调频
 for pol in /sys/devices/system/cpu/cpufreq/policy*; do
 	[ -d "$pol" ] || continue
@@ -70,4 +90,7 @@ done
 uci -q set n5000.mode.current="$MODE"
 uci -q commit n5000
 
+if [ "$SQM_WARN" = "1" ]; then
+	echo "warn=bandwidth_not_configured"
+fi
 echo "mode=$MODE governor=$GOV max_freq=$FREQ_MAX hnat=$HNAT sqm=$SQM"
