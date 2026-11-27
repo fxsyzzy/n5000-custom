@@ -2,6 +2,7 @@
 0 * * * * /usr/sbin/n5000-logarchive >/dev/null 2>&1
 30 3 * * 0 /usr/sbin/n5000-backup >/dev/null 2>&1
 # 预热缓存：让 N5000 页面加载直接命中（避免切页白屏）
-*/1 * * * * wget -q -O /dev/null "http://127.0.0.1/cgi-bin/rstatus" 2>/dev/null # prewarm rstatus
-*/2 * * * * wget -q -O /dev/null "http://127.0.0.1/cgi-bin/traffic?action=summary" 2>/dev/null # prewarm traffic
-*/2 * * * * wget -q -O /dev/null "http://127.0.0.1/cgi-bin/appfilter?action=state" 2>/dev/null # prewarm appfilter
+*/1 * * * * wget --no-check-certificate -q -O /dev/null "https://127.0.0.1/cgi-bin/rstatus" 2>/dev/null # prewarm rstatus
+*/2 * * * * wget --no-check-certificate -q -O /dev/null "https://127.0.0.1/cgi-bin/traffic?action=summary" 2>/dev/null # prewarm traffic
+*/2 * * * * wget --no-check-certificate -q -O /dev/null "https://127.0.0.1/cgi-bin/appfilter?action=state" 2>/dev/null # prewarm appfilter
+*/1 * * * * /usr/sbin/n5000-fail2ban apply >/dev/null 2>&1 # anti-bruteforce
