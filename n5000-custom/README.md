@@ -649,3 +649,22 @@ N5000              order 0   分组（展开）
 - 加密 DNS 只隐藏「查询内容」，上游仍能看到你连接的 IP、SNI、流量特征
 - 要隐藏访问目的地，必须走 VPN/代理/Tor；且代理/VPN 提供方能看到你的流量
 - 本机/上游路由器管理员仍能看到设备在线情况
+
+
+## 可观测性与可靠性（v4.3）
+
+### 已启用
+- **collectd 统计**：CPU/负载/内存/磁盘/网口/WiFi 历史 RRD，持久化在 `/srv/rrd`；LuCI → 统计 页面可看 2 小时~1 年图表
+- **SNMP**：`snmpd` 只读，仅监听 `192.168.88.1:161`，community `n5000ro`，仅允许 192.168.88.0/24 访问（可接 Zabbix/LibreNMS）
+- **健康检查 + 告警**：`n5000-healthcheck` 每 5 分钟检查服务/DNS/外网/温度/空间/TF 错误/备份新鲜度；异常写入 `/root/logs/health.log`，支持 webhook（通用 JSON）和 Bark 推送
+  - 配置：`/etc/config/n5000` 的 `health.alert_url` / `health.bark_url` / `health.alert_min`
+- **自动加密备份**：`n5000-backup` 每周日 03:30 备份 UCI/配置/包清单，AES-256 加密到 `/root/backups`（保留 8 份），密钥 `/etc/n5000-backup.key`；同时复制到 `/mnt/sda1/backups`（若挂载）
+  - 手动：`n5000-backup backup|verify|list`
+- **日志审计留存**：`n5000-logarchive` 每小时把登录/错误/重启等关键日志归档到 `/root/logs/system.log`（512KB 轮转）
+- 首次启动脚本：`87-observability`
+
+### 已知限制
+- 单机无 HA/VRRP；无第二条上行，mwan3 暂不启用
+- 无 UPS 硬件监测
+- 远程 syslog 需要自备日志服务器（可后续加 rsyslog）
+- TF 卡寿命只能靠 I/O 错误计数告警、无法预测
