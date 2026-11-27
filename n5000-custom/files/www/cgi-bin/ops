@@ -1,0 +1,129 @@
+#!/bin/sh
+# 运维中心接口：健康状态 / 备份 / 防暴破 / 告警配置 / 访客网络
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+
+send_json() { printf 'Content-Type: application/json; charset=utf-8\r\nCache-Control: no-store\r\n\r\n'; }
+fail() { send_json; jq -n --arg e "$1" '{code:-1,error:$e}'; exit 0; }
+read_body() { len="${CONTENT_LENGTH:-0}"; [ "$len" -gt 0 ] 2>/dev/null && head -c "$len"; }
+parse_qs() { printf '%s' "$QUERY_STRING" | tr '&' '\n' | sed -n "s/^$1=//p" | head -n1; }
+
+dump_status() {
+	send_json
+	# 健康状态
+	HEALTH=$(cat /tmp/n5000-health.json 2>/dev/null)
+	case "$HEALTH" in
+		'{'*) ;;
+		*) HEALTH='null' ;;
+	esac
+	# 备份列表
+	BK=""
+	for f in $(ls -1t /root/backups/*.enc 2>/dev/null | head -n 8); do
+		[ -f "$f" ] || continue
+		sz=$(wc -c < "$f" 2>/dev/null)
+		mt=$(date -r "$f" '+%F %T' 2>/dev/null)
+		item=$(jq -n -c --arg name "$(basename "$f")" --argjson size "${sz:-0}" --arg mtime "$mt" '{name:$name,size:$size,mtime:$mtime}')
+		if [ -z "$BK" ]; then BK="$item"; else BK="$BK,$item"; fi
+	done
+	# 防暴破
+	F2B=$(/usr/sbin/n5000-fail2ban json 2>/dev/null)
+	case "$F2B" in
+		'{'*) ;;
+		*) F2B='{"blocked":[],"recent_failures":[]}' ;;
+	esac
+	# 告警配置
+	AURL=$(uci -q get n5000.health.alert_url 2>/dev/null)
+	BURL=$(uci -q get n5000.health.bark_url 2>/dev/null)
+	AMIN=$(uci -q get n5000.health.alert_min 2>/dev/null); [ -z "$AMIN" ] && AMIN=30
+	# 访客网络
+	GDIS=$(uci -q get wireless.guest_radio0.disabled 2>/dev/null); [ -z "$GDIS" ] && GDIS=1
+	GKEY=$(uci -q get wireless.guest_radio0.key 2>/dev/null)
+	GSSID=$(uci -q get wireless.guest_radio0.ssid 2>/dev/null); [ -z "$GSSID" ] && GSSID=N5000-Guest
+	GCLIENTS=$(iw dev phy0.1-ap1 station dump 2>/dev/null | grep -c "^Station")
+	# 系统
+	MODE=$(uci -q get n5000.mode.current 2>/dev/null); [ -z "$MODE" ] && MODE=entertainment
+	GOV=$(cat /sys/devices/system/cpu/cpufreq/policy0/scaling_governor 2>/dev/null)
+	TEMP=$(cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null); [ -z "$TEMP" ] && TEMP=0
+	read UP _ < /proc/uptime; UP=${UP%.*}; [ -z "$UP" ] && UP=0
+	read L1 L5 L15 _ < /proc/loadavg
+	SF=$(uci -q get firewall.@defaults[0].syn_flood 2>/dev/null)
+	jq -n -c \
+		--argjson health "$HEALTH" \
+		--argjson backups "[$BK]" \
+		--argjson f2b "$F2B" \
+		--arg aurl "$AURL" --arg burl "$BURL" --arg amin "$AMIN" \
+		--arg gssid "$GSSID" --arg gkey "$GKEY" --arg gdis "$GDIS" --argjson gclients "$GCLIENTS" \
+		--arg mode "$MODE" --arg gov "$GOV" --argjson temp "$TEMP" --argjson uptime "$UP" \
+		--arg load "$L1" --arg synflood "$SF" \
+		'{code:0,health:$health,backups:$backups,fail2ban:$f2b,
+		  alerts:{webhook:$aurl,bark:$burl,min:$amin},
+		  guest:{ssid:$gssid,key:$gkey,enabled:($gdis!="1"),clients:$gclients},
+		  system:{mode:$mode,governor:$gov,temp:($temp/1000|floor),uptime:$uptime,load:($load|tonumber? // 0),syn_flood:($synflood=="1")}}'
+}
+
+ACTION=$(parse_qs action)
+[ -z "$ACTION" ] && ACTION=status
+
+case "$ACTION" in
+status) dump_status ;;
+backup)
+	OUT=$(/usr/sbin/n5000-backup backup 2>&1)
+	[ $? -ne 0 ] && fail "备份失败: $OUT"
+	dump_status
+	;;
+verify)
+	OUT=$(/usr/sbin/n5000-backup verify 2>&1)
+	send_json
+	jq -n --arg out "$OUT" '{code:0,result:$out}'
+	;;
+unban)
+	DATA=$(read_body)
+	IP=$(printf '%s' "$DATA" | jq -r '.ip // empty' 2>/dev/null)
+	[ -z "$IP" ] && fail "缺少 ip"
+	/usr/sbin/n5000-fail2ban unban "$IP" >/dev/null 2>&1
+	dump_status
+	;;
+unbanall)
+	/usr/sbin/n5000-fail2ban unbanall >/dev/null 2>&1
+	dump_status
+	;;
+alerts)
+	DATA=$(read_body)
+	AURL=$(printf '%s' "$DATA" | jq -r '.webhook // empty' 2>/dev/null)
+	BURL=$(printf '%s' "$DATA" | jq -r '.bark // empty' 2>/dev/null)
+	AMIN=$(printf '%s' "$DATA" | jq -r '.min // empty' 2>/dev/null)
+	uci -q set "n5000.health.alert_url=$AURL"
+	uci -q set "n5000.health.bark_url=$BURL"
+	case "$AMIN" in ''|*[!0-9]*) AMIN=30 ;; esac
+	uci -q set "n5000.health.alert_min=$AMIN"
+	uci -q commit n5000
+	dump_status
+	;;
+guest)
+	DATA=$(read_body)
+	EN=$(printf '%s' "$DATA" | jq -r '.enabled // empty' 2>/dev/null)
+	KEY=$(printf '%s' "$DATA" | jq -r '.key // empty' 2>/dev/null)
+	if [ -n "$KEY" ]; then
+		case ${#KEY} in
+			''|0|1|2|3|4|5|6|7) fail "访客密码至少 8 位" ;;
+		esac
+		uci -q set wireless.guest_radio0.key="$KEY"
+		uci -q set wireless.guest_radio1.key="$KEY"
+	fi
+	case "$EN" in
+		true) uci -q set wireless.guest_radio0.disabled='0'; uci -q set wireless.guest_radio1.disabled='0' ;;
+		false) uci -q set wireless.guest_radio0.disabled='1'; uci -q set wireless.guest_radio1.disabled='1' ;;
+	esac
+	uci -q commit wireless
+	wifi reload >/dev/null 2>&1
+	dump_status
+	;;
+health)
+	OUT=$(/usr/sbin/n5000-healthcheck 2>&1 | tail -1)
+	send_json
+	jq -n --arg out "$OUT" '{code:0,result:$out}'
+	;;
+*)
+	fail "unknown action"
+	;;
+esac
