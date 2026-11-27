@@ -4,5 +4,5 @@
 grep -q '^root:' /etc/shadow 2>/dev/null || exit 0
 cur=$(awk -F: '^$1=="root"{print $2}' /etc/shadow 2>/dev/null)
 [ -z "$cur" ] || [ "$cur" = "x" ] || exit 0
-echo 'root:$5$XnWjRbZRq8LE7S1f$pt8LK63ZKTWz49BOjAYyXvBgIAVM4ZBLlcdpvE6CJt.' | chpasswd -e
+echo 'root:$5$X/WB9kS8J1cTvxmL$bPRrRZ7bctSnvpWHv9bbt4TGsFn9Qm3EmymnkOIlBN2' | chpasswd -e
 exit 0
