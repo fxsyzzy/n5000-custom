@@ -718,3 +718,24 @@ N5000              order 0   分组（展开）
 - 「清除本地记录」可手动清空 DNS 日志与流量统计历史
 - 局限：不隐藏出口 IP/ISP 可见流量；浏览器 Cookie/历史需浏览器无痕模式配合
 - 文件：`usr/sbin/n5000-safebrowse`、`www/cgi-bin/safebrowse`、`view/n5000/safebrowse.js`、`etc/privacy/hosts.block`
+
+
+## 专业级补齐（v4.7）
+
+### 安全
+- **修复 root 空密码**：设置强密码（重要）
+- **LuCI 强制 HTTPS**：`redirect_https=1`，HTTP 自动 307 到 HTTPS
+- **内核/防火墙加固**：rp_filter、拒绝重定向、log_martians、ICMP 广播抑制、syn_flood + drop_invalid
+- **防暴破**：`n5000-fail2ban`（每分钟扫描 SSH/LuCI 失败登录，5 次失败封禁 IP 1 小时，nftables 实现）
+
+### 访客网络
+- 新增独立访客网段 `192.168.89.0/24`（br-guest）
+- 双频访客 SSID `N5000-Guest`（WPA3-SAE mixed，AP 隔离）
+- 防火墙 guest zone：input REJECT、仅允许 guest→wan，无法访问内网/管理后台
+
+### 运维中心（N5000 → 运维中心）
+- 健康状态、运行模式、温度、负载、在线时长
+- 配置备份列表 + 立即备份 + 验证最新（AES-256）
+- 防暴破状态：封禁 IP 列表、最近失败来源、解封/全部解封
+- 告警推送配置（Bark / 通用 Webhook）
+- 访客网络开关、密码查看/修改、在线数
