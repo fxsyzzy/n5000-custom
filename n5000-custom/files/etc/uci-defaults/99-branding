@@ -1,0 +1,16 @@
+#!/bin/sh
+# 首次启动：DeepWrt 品牌（主机名 / 发行版显示名）
+uci -q set system.@system[0].hostname='DeepWrt'
+uci -q commit system
+
+[ -f /etc/openwrt_release ] && {
+	sed -i "s/^DISTRIB_ID=.*/DISTRIB_ID='DeepWrt'/" /etc/openwrt_release
+	sed -i "s/^DISTRIB_DESCRIPTION=.*/DISTRIB_DESCRIPTION='DeepWrt SNAPSHOT r0-ce51f2f'/" /etc/openwrt_release
+}
+[ -f /etc/os-release ] && {
+	sed -i 's/^NAME="OpenWrt"/NAME="DeepWrt"/' /etc/os-release
+	sed -i 's/^PRETTY_NAME=.*/PRETTY_NAME="DeepWrt SNAPSHOT"/' /etc/os-release
+	sed -i 's/^OPENWRT_RELEASE=.*/OPENWRT_RELEASE="DeepWrt SNAPSHOT r0-ce51f2f"/' /etc/os-release
+	sed -i 's/^OPENWRT_DEVICE_MANUFACTURER=.*/OPENWRT_DEVICE_MANUFACTURER="DeepWrt"/' /etc/os-release
+}
+exit 0
