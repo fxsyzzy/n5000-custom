@@ -121,6 +121,20 @@ var NPCSS = [
 	'.np-rate{text-transform:uppercase;letter-spacing:.1em;font-size:11px}',
 	'.np-rate b{font-size:15px;letter-spacing:.02em}',
 	'.np-art{width:min(500px,92%)}',
+	'.np-mini-cal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:10px}',
+	'.np-mini-cal .wd{font-size:9px;text-align:center;opacity:.45;padding-bottom:1px}',
+	'.np-mini-cal .e{min-height:28px}',
+	'.np-mini-cal .d{min-height:28px;border:1px solid rgba(127,127,127,.16);border-radius:2px;font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;line-height:1}',
+	'.np-mini-cal .d.today{outline:1px solid rgba(127,127,127,.75)}',
+	'.np-mini-cal .d.sel{outline:2px solid rgba(127,127,127,.9)}',
+	'.np-mini-detail{font-size:11px;margin-top:8px;opacity:.7;line-height:1.6}',
+	'.np-more{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}',
+	'@media(max-width:1100px){.np-more{grid-template-columns:repeat(2,1fr)}}',
+	'.np-more .it{padding:10px 12px;border:1px solid rgba(127,127,127,.18);border-radius:3px}',
+	'.np-more .it .l{font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;opacity:.5;font-weight:600}',
+	'.np-more .it .v{font-size:13px;font-weight:600;margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+	'.np-more .it .s{font-size:10.5px;opacity:.5;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+	'html[data-argon-mode="light"] .np-more .it{border-color:rgba(17,17,17,.12)}',
 ].join('\n');
 
 function npIsLight() {
@@ -190,6 +204,11 @@ return view.extend({
 			E('div', { 'class': 'np-panel np-card' }, [
 				E('div', { 'class': 't' }, [E('span', {}, ['活跃应用 TOP5']), E('span', { 'class': 'np-badge', 'id': 'np-apps-total' }, ['--'])]),
 				E('div', { 'class': 'np-apps', 'id': 'np-apps' }, [])
+			]),
+			E('div', { 'class': 'np-panel np-card' }, [
+				E('div', { 'class': 't' }, [E('span', {}, ['流量日历']), E('span', { 'class': 'np-badge', 'id': 'np-cal-sum' }, ['--'])]),
+				E('div', { 'class': 'np-mini-cal', 'id': 'np-cal' }, [' ']),
+				E('div', { 'class': 'np-mini-detail', 'id': 'np-cal-detail' }, ['点击日期查看当日流量'])
 			])
 		]);
 
@@ -212,6 +231,24 @@ return view.extend({
 			E('a', { 'class': 'np-act', 'href': url('admin/system/reboot') }, [E('span', { 'class': 'i' }, ['⟳']), E('span', {}, ['重启设备'])]),
 			E('a', { 'class': 'np-act', 'href': url('admin/system/admin') }, [E('span', { 'class': 'i' }, ['⚙']), E('span', {}, ['系统设置'])])
 		]);
+
+		var moreItems = [
+			['系统版本', 'np-mi-dist', 'np-mi-dist-s'],
+			['内核', 'np-mi-kernel', 'np-mi-kernel-s'],
+			['运行模式', 'np-mi-mode', 'np-mi-mode-s'],
+			['默认网关', 'np-mi-gw', 'np-mi-gw-s'],
+			['无线网络', 'np-mi-wifi', 'np-mi-wifi-s'],
+			['访客网络', 'np-mi-guest', 'np-mi-guest-s'],
+			['健康检查', 'np-mi-health', 'np-mi-health-s'],
+			['最近备份', 'np-mi-backup', 'np-mi-backup-s']
+		];
+		var more = E('div', { 'class': 'np-more' }, moreItems.map(function(it) {
+			return E('div', { 'class': 'it' }, [
+				E('div', { 'class': 'l' }, [it[0]]),
+				E('div', { 'class': 'v', 'id': it[1] }, ['--']),
+				E('div', { 'class': 's', 'id': it[2] }, [' '])
+			]);
+		}));
 
 		var root = E('div', { 'class': 'np' }, [
 			E('style', {}, [NPCSS]),
@@ -263,7 +300,11 @@ return view.extend({
 				])
 			]),
 			E('div', { 'class': 'np-main' }, [hero, side]),
-			E('div', { 'class': 'np-panel np-bottom' }, [stats, actions])
+			E('div', { 'class': 'np-panel np-bottom' }, [stats, actions]),
+			E('div', { 'class': 'np-panel np-bottom' }, [
+				E('div', { 'class': 't', 'style': 'font-size:13px;margin-bottom:6px' }, [E('span', {}, ['更多信息'])]),
+				more
+			])
 		]);
 
 		function drawSpark() {
@@ -293,6 +334,50 @@ return view.extend({
 			}
 			line('down', npIsLight() ? '#1A1A1A' : '#F0F0F0');
 			line('up', npIsLight() ? '#888888' : '#9E9E9E');
+		}
+
+		var calSel = null;
+		function calPaint() {
+			var el = document.getElementById('np-cal');
+			if (!el) return;
+			var days = (tr && tr.days) || [];
+			var map = {};
+			days.forEach(function(x) { map[x.date] = x; });
+			var now = new Date();
+			var y = now.getFullYear(), mo = now.getMonth() + 1;
+			var month = y + '-' + (mo < 10 ? '0' + mo : mo);
+			var startWd = (new Date(y, mo - 1, 1).getDay() + 6) % 7;
+			var dim = new Date(y, mo, 0).getDate();
+			var maxV = 1, sum = 0;
+			for (var i = 1; i <= dim; i++) {
+				var k = month + '-' + (i < 10 ? '0' + i : i);
+				if (map[k]) { maxV = Math.max(maxV, map[k].total || 0); sum += map[k].total || 0; }
+			}
+			var html = '';
+			['一', '二', '三', '四', '五', '六', '日'].forEach(function(w) { html += '<div class="wd">' + w + '</div>'; });
+			for (var j = 0; j < startWd; j++) html += '<div class="e"></div>';
+			var today = now.toISOString().slice(0, 10);
+			for (var d = 1; d <= dim; d++) {
+				var kk = month + '-' + (d < 10 ? '0' + d : d);
+				var rec = map[kk];
+				var cls = 'd' + (kk === today ? ' today' : '') + (kk === calSel ? ' sel' : '');
+				var ratio = rec ? Math.min(1, (rec.total || 0) / maxV) : 0;
+				var alpha = 0.05 + ratio * 0.35;
+				var bg = npIsLight() ? 'rgba(17,17,17,' + alpha.toFixed(2) + ')' : 'rgba(240,240,240,' + alpha.toFixed(2) + ')';
+				html += '<div class="' + cls + '" data-date="' + kk + '" style="background:' + bg + '"><span>' + d + '</span></div>';
+			}
+			el.innerHTML = html;
+			var sumEl = document.getElementById('np-cal-sum');
+			if (sumEl) sumEl.textContent = npFmt(sum);
+			var det = document.getElementById('np-cal-detail');
+			if (det) {
+				if (calSel && map[calSel]) det.textContent = calSel + ' · 合计 ' + npFmt(map[calSel].total) + '（↓' + npFmt(map[calSel].rx) + ' / ↑' + npFmt(map[calSel].tx) + '）';
+				else if (calSel) det.textContent = calSel + ' · 无记录';
+				else det.textContent = '点击日期查看当日流量';
+			}
+			Array.prototype.forEach.call(el.querySelectorAll('[data-date]'), function(c) {
+				c.addEventListener('click', function() { calSel = c.getAttribute('data-date'); calPaint(); });
+			});
 		}
 
 		function paint(d2, af2) {
@@ -339,8 +424,9 @@ return view.extend({
 			document.getElementById('np-lan').textContent = 'LAN br-lan · ' + (d2.lan_ip || '--') + ' · ' + npFmt(d2.lan_rx) + '↓ ' + npFmt(d2.lan_tx) + '↑';
 			/* 服务 */
 			var svc = [];
-			svc.push('PassWall ' + (d2.pw ? '✓' : '✗'));
-			svc.push('Docker ' + (d2.docker ? '✓' : '✗'));
+			svc.push('加密DNS ' + (d2.dns ? '✓' : '✗'));
+			svc.push('DNS防护 ' + (d2.hij ? '✓' : '✗'));
+			svc.push('流量统计 ' + (d2.trafficd ? '✓' : '✗'));
 			svc.push('TF ' + ((d2.errs || 0) > 0 ? ('✗ ' + d2.errs) : '✓'));
 			document.getElementById('np-svc').textContent = svc.join(' · ');
 			/* 底部 */
@@ -403,6 +489,30 @@ return view.extend({
 			samples.push({ down: down, up: up });
 			if (samples.length > 60) samples.shift();
 			drawSpark();
+
+			/* 更多信息 */
+			var modeNames = { high: '高速运行', low: '低速运行', entertainment: '娱乐模式', game: '游戏模式' };
+			var mi = function(id, v, sub) {
+				var a = document.getElementById('np-mi-' + id), b = document.getElementById('np-mi-' + id + '-s');
+				if (a) a.textContent = v;
+				if (b) b.textContent = sub || ' ';
+			};
+			mi('dist', 'DeepWrt', d2.dist || 'SNAPSHOT');
+			mi('kernel', 'Linux ' + (d2.kernel || '--'), '内核版本');
+			mi('mode', (modeNames[d2.mode] || d2.mode || '--'), 'CPU ' + (d2.mode === 'low' ? '1.3GHz' : '最高 2.0GHz'));
+			mi('gw', d2.gw || '--', '默认路由');
+			mi('wifi', d2.ssid || '--', (d2.clients || 0) + ' 台无线在线');
+			mi('guest', d2.guest ? '已启用' : '已停用', d2.guest ? 'DeepWrt-Guest' : '可在访客网络开启');
+			var heal = document.getElementById('np-mi-health');
+			if (heal) {
+				heal.textContent = d2.health === 'ok' ? '正常' : (d2.health === 'bad' ? '异常' : '未知');
+				heal.className = 'v ' + (d2.health === 'ok' ? 'np-ok' : (d2.health === 'bad' ? 'np-bad' : ''));
+			}
+			var bks = document.getElementById('np-mi-backup-s');
+			if (bks) bks.textContent = d2.backup && d2.backup !== '--' ? 'AES-256 加密' : '尚未备份';
+			var bkv = document.getElementById('np-mi-backup');
+			if (bkv) bkv.textContent = d2.backup && d2.backup !== '--' ? d2.backup.replace(/^n5000-/, '').replace(/\.tar\.gz\.enc$/, '') : '--';
+			calPaint();
 		}
 
 		setTimeout(function() { paint(d, af); }, 100);
