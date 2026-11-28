@@ -90,16 +90,41 @@ PWEN=$(uci -q get passwall.@global[0].enabled 2>/dev/null); [ -z "$PWEN" ] && PW
 if pidof dockerd >/dev/null 2>&1; then DOCKER=true; else DOCKER=false; fi
 MODEM=false; MODEMIP="--"
 TFMODEL=$(cat /sys/block/mmcblk0/device/name 2>/dev/null || echo "TF")
-read HOST < /proc/sys/kernel/hostname 2>/dev/null; [ -z "$HOST" ] && HOST="OpenWrt"
+read HOST < /proc/sys/kernel/hostname 2>/dev/null; [ -z "$HOST" ] && HOST="DeepWrt"
+
+# 发行版 / 内核 / 运行模式 / 网关 / 访客网络 / 健康 / 备份 / 服务状态
+DIST="--"
+[ -f /etc/openwrt_release ] && while IFS='=' read -r _k _v; do
+	case "$_k" in DISTRIB_DESCRIPTION) DIST=$(printf '%s' "$_v" | tr -d "'\"") ;; esac
+done < /etc/openwrt_release
+[ -z "$DIST" ] && DIST="DeepWrt"
+read KERNEL < /proc/sys/kernel/osrelease 2>/dev/null; [ -z "$KERNEL" ] && KERNEL="--"
+MODE=$(uci -q get n5000.mode.current 2>/dev/null); [ -z "$MODE" ] && MODE="entertainment"
+GW="--"
+while read -r _if _dest _gw _rest; do
+	[ "$_dest" = "00000000" ] && [ -n "$_gw" ] && { _g=$((0x$_gw)); GW="$((_g & 255)).$(((_g >> 8) & 255)).$(((_g >> 16) & 255)).$(((_g >> 24) & 255))"; break; }
+done < /proc/net/route
+GST=$(uci -q get wireless.guest_radio0.disabled 2>/dev/null); if [ "$GST" = "0" ]; then GUEST=true; else GUEST=false; fi
+HEALTH="unknown"
+[ -f /tmp/n5000-health.json ] && {
+	read -r _hj < /tmp/n5000-health.json
+	case "$_hj" in *'"state":"ok"'*) HEALTH="ok" ;; *'"state":"bad"'*) HEALTH="bad" ;; esac
+}
+BK="--"
+for _f in /root/backups/*.enc; do [ -f "$_f" ] && BK=${_f##*/}; done
+DNSR=false; pidof dnscrypt-proxy >/dev/null 2>&1 && DNSR=true
+HIJ=false; uci -q get firewall.dns_hijack >/dev/null 2>&1 && HIJ=true
+TRD=false; pidof trafficd >/dev/null 2>&1 && TRD=true
 TS=$_now
 
-OUT=$(printf '{"host":"%s","uptime":%s,"load":[%s,%s,%s],"mem_total":%s,"mem_avail":%s,"swap_total":%s,"swap_free":%s,"temp":%s,"root_total":%s,"root_used":%s,"root_free":%s,"tf_total":%s,"tf_used":%s,"tf_free":%s,"wan_ip":"%s","wan_rx":%s,"wan_tx":%s,"lan_ip":"%s","lan_rx":%s,"lan_tx":%s,"ssid":"%s","clients":%s,"devices":%s,"pw":%s,"pw_enabled":%s,"docker":%s,"docker_count":%s,"modem":%s,"modem_ip":"%s","tf_model":"%s","errs":%s,"ts":%s}' \
+OUT=$(printf '{"host":"%s","uptime":%s,"load":[%s,%s,%s],"mem_total":%s,"mem_avail":%s,"swap_total":%s,"swap_free":%s,"temp":%s,"root_total":%s,"root_used":%s,"root_free":%s,"tf_total":%s,"tf_used":%s,"tf_free":%s,"wan_ip":"%s","wan_rx":%s,"wan_tx":%s,"lan_ip":"%s","lan_rx":%s,"lan_tx":%s,"ssid":"%s","clients":%s,"devices":%s,"pw":%s,"pw_enabled":%s,"docker":%s,"docker_count":%s,"modem":%s,"modem_ip":"%s","tf_model":"%s","errs":%s,"ts":%s,"dist":"%s","kernel":"%s","mode":"%s","gw":"%s","guest":%s,"health":"%s","backup":"%s","dns":%s,"hij":%s,"trafficd":%s}' \
 	"$HOST" "${UP:-0}" "${L1:-0}" "${L5:-0}" "${L15:-0}" \
 	"${MEMT:-0}" "${MEMA:-0}" "${SWT:-0}" "${SWF:-0}" "${TEMP:-0}" \
 	"${RT:-0}" "${RU:-0}" "${RF:-0}" "${TT:-0}" "${TU:-0}" "${TFREE:-0}" \
 	"$WANIP" "${WRX:-0}" "${WTX:-0}" "$LANIP" "${LRX:-0}" "${LTX:-0}" \
 	"$SSID" "${CLIENTS:-0}" "${DEVICES:-0}" "$PW" "${PWEN:-0}" "$DOCKER" "${DCON:-0}" \
-	"$MODEM" "$MODEMIP" "$TFMODEL" "${ERRS:-0}" "$TS")
+	"$MODEM" "$MODEMIP" "$TFMODEL" "${ERRS:-0}" "$TS" \
+	"$DIST" "$KERNEL" "$MODE" "$GW" "$GUEST" "$HEALTH" "$BK" "$DNSR" "$HIJ" "$TRD")
 
 printf '%s\n%s\n' "$_now" "$OUT" > "$CACHE"
 printf '%s\n' "$OUT"
