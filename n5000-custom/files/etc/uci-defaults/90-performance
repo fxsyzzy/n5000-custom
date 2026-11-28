@@ -1,7 +1,7 @@
 #!/bin/sh
 # 首次启动：启用性能优化 + 关闭未配置服务的自启（避免抢占 DNS/内存）
 /etc/init.d/n5000-perf enable >/dev/null 2>&1
-for svc in adguardhome haproxy dnscrypt-proxy smartdns; do
+for svc in adguardhome haproxy dnscrypt-proxy smartdns dockerd containerd ttyd passwall passwall_server sing-box xray microsocks adblock; do
 	[ -x "/etc/init.d/$svc" ] && {
 		/etc/init.d/$svc stop >/dev/null 2>&1
 		/etc/init.d/$svc disable >/dev/null 2>&1
