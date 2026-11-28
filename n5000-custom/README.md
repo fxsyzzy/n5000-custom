@@ -755,3 +755,12 @@ N5000              order 0   分组（展开）
 - 固件默认 root 密码预置为 `YUDI`（`board/files/etc/uci-defaults/98-nradio-n5000-rootpw`）
 - 首发脚本：`files/etc/uci-defaults/99-branding`；banner：`files/etc/banner`
 - ⚠️ 密码 `YUDI` 强度很低，建议自行在 LuCI 修改为强密码
+
+
+## 测速面板（v5.0）
+
+- N5000 → 测速：路由器侧 WAN 测速（不是设备无线速率）
+- 指标：下行（清华/中科大镜像 + Cloudflare 三源并行取最快）、上行（Cloudflare 上传端点）、延迟（223.5.5.5）、总耗时
+- 后台异步执行，页面 2 秒轮询进度；测速约产生 30~60MB 流量
+- 实现：`usr/sbin/n5000-speedtest`、`www/cgi-bin/speedtest`、`view/n5000/speedtest.js`
+- 上行显示「不可测」表示到测试服务器上传不通，不代表宽带无上行
