@@ -117,18 +117,6 @@ return view.extend({
 				} }, ['修改访客密码']),
 				E('button', { 'class': 'op-btn', click: function() { self.api('guest', { enabled: true }); } }, ['启用访客 WiFi']),
 				E('button', { 'class': 'op-btn danger', click: function() { self.api('guest', { enabled: false }); } }, ['停用访客 WiFi'])
-			]),
-
-			E('div', { 'class': 'op-sec' }, [
-				E('div', { 'class': 'h' }, ['HTTPS 证书', E('span', { 'class': 'sub' }, ['导入 CA 后浏览器不再提示“连接不安全”')]),
-				E('div', { 'style': 'font-size:12.5px;line-height:1.8' }, [
-					'① 下载 CA 证书：',
-					E('a', { 'href': '/ca.crt', 'target': '_blank', 'style': 'color:#48A9C5;text-decoration:underline' }, ['/ca.crt']),
-					E('br'),
-					'② 导入到系统「受信任的根证书颁发机构」（Windows 双击证书→安装→本地计算机→受信任的根证书颁发机构）',
-					E('br'),
-					'③ 重启浏览器后再访问 https://192.168.88.1 即显示安全锁'
-				])
 			])
 		]);
 
