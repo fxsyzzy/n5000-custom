@@ -1,0 +1,75 @@
+#!/bin/sh
+# N5000 测速：延迟 + 下行 + 上行（结果写入 /tmp/speedtest.json）
+# 用法: n5000-speedtest run
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+
+OUT=/tmp/speedtest.json
+LOCK=/tmp/speedtest.lock
+
+write() { printf '%s\n' "$1" > "$OUT"; }
+
+run() {
+
+	TS=$(date +%s)
+	write "{\"state\":\"running\",\"phase\":\"ping\",\"down\":0,\"up\":0,\"ping\":0,\"ts\":$TS}"
+
+	# 1) 延迟
+	PING=$(ping -c 5 -W 1 223.5.5.5 2>/dev/null | sed -n 's/.*= \([0-9.]*\)\/\([0-9.]*\)\/.*/\2/p')
+	case "$PING" in ''|*[!0-9.]*) PING=0 ;; esac
+	write "{\"state\":\"running\",\"phase\":\"download\",\"down\":0,\"up\":0,\"ping\":$PING,\"ts\":$TS}"
+
+	# 2) 下行：两个源并行，取更快者
+	rm -f /tmp/st_d1 /tmp/st_d2 /tmp/st_d3
+	curl -sL -o /dev/null -w "%{speed_download}" --max-time 12 \
+		"https://mirrors.tuna.tsinghua.edu.cn/ubuntu-releases/22.04/ubuntu-22.04.5-desktop-amd64.iso" > /tmp/st_d1 2>/dev/null &
+	P1=$!
+	curl -sL -o /dev/null -w "%{speed_download}" --max-time 12 \
+		"https://mirrors.ustc.edu.cn/ubuntu-releases/22.04/ubuntu-22.04.5-desktop-amd64.iso" > /tmp/st_d2 2>/dev/null &
+	P2=$!
+	curl -sL -o /dev/null -w "%{speed_download}" --max-time 12 \
+		"https://speed.cloudflare.com/__down?bytes=25000000" > /tmp/st_d3 2>/dev/null &
+	P3=$!
+	wait $P1 $P2 $P3 2>/dev/null
+
+	DOWN=0
+	for f in /tmp/st_d1 /tmp/st_d2 /tmp/st_d3; do
+		[ -f "$f" ] || continue
+		v=$(cat "$f" 2>/dev/null)
+		case "$v" in ''|*[!0-9.]*) continue ;; esac
+		# 取最大值（awk 比较）
+		DOWN=$(awk -v a="$DOWN" -v b="$v" 'BEGIN{printf "%.0f", (b>a?b:a)}')
+	done
+
+	write "{\"state\":\"running\",\"phase\":\"upload\",\"down\":$DOWN,\"up\":0,\"ping\":$PING,\"ts\":$TS}"
+
+	# 3) 上行：Cloudflare 上传端点（失败标记 -1）
+	head -c 3000000 /dev/urandom > /tmp/st_up.bin 2>/dev/null
+	UP=$(curl -s -o /dev/null -w "%{speed_upload}" --max-time 20 -H "Expect:" \
+		-X POST --data-binary @/tmp/st_up.bin "https://speed.cloudflare.com/__up" 2>/dev/null)
+	rm -f /tmp/st_up.bin /tmp/st_d1 /tmp/st_d2 /tmp/st_d3
+	case "$UP" in ''|*[!0-9.]*) UP=-1 ;; esac
+	# 小于 10KB/s 视为不可测
+	UP=$(awk -v v="$UP" 'BEGIN{if (v>=10240) printf "%.0f", v; else print "-1"}')
+
+	TS2=$(date +%s)
+	write "{\"state\":\"done\",\"phase\":\"done\",\"down\":$DOWN,\"up\":$UP,\"ping\":$PING,\"ts\":$TS2,\"cost\":$((TS2 - TS))}"
+	rm -f "$LOCK"
+}
+
+# 状态文件超过 3 分钟视为陈旧，清理锁
+if [ -f "$LOCK" ]; then
+	TS_OLD=$(date +%s)
+	TS_SAVED=$(sed -n 's/.*"ts":\([0-9]*\).*/\1/p' "$OUT" 2>/dev/null)
+	case "$TS_SAVED" in ''|*[!0-9]*) TS_SAVED=0 ;; esac
+	if [ $((TS_OLD - TS_SAVED)) -gt 180 ]; then
+		rm -f "$LOCK"
+	else
+		cat "$OUT" 2>/dev/null || echo '{"state":"running","phase":"ping","down":0,"up":0,"ping":0}'
+		exit 0
+	fi
+fi
+
+: > "$LOCK"
+run &
+echo started
