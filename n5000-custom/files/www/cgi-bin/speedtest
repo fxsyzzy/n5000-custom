@@ -1,0 +1,33 @@
+#!/bin/sh
+# 测速管理接口
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+export PATH
+
+send_json() { printf 'Content-Type: application/json; charset=utf-8\r\nCache-Control: no-store\r\n\r\n'; }
+parse_qs() { printf '%s' "$QUERY_STRING" | tr '&' '\n' | sed -n "s/^$1=//p" | head -n1; }
+
+status() {
+	send_json
+	if [ -f /tmp/speedtest.json ]; then
+		cat /tmp/speedtest.json
+	else
+		echo '{"state":"idle"}'
+	fi
+}
+
+ACTION=$(parse_qs action)
+[ -z "$ACTION" ] && ACTION=status
+
+case "$ACTION" in
+status) status ;;
+start)
+	[ -x /usr/sbin/n5000-speedtest ] || { send_json; echo '{"state":"error","error":"missing speedtest script"}'; exit 0; }
+	/usr/sbin/n5000-speedtest run >/dev/null 2>&1
+	sleep 1
+	status
+	;;
+*)
+	send_json
+	echo '{"state":"error","error":"unknown action"}'
+	;;
+esac
