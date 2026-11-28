@@ -19,6 +19,7 @@ function dbCatName(k) {
 function dbSiteName(d) {
 	d = String(d || '').toLowerCase().replace(/^www\./, '').replace(/\.$/, '');
 	if (!d) return { n: '未知', h: '' };
+	if (d === 'unknown' || d === 'none' || d === 'unknown-cdn') return { n: '未识别流量', h: '无域名记录（直连 IP / 加密 DNS）' };
 	var exact = {
 		'bilibili.com': '哔哩哔哩', 'hdslb.com': '哔哩哔哩', 'bilivideo.com': '哔哩哔哩',
 		'iqiyi.com': '爱奇艺', 'qiyi.com': '爱奇艺', 'youku.com': '优酷', 'mgtv.com': '芒果TV',
@@ -55,45 +56,70 @@ function dbSiteName(d) {
 	if (exact[d]) return { n: exact[d], h: d };
 	var rules = [
 		['bilibili', '哔哩哔哩'], ['hdslb', '哔哩哔哩'], ['bilivideo', '哔哩哔哩'],
+		['biliapi', '哔哩哔哩'], ['bilicdn', '哔哩哔哩'], ['acgvideo', '哔哩哔哩'],
 		['iqiyi', '爱奇艺'], ['qiyi', '爱奇艺'], ['youku', '优酷'], ['mgtv', '芒果TV'],
+		['tdnsvod', '视频 CDN'], ['smtcdns', '视频 CDN'], ['vodtylego', '视频 CDN'],
 		['weixin', '微信'], ['wechat', '微信'], ['qq.com', '腾讯 QQ'], ['tencent', '腾讯'],
-		['baidu', '百度'], ['taobao', '淘宝'], ['tmall', '天猫'], ['alicdn', '阿里 CDN'],
-		['alipay', '支付宝'], ['alibaba', '阿里巴巴'], ['aliyun', '阿里云'],
+		['myqcloud', '腾讯云'], ['daxuesoutijiang', '作业帮'],
+		['baidu', '百度'], ['bdydns', '百度云加速'], ['bdurl', '百度'],
+		['taobao', '淘宝'], ['tmall', '天猫'], ['alicdn', '阿里 CDN'], ['alipay', '支付宝'],
+		['alibaba', '阿里巴巴'], ['aliyun', '阿里云'], ['aliyuncs', '阿里云'],
+		['cdngslb', '阿里云 CDN'], ['kunlungr', '阿里云 CDN'], ['alibabadns', '阿里云 CDN'],
 		['jd.com', '京东'], ['360buy', '京东'], ['pinduoduo', '拼多多'], ['yangkeduo', '拼多多'],
-		['meituan', '美团'], ['dianping', '大众点评'],
-		['douyin', '抖音'], ['amemv', '抖音'], ['kuaishou', '快手'], ['xiaohongshu', '小红书'],
+		['meituan', '美团'], ['dianping', '大众点评'], ['ele.me', '饿了么'],
+		['douyin', '抖音'], ['amemv', '抖音'], ['toutiao', '今日头条'], ['bytedance', '字节跳动'],
+		['kuaishou', '快手'], ['xiaohongshu', '小红书'], ['xhscdn', '小红书'],
 		['zhihu', '知乎'], ['weibo', '微博'], ['sina', '新浪'], ['163.com', '网易'], ['126.net', '网易'],
-		['netease', '网易'], ['sohu', '搜狐'], ['ifeng', '凤凰网'], ['toutiao', '今日头条'], ['douban', '豆瓣'],
-		['apple', '苹果'], ['icloud', '苹果'], ['gstatic', '谷歌'], ['google', '谷歌'],
-		['youtube', 'YouTube'], ['googlevideo', 'YouTube'], ['ytimg', 'YouTube'],
-		['github', 'GitHub'], ['gitlab', 'GitLab'], ['microsoft', '微软'],
+		['netease', '网易'], ['sohu', '搜狐'], ['ifeng', '凤凰网'], ['douban', '豆瓣'],
+		['apple', '苹果'], ['icloud', '苹果'], ['mzstatic', '苹果'],
+		['gstatic', '谷歌'], ['google', '谷歌'], ['googlevideo', 'YouTube'], ['youtube', 'YouTube'],
+		['ytimg', 'YouTube'], ['github', 'GitHub'], ['gitlab', 'GitLab'], ['microsoft', '微软'],
+		['msedge', '微软 Edge'], ['cloud.microsoft', '微软云'], ['windowsupdate', 'Windows 更新'],
 		['nvidia', 'NVIDIA'], ['steam', 'Steam'], ['epicgames', 'Epic Games'],
 		['cloudflare', 'Cloudflare'], ['akamai', 'Akamai'], ['fastly', 'Fastly'], ['jsdelivr', 'jsDelivr'],
+		['cloudfront', 'AWS CloudFront'], ['amazonaws', 'AWS'],
+		['cdnhwc', '华为云 CDN'], ['huaweicloud', '华为云'], ['huawei', '华为'],
+		['queniuk', '七牛 CDN'], ['queniuiq', '七牛 CDN'], ['queniuyk', '七牛 CDN'], ['qiniu', '七牛云'],
+		['eccdnx', '白山云 CDN'], ['baishangeek', '白山云 CDN'], ['ctot', '白山云 CDN'],
 		['deepseek', 'DeepSeek'], ['openai', 'OpenAI'], ['chatgpt', 'ChatGPT'], ['anthropic', 'Anthropic'],
 		['adobe', 'Adobe'], ['spotify', 'Spotify'], ['netflix', 'Netflix'], ['telegram', 'Telegram'],
 		['whatsapp', 'WhatsApp'], ['facebook', 'Facebook'], ['instagram', 'Instagram'],
 		['reddit', 'Reddit'], ['wikipedia', '维基百科'], ['openwrt', 'OpenWrt'], ['speedtest', '测速'],
-		['xiaomi', '小米'], ['huawei', '华为'], ['amap', '高德地图'], ['autonavi', '高德地图']
+		['xiaomi', '小米'], ['amap', '高德地图'], ['autonavi', '高德地图']
 	];
 	for (var i = 0; i < rules.length; i++) {
-		var k = rules[i][0];
-		if (d === k || d.indexOf('.' + k) !== -1 || d.indexOf(k + '.') === 0 || d.indexOf(k) === 0) return { n: rules[i][1], h: d };
+		if (d.indexOf(rules[i][0]) !== -1) return { n: rules[i][1], h: d };
 	}
 	var parts = d.split('.');
 	var base = parts.length >= 2 ? parts[parts.length - 2] : d;
 	return { n: base.charAt(0).toUpperCase() + base.slice(1), h: d };
 }
 
-function dbSiteRow(domain, bytes, max) {
-	var info = dbSiteName(domain);
-	var pct = max > 0 ? Math.round((Number(bytes) || 0) / max * 100) : 0;
+function dbAggSites(list) {
+	var agg = {};
+	(list || []).forEach(function(x) {
+		var domain = x.domain || x.d || '';
+		var bytes = Number(x.bytes || x.b || 0);
+		var info = dbSiteName(domain);
+		var key = info.n;
+		if (!agg[key]) agg[key] = { name: info.n, host: info.h || domain, domains: {}, bytes: 0, count: 0 };
+		agg[key].bytes += bytes;
+		agg[key].count += 1;
+		agg[key].domains[domain] = 1;
+	});
+	return Object.keys(agg).map(function(k) { return agg[k]; }).sort(function(a, b) { return b.bytes - a.bytes; });
+}
+
+function dbSiteRowAgg(item, max) {
+	var pct = max > 0 ? Math.round((item.bytes || 0) / max * 100) : 0;
+	var host = item.count > 1 ? (item.count + ' 个域名 · ' + item.host) : item.host;
 	return E('div', { 'class': 'db-row two' }, [
 		E('span', { 'class': 'nm' }, [
-			E('span', { 'class': 'n' }, [info.n]),
-			E('span', { 'class': 'h' }, [info.h || domain])
+			E('span', { 'class': 'n' }, [item.name]),
+			E('span', { 'class': 'h', 'title': host }, [host])
 		]),
 		E('span', { 'class': 'bar' }, [E('i', { 'style': 'width:' + Math.max(2, pct) + '%' })]),
-		E('span', { 'class': 'vl' }, [dbFmt(bytes)])
+		E('span', { 'class': 'vl' }, [dbFmt(item.bytes)])
 	]);
 }
 
@@ -196,7 +222,7 @@ return view.extend({
 			E('div', { 'class': 'db-sec' }, [E('h3', {}, ['分类与网站']), E('span', { 'class': 'sub' }, ['近 24 小时（应用识别）'])]),
 			E('div', { 'class': 'db-cols' }, [
 				E('div', { 'class': 'cbi-section' }, [E('h3', {}, ['分类流量']), E('div', { 'id': 'db-cats' }, [' '])]),
-				E('div', { 'class': 'cbi-section' }, [E('h3', {}, ['网站 Top 10']), E('div', { 'id': 'db-sites' }, [' '])])
+				E('div', { 'class': 'cbi-section' }, [E('h3', {}, ['网站 / 应用 Top 10']), E('div', { 'id': 'db-sites' }, [' '])])
 			]),
 			E('div', { 'class': 'cbi-section db-traffic' }, [
 				E('div', { 'class': 'db-traffic-head' }, [
@@ -214,7 +240,7 @@ return view.extend({
 				]),
 				E('div', { 'class': 'db-cols' }, [
 					E('div', {}, [E('h4', { 'style': 'margin:4px 0 8px' }, ['流量用在哪（分类）']), E('div', { 'id': 'db-tcats' }, [' '])]),
-					E('div', {}, [E('h4', { 'style': 'margin:4px 0 8px' }, ['流量用在哪（网站 Top 10）']), E('div', { 'id': 'db-tsites' }, [' '])])
+					E('div', {}, [E('h4', { 'style': 'margin:4px 0 8px' }, ['流量用在哪（网站/应用 Top 10）']), E('div', { 'id': 'db-tsites' }, [' '])])
 				]),
 				E('div', { 'class': 'db-note', 'style': 'margin-top:12px' }, ['近 30 天每日流量']),
 				E('canvas', { 'id': 'db-days', 'style': 'width:100%;height:120px;display:block' })
@@ -342,8 +368,9 @@ return view.extend({
 			var sl = document.getElementById('db-sites');
 			sl.innerHTML = '';
 			if (!arr.length) sl.appendChild(E('em', {}, ['暂无数据']));
-			var maxSb = arr.length ? arr[0].b : 1;
-			arr.forEach(function(s) { sl.appendChild(dbSiteRow(s.d, s.b, maxSb)); });
+			var aggS = dbAggSites(arr.map(function(s) { return { domain: s.d, bytes: s.b }; }));
+			var maxSb = aggS.length ? aggS[0].bytes : 1;
+			aggS.slice(0, 10).forEach(function(it) { sl.appendChild(dbSiteRowAgg(it, maxSb)); });
 
 			var dl = document.getElementById('db-devs');
 			dl.innerHTML = '';
@@ -388,9 +415,9 @@ return view.extend({
 			var sl = document.getElementById('db-tsites');
 			sl.innerHTML = '';
 			if (!sites.length) sl.appendChild(E('em', {}, ['暂无数据']));
-			var listS = sites.slice(0, 10);
-			var maxTs = listS.length ? (listS[0].bytes || 1) : 1;
-			listS.forEach(function(x) { sl.appendChild(dbSiteRow(x.domain, x.bytes, maxTs)); });
+			var aggT = dbAggSites(sites);
+			var maxTs = aggT.length ? aggT[0].bytes : 1;
+			aggT.slice(0, 10).forEach(function(it) { sl.appendChild(dbSiteRowAgg(it, maxTs)); });
 
 			drawDays(tdata.days || []);
 		};
