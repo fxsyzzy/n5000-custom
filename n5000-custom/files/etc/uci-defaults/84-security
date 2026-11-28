@@ -40,7 +40,7 @@ for band in 0 1; do
 	uci -q set wireless.guest_radio$band.device=radio$band
 	uci -q set wireless.guest_radio$band.network=guest
 	uci -q set wireless.guest_radio$band.mode=ap
-	uci -q set wireless.guest_radio$band.ssid='N5000-Guest'
+	uci -q set wireless.guest_radio$band.ssid='DeepWrt-Guest'
 	uci -q set wireless.guest_radio$band.encryption='sae-mixed'
 	uci -q set wireless.guest_radio$band.key='N5000@Guest'
 	uci -q set wireless.guest_radio$band.isolate='1'
