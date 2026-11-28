@@ -13,4 +13,17 @@ uci -q commit system
 	sed -i 's/^OPENWRT_RELEASE=.*/OPENWRT_RELEASE="DeepWrt SNAPSHOT r0-ce51f2f"/' /etc/os-release
 	sed -i 's/^OPENWRT_DEVICE_MANUFACTURER=.*/OPENWRT_DEVICE_MANUFACTURER="DeepWrt"/' /etc/os-release
 }
+
+# 无线 SSID 品牌（仅替换 OpenWrt 前缀）
+for sec in $(uci -q show wireless 2>/dev/null | sed -n 's/^\(wireless\.[^.]*\)\.ssid=.*/\1/p'); do
+	cur=$(uci -q get "$sec.ssid")
+	case "$cur" in
+		OpenWrt-2G) uci -q set "$sec.ssid=DeepWrt-2G" ;;
+		OpenWrt-5G) uci -q set "$sec.ssid=DeepWrt-5G" ;;
+		OpenWrt) uci -q set "$sec.ssid=DeepWrt-Guest" ;;
+		OpenWrt-Guest) uci -q set "$sec.ssid=DeepWrt-Guest" ;;
+	esac
+done
+uci -q commit wireless
+
 exit 0
