@@ -42,8 +42,8 @@ flush_month() {
 	[ -f "$RUN_DIR/month.json" ] || return 0
 	cp -f "$RUN_DIR/month.json" "$mf.tmp" 2>/dev/null || return 0
 	mv -f "$mf.tmp" "$mf"
-	# 只保留最近 4 个月
-	ls -1 "$DATA_DIR"/*.json 2>/dev/null | sort | head -n -4 | while read -r old; do rm -f "$old"; done
+	# 只保留最近 12 个月
+	ls -1 "$DATA_DIR"/*.json 2>/dev/null | sort | head -n -12 | while read -r old; do rm -f "$old"; done
 }
 
 # 初始化/加载当月运行态
