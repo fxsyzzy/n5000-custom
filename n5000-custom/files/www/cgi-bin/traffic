@@ -15,7 +15,7 @@ gen_summary() {
 	TODAY=$(date +%F)
 	MONTH=$(date +%Y-%m)
 	RT=/tmp/trafficd/month.json
-	FILES=$(ls -1 "$DATA_DIR"/*.json 2>/dev/null | grep -v "/$MONTH.json$" | sort | tail -n 3 | tr '\n' ' ')
+	FILES=$(ls -1 "$DATA_DIR"/*.json 2>/dev/null | grep -v "/$MONTH.json$" | sort | tail -n 12 | tr '\n' ' ')
 	if [ -f "$RT" ]; then
 		FILES="$FILES $RT"
 	elif [ -f "$DATA_DIR/$MONTH.json" ]; then
