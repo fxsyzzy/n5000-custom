@@ -796,6 +796,6 @@ N5000              order 0   分组（展开）
 ## 双频合一 WiFi（v6.1）
 
 - 2.4G/5G 合并为同一 SSID：`DeepWrt`（访客为 `DeepWrt-Guest`）
-- 开启 802.11k / 802.11v（bss_transition）/ MBO，客户端可自动选择 5G 或漫游
+- 开启 802.11k + MBO，客户端可自动选择 5G 或漫游（该 hostapd 不支持 bss_transition 关键字，已去掉）
 - 实现：`files/etc/uci-defaults/88-wifi-merge`（首次启动应用）
 - 注意：合并后设备会看到一个 SSID，但实际仍由 2.4G/5G 两个射频承载；老设备可能仍偏好 2.4G
