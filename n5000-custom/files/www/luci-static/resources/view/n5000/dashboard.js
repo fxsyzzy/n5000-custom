@@ -16,6 +16,87 @@ function dbCatName(k) {
 	return m[k] || k;
 }
 
+function dbSiteName(d) {
+	d = String(d || '').toLowerCase().replace(/^www\./, '').replace(/\.$/, '');
+	if (!d) return { n: '未知', h: '' };
+	var exact = {
+		'bilibili.com': '哔哩哔哩', 'hdslb.com': '哔哩哔哩', 'bilivideo.com': '哔哩哔哩',
+		'iqiyi.com': '爱奇艺', 'qiyi.com': '爱奇艺', 'youku.com': '优酷', 'mgtv.com': '芒果TV',
+		'qq.com': '腾讯 QQ', 'weixin.qq.com': '微信', 'v.qq.com': '腾讯视频', 'tencent.com': '腾讯',
+		'baidu.com': '百度', 'bdstatic.com': '百度', 'pan.baidu.com': '百度网盘',
+		'taobao.com': '淘宝', 'tmall.com': '天猫', 'alicdn.com': '阿里 CDN', 'alipay.com': '支付宝',
+		'alibaba.com': '阿里巴巴', 'aliyun.com': '阿里云', 'alibabacloud.com': '阿里云',
+		'jd.com': '京东', '360buyimg.com': '京东', 'pinduoduo.com': '拼多多', 'yangkeduo.com': '拼多多',
+		'meituan.com': '美团', 'dianping.com': '大众点评', 'ele.me': '饿了么',
+		'douyin.com': '抖音', 'amemv.com': '抖音', 'kuaishou.com': '快手', 'xiaohongshu.com': '小红书',
+		'xhscdn.com': '小红书', 'zhihu.com': '知乎', 'weibo.com': '微博', 'weibo.cn': '微博',
+		'sina.com.cn': '新浪', '163.com': '网易', '126.net': '网易', 'netease.com': '网易',
+		'sohu.com': '搜狐', 'ifeng.com': '凤凰网', 'toutiao.com': '今日头条', 'douban.com': '豆瓣',
+		'apple.com': '苹果', 'icloud.com': '苹果 iCloud', 'mzstatic.com': '苹果',
+		'google.com': '谷歌', 'gstatic.com': '谷歌', 'youtube.com': 'YouTube', 'googlevideo.com': 'YouTube',
+		'ytimg.com': 'YouTube', 'github.com': 'GitHub', 'githubusercontent.com': 'GitHub',
+		'gitlab.com': 'GitLab', 'microsoft.com': '微软', 'windowsupdate.com': 'Windows 更新',
+		'office.com': '微软 Office', 'live.com': '微软', 'msftconnecttest.com': '微软',
+		'nvidia.com': 'NVIDIA', 'amd.com': 'AMD', 'intel.com': 'Intel',
+		'steamcommunity.com': 'Steam', 'steampowered.com': 'Steam', 'epicgames.com': 'Epic Games',
+		'playstation.com': 'PlayStation', 'xbox.com': 'Xbox', 'nintendo.com': '任天堂',
+		'cloudflare.com': 'Cloudflare', 'akamai.net': 'Akamai', 'fastly.net': 'Fastly', 'jsdelivr.net': 'jsDelivr',
+		'deepseek.com': 'DeepSeek', 'openai.com': 'OpenAI', 'chatgpt.com': 'ChatGPT',
+		'anthropic.com': 'Anthropic', 'claude.ai': 'Claude', 'adobe.com': 'Adobe',
+		'spotify.com': 'Spotify', 'netflix.com': 'Netflix', 'telegram.org': 'Telegram',
+		'whatsapp.com': 'WhatsApp', 'facebook.com': 'Facebook', 'instagram.com': 'Instagram',
+		'twitter.com': 'X（Twitter）', 'x.com': 'X（Twitter）', 'reddit.com': 'Reddit',
+		'wikipedia.org': '维基百科', 'archive.org': '互联网档案馆',
+		'mi.com': '小米', 'xiaomi.com': '小米', 'huawei.com': '华为', 'vivo.com': 'vivo',
+		'oppo.com': 'OPPO', 'honor.com': '荣耀', 'amap.com': '高德地图', 'autonavi.com': '高德地图',
+		'12306.cn': '铁路 12306', 'ctrip.com': '携程', 'qunar.com': '去哪儿', 'airbnb.com': '爱彼迎',
+		'openwrt.org': 'OpenWrt', 'speedtest.net': '测速'
+	};
+	if (exact[d]) return { n: exact[d], h: d };
+	var rules = [
+		['bilibili', '哔哩哔哩'], ['hdslb', '哔哩哔哩'], ['bilivideo', '哔哩哔哩'],
+		['iqiyi', '爱奇艺'], ['qiyi', '爱奇艺'], ['youku', '优酷'], ['mgtv', '芒果TV'],
+		['weixin', '微信'], ['wechat', '微信'], ['qq.com', '腾讯 QQ'], ['tencent', '腾讯'],
+		['baidu', '百度'], ['taobao', '淘宝'], ['tmall', '天猫'], ['alicdn', '阿里 CDN'],
+		['alipay', '支付宝'], ['alibaba', '阿里巴巴'], ['aliyun', '阿里云'],
+		['jd.com', '京东'], ['360buy', '京东'], ['pinduoduo', '拼多多'], ['yangkeduo', '拼多多'],
+		['meituan', '美团'], ['dianping', '大众点评'],
+		['douyin', '抖音'], ['amemv', '抖音'], ['kuaishou', '快手'], ['xiaohongshu', '小红书'],
+		['zhihu', '知乎'], ['weibo', '微博'], ['sina', '新浪'], ['163.com', '网易'], ['126.net', '网易'],
+		['netease', '网易'], ['sohu', '搜狐'], ['ifeng', '凤凰网'], ['toutiao', '今日头条'], ['douban', '豆瓣'],
+		['apple', '苹果'], ['icloud', '苹果'], ['gstatic', '谷歌'], ['google', '谷歌'],
+		['youtube', 'YouTube'], ['googlevideo', 'YouTube'], ['ytimg', 'YouTube'],
+		['github', 'GitHub'], ['gitlab', 'GitLab'], ['microsoft', '微软'],
+		['nvidia', 'NVIDIA'], ['steam', 'Steam'], ['epicgames', 'Epic Games'],
+		['cloudflare', 'Cloudflare'], ['akamai', 'Akamai'], ['fastly', 'Fastly'], ['jsdelivr', 'jsDelivr'],
+		['deepseek', 'DeepSeek'], ['openai', 'OpenAI'], ['chatgpt', 'ChatGPT'], ['anthropic', 'Anthropic'],
+		['adobe', 'Adobe'], ['spotify', 'Spotify'], ['netflix', 'Netflix'], ['telegram', 'Telegram'],
+		['whatsapp', 'WhatsApp'], ['facebook', 'Facebook'], ['instagram', 'Instagram'],
+		['reddit', 'Reddit'], ['wikipedia', '维基百科'], ['openwrt', 'OpenWrt'], ['speedtest', '测速'],
+		['xiaomi', '小米'], ['huawei', '华为'], ['amap', '高德地图'], ['autonavi', '高德地图']
+	];
+	for (var i = 0; i < rules.length; i++) {
+		var k = rules[i][0];
+		if (d === k || d.indexOf('.' + k) !== -1 || d.indexOf(k + '.') === 0 || d.indexOf(k) === 0) return { n: rules[i][1], h: d };
+	}
+	var parts = d.split('.');
+	var base = parts.length >= 2 ? parts[parts.length - 2] : d;
+	return { n: base.charAt(0).toUpperCase() + base.slice(1), h: d };
+}
+
+function dbSiteRow(domain, bytes, max) {
+	var info = dbSiteName(domain);
+	var pct = max > 0 ? Math.round((Number(bytes) || 0) / max * 100) : 0;
+	return E('div', { 'class': 'db-row two' }, [
+		E('span', { 'class': 'nm' }, [
+			E('span', { 'class': 'n' }, [info.n]),
+			E('span', { 'class': 'h' }, [info.h || domain])
+		]),
+		E('span', { 'class': 'bar' }, [E('i', { 'style': 'width:' + Math.max(2, pct) + '%' })]),
+		E('span', { 'class': 'vl' }, [dbFmt(bytes)])
+	]);
+}
+
 function dbIsLight() {
 	return document.documentElement.getAttribute('data-argon-mode') === 'light';
 }
@@ -45,6 +126,17 @@ var DBCSS = [
 	'.db-row .nm{width:110px;flex:0 0 auto;opacity:.75;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
 	'.db-row .bar{flex:1;margin:0}',
 	'.db-row .vl{width:90px;text-align:right;font-variant-numeric:tabular-nums}',
+	'.db-row.two .nm{width:160px}',
+	'.db-row .n{display:block;font-size:12.5px;font-weight:600;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+	'.db-row .h{display:block;font-size:10.5px;opacity:.5;line-height:1.2;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+	'.db-row.two{margin-bottom:10px;align-items:center}',
+	'.db-sec{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:20px 0 10px}',
+	'.db-sec h3{margin:0}',
+	'.db-sec .sub{font-size:11.5px;opacity:.55}',
+	'.db-cols .cbi-section{margin-top:0}',
+	'.db-cols .cbi-section h3{margin-top:0}',
+	'.db-traffic .db-grid .db-card{padding:12px 14px}',
+	'@media(max-width:700px){.db-row.two .nm{width:120px}.db-row .bar{display:none}}',
 	'@media(max-width:1000px){.db-grid{grid-template-columns:repeat(2,1fr)}.db-cols{grid-template-columns:1fr}}',
 	'.db-traffic-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}',
 	'.db-seg{display:flex;gap:4px;background:rgba(127,127,127,.14);border-radius:10px;padding:3px}',
@@ -78,7 +170,6 @@ return view.extend({
 
 		var canvas = E('canvas', { 'id': 'db-chart' });
 		var chart = E('div', { 'class': 'cbi-section db-chart' }, [
-			E('h3', {}, ['WAN 实时速率']),
 			E('div', { 'style': 'display:flex;gap:20px;font-size:12px;margin-bottom:6px' }, [
 				E('span', { 'id': 'db-down' }, ['↓ 0.00 Mbps']),
 				E('span', { 'id': 'db-up' }, ['↑ 0.00 Mbps'])
@@ -88,7 +179,8 @@ return view.extend({
 
 		var root = E('div', {}, [
 			E('style', {}, [DBCSS]),
-			E('h2', {}, ['N5000 流量仪表盘']),
+			E('h2', {}, ['流量仪表盘']),
+			E('div', { 'class': 'db-sec' }, [E('h3', {}, ['系统状态']), E('span', { 'class': 'sub' }, ['实时刷新'])]),
 			E('div', { 'class': 'db-grid' }, [
 				mkCard('运行时间', 'db-uptime', 'db-boot'),
 				mkCard('CPU 负载', 'db-load', 'db-loadavg'),
@@ -99,7 +191,9 @@ return view.extend({
 				mkCard('TF 存储', 'db-tf', 'db-tfnote'),
 				mkCard('服务状态', 'db-svc', 'db-svcnone')
 			]),
+			E('div', { 'class': 'db-sec' }, [E('h3', {}, ['实时速率']), E('span', { 'class': 'sub' }, ['WAN 上行 / 下行'])]),
 			chart,
+			E('div', { 'class': 'db-sec' }, [E('h3', {}, ['分类与网站']), E('span', { 'class': 'sub' }, ['近 24 小时（应用识别）'])]),
 			E('div', { 'class': 'db-cols' }, [
 				E('div', { 'class': 'cbi-section' }, [E('h3', {}, ['分类流量']), E('div', { 'id': 'db-cats' }, [' '])]),
 				E('div', { 'class': 'cbi-section' }, [E('h3', {}, ['网站 Top 10']), E('div', { 'id': 'db-sites' }, [' '])])
@@ -125,7 +219,8 @@ return view.extend({
 				E('div', { 'class': 'db-note', 'style': 'margin-top:12px' }, ['近 30 天每日流量']),
 				E('canvas', { 'id': 'db-days', 'style': 'width:100%;height:120px;display:block' })
 			]),
-			E('div', { 'class': 'cbi-section' }, [E('h3', {}, ['设备流量']), E('div', { 'id': 'db-devs' }, [' '])]),
+			E('div', { 'class': 'db-sec' }, [E('h3', {}, ['设备流量']), E('span', { 'class': 'sub' }, ['按设备累计'])]),
+			E('div', { 'class': 'cbi-section' }, [E('div', { 'id': 'db-devs' }, [' '])]),
 
 		]);
 
@@ -247,12 +342,8 @@ return view.extend({
 			var sl = document.getElementById('db-sites');
 			sl.innerHTML = '';
 			if (!arr.length) sl.appendChild(E('em', {}, ['暂无数据']));
-			arr.forEach(function(s) {
-				sl.appendChild(E('div', { 'class': 'db-row' }, [
-					E('span', { 'class': 'nm', 'title': s.d }, [s.d]),
-					E('span', { 'class': 'vl' }, [dbFmt(s.b)])
-				]));
-			});
+			var maxSb = arr.length ? arr[0].b : 1;
+			arr.forEach(function(s) { sl.appendChild(dbSiteRow(s.d, s.b, maxSb)); });
 
 			var dl = document.getElementById('db-devs');
 			dl.innerHTML = '';
@@ -297,12 +388,9 @@ return view.extend({
 			var sl = document.getElementById('db-tsites');
 			sl.innerHTML = '';
 			if (!sites.length) sl.appendChild(E('em', {}, ['暂无数据']));
-			sites.slice(0, 10).forEach(function(x) {
-				sl.appendChild(E('div', { 'class': 'db-row' }, [
-					E('span', { 'class': 'nm', 'title': x.domain }, [x.domain]),
-					E('span', { 'class': 'vl' }, [dbFmt(x.bytes)])
-				]));
-			});
+			var listS = sites.slice(0, 10);
+			var maxTs = listS.length ? (listS[0].bytes || 1) : 1;
+			listS.forEach(function(x) { sl.appendChild(dbSiteRow(x.domain, x.bytes, maxTs)); });
 
 			drawDays(tdata.days || []);
 		};
