@@ -773,3 +773,11 @@ N5000              order 0   分组（展开）
 - CA 证书下载：`https://192.168.88.1/ca.crt`（或 `/luci-static/n5000/deepwrt-ca.crt`）
 - 导入 CA 到系统/浏览器信任列表后，HTTPS 不再报警
 - 首次启动自动生成：`files/etc/uci-defaults/83-tls`（密钥不进入仓库）
+
+
+## 撤回 HTTPS 受信任证书（v5.1.1）
+
+- 用户选择不使用本地 CA 方案：撤回自签 CA/证书、删除 CA 下载文件与入口
+- 恢复 HTTP 直接访问（`redirect_https=0`），浏览器不再弹「连接不安全」警告
+- HTTPS 端口仍可用，但使用原自签证书，仅供需要时手动访问
+- `83-tls` 已从固件仓库移除；`84-security` 不再强制 HTTPS
