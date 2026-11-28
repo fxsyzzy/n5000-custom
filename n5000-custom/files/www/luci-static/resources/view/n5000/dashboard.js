@@ -176,6 +176,9 @@ var DBCSS = [
 	'.db-cal .day.sel{border-color:var(--primary,#48A9C5);box-shadow:0 0 0 1px var(--primary,#48A9C5) inset}',
 	'.db-cal .day .d{font-weight:600;font-size:11.5px;opacity:.85}',
 	'.db-cal .day .v{font-size:9.5px;opacity:.65;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+	'.db-cal-title{font-size:14px;font-weight:700;letter-spacing:.02em}',
+	'.db-cal .day .tag{position:absolute;top:2px;right:3px;font-size:8px;line-height:1;opacity:.85;font-style:normal}',
+	'.db-cal .day.today{font-weight:700}',
 	'.db-cal-detail{margin-top:10px;font-size:12.5px;line-height:1.8;padding:10px 12px;border:1px solid rgba(127,127,127,.22);border-radius:2px}',
 	'.db-cal-month-sum{font-size:11.5px;opacity:.6}',
 	'@media(max-width:1000px){.db-grid{grid-template-columns:repeat(2,1fr)}.db-cols{grid-template-columns:1fr}}',
@@ -262,6 +265,7 @@ return view.extend({
 				E('div', { 'class': 'db-sec' }, [E('h3', {}, ['流量日历']), E('span', { 'class': 'sub' }, ['点击日期查看当日流量'])]),
 				E('div', { 'class': 'cbi-section' }, [
 					E('div', { 'class': 'db-cal-head' }, [
+						E('div', { 'class': 'db-cal-title', 'id': 'db-cal-title' }, ['--']),
 						E('div', { 'class': 'db-cal-nav' }, [
 							E('button', { 'class': 'db-cal-btn', 'type': 'button', click: function() { self.calShift(-1, tr); } }, ['‹ 上月']),
 							E('button', { 'class': 'db-cal-btn', 'type': 'button', click: function() { self.calShift(0, tr); } }, ['本月']),
@@ -498,12 +502,16 @@ return view.extend({
 				var bg = dbIsLight() ? 'rgba(17,17,17,' + alpha.toFixed(2) + ')' : 'rgba(240,240,240,' + alpha.toFixed(2) + ')';
 				var fg = (dbIsLight() && ratio > 0.55) ? '#fff' : (dbIsLight() ? '#111' : (ratio > 0.55 ? '#111' : '#e6e6e6'));
 				html += '<div class="' + cls + '" data-date="' + key2 + '" style="background:' + bg + ';color:' + fg + '">' +
-					'<div class="d">' + d2 + '</div>' +
+					'<div class="d">' + d2 + (key2 === today ? '<i class="tag">今天</i>' : '') + '</div>' +
 					'<div class="v">' + (rec2 ? dbFmt(rec2.total) : '—') + '</div></div>';
 			}
 			el.innerHTML = html;
+			var monTitle = document.getElementById('db-cal-title');
+			if (monTitle) monTitle.textContent = y + ' 年 ' + mo + ' 月';
 			var sumEl = document.getElementById('db-cal-sum');
-			if (sumEl) sumEl.textContent = month + ' · 共 ' + dbFmt(sum.total) + '（↓' + dbFmt(sum.rx) + ' / ↑' + dbFmt(sum.tx) + '，' + sum.n + ' 天有记录）';
+			if (sumEl) sumEl.textContent = '共 ' + dbFmt(sum.total) + '（↓' + dbFmt(sum.rx) + ' / ↑' + dbFmt(sum.tx) + ' · ' + sum.n + ' 天）';
+			var detEl = document.getElementById('db-cal-detail');
+			if (detEl && !self.calSel) detEl.innerHTML = '今天 <b>' + today + '</b> · ' + y + '年' + mo + '月合计 <b>' + dbFmt(sum.total) + '</b>';
 			var self2 = self;
 			Array.prototype.forEach.call(el.querySelectorAll('.day'), function(cell) {
 				cell.addEventListener('click', function() { self2.calSel = cell.getAttribute('data-date'); self2.paintCalendar(self2.calData); self2.calShowDetail(self2.calSel); });
