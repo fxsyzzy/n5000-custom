@@ -126,6 +126,9 @@ var NPCSS = [
 	'.np-mini-cal .e{min-height:28px}',
 	'.np-mini-cal .d{min-height:28px;border:1px solid rgba(127,127,127,.16);border-radius:2px;font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;line-height:1}',
 	'.np-mini-cal .d.today{outline:1px solid rgba(127,127,127,.75)}',
+	'.np-mini-cal .d{position:relative}',
+	'.np-mini-cal .d .t{position:absolute;top:1px;right:2px;font-size:7.5px;line-height:1;opacity:.8;font-style:normal}',
+	'.np-mini-cal .d.today{font-weight:700}',
 	'.np-mini-cal .d.sel{outline:2px solid rgba(127,127,127,.9)}',
 	'.np-mini-detail{font-size:11px;margin-top:8px;opacity:.7;line-height:1.6}',
 	'.np-more{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}',
@@ -206,7 +209,7 @@ return view.extend({
 				E('div', { 'class': 'np-apps', 'id': 'np-apps' }, [])
 			]),
 			E('div', { 'class': 'np-panel np-card' }, [
-				E('div', { 'class': 't' }, [E('span', {}, ['流量日历']), E('span', { 'class': 'np-badge', 'id': 'np-cal-sum' }, ['--'])]),
+				E('div', { 'class': 't' }, [E('span', {}, ['流量日历']), E('span', { 'style': 'display:flex;gap:6px;align-items:center' }, [E('span', { 'class': 'np-badge', 'id': 'np-cal-month' }, ['--']), E('span', { 'class': 'np-badge', 'id': 'np-cal-sum' }, ['--'])])]),
 				E('div', { 'class': 'np-mini-cal', 'id': 'np-cal' }, [' ']),
 				E('div', { 'class': 'np-mini-detail', 'id': 'np-cal-detail' }, ['点击日期查看当日流量'])
 			])
@@ -364,16 +367,18 @@ return view.extend({
 				var ratio = rec ? Math.min(1, (rec.total || 0) / maxV) : 0;
 				var alpha = 0.05 + ratio * 0.35;
 				var bg = npIsLight() ? 'rgba(17,17,17,' + alpha.toFixed(2) + ')' : 'rgba(240,240,240,' + alpha.toFixed(2) + ')';
-				html += '<div class="' + cls + '" data-date="' + kk + '" style="background:' + bg + '"><span>' + d + '</span></div>';
+				html += '<div class="' + cls + '" data-date="' + kk + '" style="background:' + bg + '"><span>' + d + '</span>' + (kk === today ? '<i class="t">今</i>' : '') + '</div>';
 			}
 			el.innerHTML = html;
+			var monEl = document.getElementById('np-cal-month');
+			if (monEl) monEl.textContent = y + '年' + mo + '月';
 			var sumEl = document.getElementById('np-cal-sum');
 			if (sumEl) sumEl.textContent = npFmt(sum);
 			var det = document.getElementById('np-cal-detail');
 			if (det) {
 				if (calSel && map[calSel]) det.textContent = calSel + ' · 合计 ' + npFmt(map[calSel].total) + '（↓' + npFmt(map[calSel].rx) + ' / ↑' + npFmt(map[calSel].tx) + '）';
 				else if (calSel) det.textContent = calSel + ' · 无记录';
-				else det.textContent = '点击日期查看当日流量';
+				else det.textContent = '今天是 ' + today + ' · 本月合计 ' + npFmt(sum);
 			}
 			Array.prototype.forEach.call(el.querySelectorAll('[data-date]'), function(c) {
 				c.addEventListener('click', function() { calSel = c.getAttribute('data-date'); calPaint(); });
