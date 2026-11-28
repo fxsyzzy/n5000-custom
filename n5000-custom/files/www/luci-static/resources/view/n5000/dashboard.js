@@ -163,6 +163,21 @@ var DBCSS = [
 	'.db-cols .cbi-section h3{margin-top:0}',
 	'.db-traffic .db-grid .db-card{padding:12px 14px}',
 	'@media(max-width:700px){.db-row.two .nm{width:120px}.db-row .bar{display:none}}',
+	'.db-cal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px}',
+	'.db-cal-nav{display:flex;align-items:center;gap:6px}',
+	'.db-cal-btn{border:1px solid rgba(127,127,127,.35);background:transparent;color:inherit;font:inherit;font-size:12px;padding:3px 10px;border-radius:2px;cursor:pointer}',
+	'.db-cal-btn:hover{background:rgba(127,127,127,.12)}',
+	'.db-cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}',
+	'.db-cal .wd{font-size:10.5px;opacity:.55;text-align:center;padding:2px 0;letter-spacing:.05em}',
+	'.db-cal .empty{min-height:54px}',
+	'.db-cal .day{min-height:54px;border:1px solid rgba(127,127,127,.18);border-radius:3px;padding:4px 6px;font-size:11px;line-height:1.3;cursor:pointer;position:relative;overflow:hidden}',
+	'.db-cal .day:hover{border-color:rgba(127,127,127,.5)}',
+	'.db-cal .day.today{outline:1px solid var(--primary,#48A9C5)}',
+	'.db-cal .day.sel{border-color:var(--primary,#48A9C5);box-shadow:0 0 0 1px var(--primary,#48A9C5) inset}',
+	'.db-cal .day .d{font-weight:600;font-size:11.5px;opacity:.85}',
+	'.db-cal .day .v{font-size:9.5px;opacity:.65;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}',
+	'.db-cal-detail{margin-top:10px;font-size:12.5px;line-height:1.8;padding:10px 12px;border:1px solid rgba(127,127,127,.22);border-radius:2px}',
+	'.db-cal-month-sum{font-size:11.5px;opacity:.6}',
 	'@media(max-width:1000px){.db-grid{grid-template-columns:repeat(2,1fr)}.db-cols{grid-template-columns:1fr}}',
 	'.db-traffic-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}',
 	'.db-seg{display:flex;gap:4px;background:rgba(127,127,127,.14);border-radius:10px;padding:3px}',
@@ -243,7 +258,20 @@ return view.extend({
 					E('div', {}, [E('h4', { 'style': 'margin:4px 0 8px' }, ['流量用在哪（网站/应用 Top 10）']), E('div', { 'id': 'db-tsites' }, [' '])])
 				]),
 				E('div', { 'class': 'db-note', 'style': 'margin-top:12px' }, ['近 30 天每日流量']),
-				E('canvas', { 'id': 'db-days', 'style': 'width:100%;height:120px;display:block' })
+				E('canvas', { 'id': 'db-days', 'style': 'width:100%;height:120px;display:block' }),
+				E('div', { 'class': 'db-sec' }, [E('h3', {}, ['流量日历']), E('span', { 'class': 'sub' }, ['点击日期查看当日流量'])]),
+				E('div', { 'class': 'cbi-section' }, [
+					E('div', { 'class': 'db-cal-head' }, [
+						E('div', { 'class': 'db-cal-nav' }, [
+							E('button', { 'class': 'db-cal-btn', 'type': 'button', click: function() { self.calShift(-1, tr); } }, ['‹ 上月']),
+							E('button', { 'class': 'db-cal-btn', 'type': 'button', click: function() { self.calShift(0, tr); } }, ['本月']),
+							E('button', { 'class': 'db-cal-btn', 'type': 'button', click: function() { self.calShift(1, tr); } }, ['下月 ›'])
+						]),
+						E('div', { 'class': 'db-cal-month-sum', 'id': 'db-cal-sum' }, [' '])
+					]),
+					E('div', { 'class': 'db-cal', 'id': 'db-cal' }, [' ']),
+					E('div', { 'class': 'db-cal-detail', 'id': 'db-cal-detail' }, ['点击上方日期查看详情'])
+				])
 			]),
 			E('div', { 'class': 'db-sec' }, [E('h3', {}, ['设备流量']), E('span', { 'class': 'sub' }, ['按设备累计'])]),
 			E('div', { 'class': 'cbi-section' }, [E('div', { 'id': 'db-devs' }, [' '])]),
@@ -351,7 +379,7 @@ return view.extend({
 			catsData.forEach(function(c) { maxB = Math.max(maxB, c.bytes || 0); });
 			var cl = document.getElementById('db-cats');
 			cl.innerHTML = '';
-			var catList = catsData.slice(0, 8);
+			var catList = catsData.slice(0, 12);
 			if (!catList.length) cl.appendChild(E('em', {}, ['暂无数据']));
 			catList.forEach(function(c) {
 				cl.appendChild(E('div', { 'class': 'db-row' }, [
@@ -370,12 +398,12 @@ return view.extend({
 			if (!arr.length) sl.appendChild(E('em', {}, ['暂无数据']));
 			var aggS = dbAggSites(arr.map(function(s) { return { domain: s.d, bytes: s.b }; }));
 			var maxSb = aggS.length ? aggS[0].bytes : 1;
-			aggS.slice(0, 10).forEach(function(it) { sl.appendChild(dbSiteRowAgg(it, maxSb)); });
+			aggS.slice(0, 20).forEach(function(it) { sl.appendChild(dbSiteRowAgg(it, maxSb)); });
 
 			var dl = document.getElementById('db-devs');
 			dl.innerHTML = '';
 			if (!devs.length) dl.appendChild(E('em', {}, ['暂无数据']));
-			devs.forEach(function(dev) {
+			devs.slice(0, 20).forEach(function(dev) {
 				dl.appendChild(E('div', { 'class': 'db-row' }, [
 					E('span', { 'class': 'nm' }, [dev.name || dev.mac]),
 					E('span', { 'class': 'vl' }, [dbFmt(dev.total)])
@@ -403,7 +431,7 @@ return view.extend({
 			var cl = document.getElementById('db-tcats');
 			cl.innerHTML = '';
 			if (!cats.length) cl.appendChild(E('em', {}, ['暂无数据（统计服务刚启动）']));
-			cats.slice(0, 10).forEach(function(c) {
+			cats.slice(0, 12).forEach(function(c) {
 				cl.appendChild(E('div', { 'class': 'db-row' }, [
 					E('span', { 'class': 'nm' }, [dbCatName(c.cat)]),
 					E('span', { 'class': 'bar' }, [E('i', { 'style': 'width:' + Math.round((c.bytes || 0) / maxC * 100) + '%' })]),
@@ -417,9 +445,78 @@ return view.extend({
 			if (!sites.length) sl.appendChild(E('em', {}, ['暂无数据']));
 			var aggT = dbAggSites(sites);
 			var maxTs = aggT.length ? aggT[0].bytes : 1;
-			aggT.slice(0, 10).forEach(function(it) { sl.appendChild(dbSiteRowAgg(it, maxTs)); });
+			aggT.slice(0, 20).forEach(function(it) { sl.appendChild(dbSiteRowAgg(it, maxTs)); });
 
-			drawDays(tdata.days || []);
+			drawDays((tdata.days || []).slice(-30));
+			self.paintCalendar(tdata.days || []);
+		};
+
+		/* ---------- 流量日历 ---------- */
+		self.calMonth = self.calMonth || (new Date()).toISOString().slice(0, 7);
+		self.calSel = self.calSel || null;
+		self.calData = self.calData || [];
+
+		self.calShift = function(delta, tdata) {
+			var m = self.calMonth.split('-');
+			var y = Number(m[0]), mo = Number(m[1]);
+			if (delta === 0) { var now = new Date(); y = now.getFullYear(); mo = now.getMonth() + 1; }
+			else { mo += delta; if (mo < 1) { mo = 12; y -= 1; } if (mo > 12) { mo = 1; y += 1; } }
+			self.calMonth = y + '-' + String(mo).padStart(2, '0');
+			self.calSel = null;
+			self.paintCalendar((tdata && tdata.days) || self.calData || []);
+		};
+
+		self.paintCalendar = function(days) {
+			var el = document.getElementById('db-cal');
+			if (!el) return;
+			self.calData = days || [];
+			var month = self.calMonth;
+			var map = {};
+			self.calData.forEach(function(x) { map[x.date] = x; });
+			var y = Number(month.slice(0, 4)), mo = Number(month.slice(5, 7));
+			var first = new Date(y, mo - 1, 1);
+			var startWd = (first.getDay() + 6) % 7; /* 周一=0 */
+			var daysInMonth = new Date(y, mo, 0).getDate();
+			var maxV = 1, sum = { rx: 0, tx: 0, total: 0, n: 0 };
+			for (var d = 1; d <= daysInMonth; d++) {
+				var key = month + '-' + String(d).padStart(2, '0');
+				var rec = map[key];
+				if (rec) { maxV = Math.max(maxV, rec.total || 0); sum.rx += rec.rx || 0; sum.tx += rec.tx || 0; sum.total += rec.total || 0; sum.n += 1; }
+			}
+			var html = '';
+			['一', '二', '三', '四', '五', '六', '日'].forEach(function(w) { html += '<div class="wd">周' + w + '</div>'; });
+			for (var i = 0; i < startWd; i++) html += '<div class="empty"></div>';
+			var today = new Date().toISOString().slice(0, 10);
+			for (var d2 = 1; d2 <= daysInMonth; d2++) {
+				var key2 = month + '-' + String(d2).padStart(2, '0');
+				var rec2 = map[key2];
+				var cls = 'day';
+				if (key2 === today) cls += ' today';
+				if (key2 === self.calSel) cls += ' sel';
+				var ratio = rec2 ? Math.min(1, (rec2.total || 0) / maxV) : 0;
+				var alpha = 0.06 + ratio * 0.5;
+				var bg = dbIsLight() ? 'rgba(17,17,17,' + alpha.toFixed(2) + ')' : 'rgba(240,240,240,' + alpha.toFixed(2) + ')';
+				var fg = (dbIsLight() && ratio > 0.55) ? '#fff' : (dbIsLight() ? '#111' : (ratio > 0.55 ? '#111' : '#e6e6e6'));
+				html += '<div class="' + cls + '" data-date="' + key2 + '" style="background:' + bg + ';color:' + fg + '">' +
+					'<div class="d">' + d2 + '</div>' +
+					'<div class="v">' + (rec2 ? dbFmt(rec2.total) : '—') + '</div></div>';
+			}
+			el.innerHTML = html;
+			var sumEl = document.getElementById('db-cal-sum');
+			if (sumEl) sumEl.textContent = month + ' · 共 ' + dbFmt(sum.total) + '（↓' + dbFmt(sum.rx) + ' / ↑' + dbFmt(sum.tx) + '，' + sum.n + ' 天有记录）';
+			var self2 = self;
+			Array.prototype.forEach.call(el.querySelectorAll('.day'), function(cell) {
+				cell.addEventListener('click', function() { self2.calSel = cell.getAttribute('data-date'); self2.paintCalendar(self2.calData); self2.calShowDetail(self2.calSel); });
+			});
+		};
+
+		self.calShowDetail = function(key) {
+			var el2 = document.getElementById('db-cal-detail');
+			if (!el2) return;
+			var rec = null;
+			(self.calData || []).forEach(function(x) { if (x.date === key) rec = x; });
+			if (!rec) { el2.innerHTML = key + '：<b>无记录</b>'; return; }
+			el2.innerHTML = key + '：合计 <b>' + dbFmt(rec.total) + '</b> · 下载 ' + dbFmt(rec.rx) + ' · 上传 ' + dbFmt(rec.tx);
 		};
 
 		var drawDays = function(days) {
