@@ -45,15 +45,15 @@ gen_summary() {
 				rx: ($t.rx // 0), tx: ($t.tx // 0),
 				total: (($t.rx // 0) + ($t.tx // 0)),
 				cats: (($t.cats // {}) | to_entries | map({cat: .key, bytes: .value}) | sort_by(-.bytes)),
-				sites: (($t.sites // {}) | to_entries | map({domain: .key, bytes: .value}) | sort_by(-.bytes) | .[:30])
+				sites: (($t.sites // {}) | to_entries | map({domain: .key, bytes: .value}) | sort_by(-.bytes) | .[:100])
 			},
 			month: {
 				month: $month,
 				rx: $m.rx, tx: $m.tx, total: ($m.rx + $m.tx), days: $m.n,
 				cats: ($m.cats | to_entries | map({cat: .key, bytes: .value}) | sort_by(-.bytes)),
-				sites: ($m.sites | to_entries | map({domain: .key, bytes: .value}) | sort_by(-.bytes) | .[:30])
+				sites: ($m.sites | to_entries | map({domain: .key, bytes: .value}) | sort_by(-.bytes) | .[:100])
 			},
-			days: ($all.days | to_entries | map({date: .key, rx: (.value.rx // 0), tx: (.value.tx // 0), total: ((.value.rx // 0) + (.value.tx // 0))}) | sort_by(.date) | .[-30:])
+			days: ($all.days | to_entries | map({date: .key, rx: (.value.rx // 0), tx: (.value.tx // 0), total: ((.value.rx // 0) + (.value.tx // 0))}) | sort_by(.date) | .[-420:])
 		}
 	' $FILES
 }
