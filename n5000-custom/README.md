@@ -781,3 +781,13 @@ N5000              order 0   分组（展开）
 - 恢复 HTTP 直接访问（`redirect_https=0`），浏览器不再弹「连接不安全」警告
 - HTTPS 端口仍可用，但使用原自签证书，仅供需要时手动访问
 - `83-tls` 已从固件仓库移除；`84-security` 不再强制 HTTPS
+
+
+## 固件 v6.0.0（编译中）
+
+- 整合 v5.0.0 之后的全部改动：DeepWrt 品牌（主机名/发行版/banner/SSID）、密码 YUDI、无 AI/微信、黑白主题、护眼模式、流量统计、应用过滤、收藏夹、密码本、游戏加速、运行模式、安全浏览、运维中心、测速面板、访客网络、加密 DNS、健康检查/自动备份/日志归档、collectd 统计 + SNMP、fail2ban、内核与防火墙加固
+- 默认关闭未使用服务：Docker/containerd、ttyd、PassWall 套件、xray/sing-box/microsocks、adblock、n5000-debrand（已删除）
+- 默认 SSID：DeepWrt-2G / DeepWrt-5G / DeepWrt-Guest
+- 默认管理密码：YUDI（HTTP 访问）
+- 构建方式：GitHub Actions workflow_dispatch，产物为 sysupgrade 镜像 + 构建日志
+- 刷机后建议：改强密码、保存备份密钥、导入 CA（可选，已撤回）不再适用
