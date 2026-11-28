@@ -45,7 +45,16 @@ var NPCSS = [
 	'.np-rates{width:100%;display:flex;align-items:flex-end;gap:18px;margin-top:auto;padding-top:14px}',
 	'.np-rate{font-size:13px;opacity:.85}',
 	'.np-rate b{font-size:17px;font-weight:700;margin-left:3px}',
-	'.np-spark{flex:1;height:46px;min-width:80px}',
+	'.np-spark{flex:1;height:78px;min-width:120px}',
+	'.np-rates{padding-top:18px;gap:22px}',
+	'.np-rate{font-size:14px}',
+	'.np-rate b{font-size:20px}',
+	'.np-hero-stats{width:100%;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px}',
+	'.np-hero-stat{padding:10px 12px;border:1px solid rgba(131,217,220,.2);border-radius:10px;background:rgba(13,44,84,.25)}',
+	'.np-hero-stat .l{font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;opacity:.55;font-weight:600}',
+	'.np-hero-stat .v{font-size:16px;font-weight:700;margin-top:3px;font-variant-numeric:tabular-nums}',
+	'html[data-argon-mode="light"] .np-hero-stat{background:rgba(255,255,255,.55);border-color:rgba(30,91,140,.16)}',
+	'@media(max-width:640px){.np-hero-stats{grid-template-columns:repeat(2,1fr)}}',
 	'.np-side{display:flex;flex-direction:column;gap:10px}',
 	'.np-card{padding:11px 14px}',
 	'.np-card .t{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;opacity:.8}',
@@ -185,9 +194,15 @@ return view.extend({
 				E('span', { 'class': 'np-call', 'id': 'np-wifi' }, ['WiFi --'])
 			]),
 			E('div', { 'class': 'np-rates' }, [
-				E('span', { 'class': 'np-rate' }, ['↓', E('b', { 'id': 'np-down' }, ['0.00']), ' Mbps']),
-				E('span', { 'class': 'np-rate' }, ['↑', E('b', { 'id': 'np-up' }, ['0.00']), ' Mbps']),
+				E('span', { 'class': 'np-rate' }, ['↓', E('b', { 'id': 'np-down' }, ['—']), ' Mbps']),
+				E('span', { 'class': 'np-rate' }, ['↑', E('b', { 'id': 'np-up' }, ['—']), ' Mbps']),
 				spark
+			]),
+			E('div', { 'class': 'np-hero-stats' }, [
+				E('div', { 'class': 'np-hero-stat' }, [E('div', { 'class': 'l' }, ['今日流量']), E('div', { 'class': 'v', 'id': 'np-hs-today' }, ['--'])]),
+				E('div', { 'class': 'np-hero-stat' }, [E('div', { 'class': 'l' }, ['本月流量']), E('div', { 'class': 'v', 'id': 'np-hs-month' }, ['--'])]),
+				E('div', { 'class': 'np-hero-stat' }, [E('div', { 'class': 'l' }, ['在线设备']), E('div', { 'class': 'v', 'id': 'np-hs-clients' }, ['--'])]),
+				E('div', { 'class': 'np-hero-stat' }, [E('div', { 'class': 'l' }, ['识别应用/网站']), E('div', { 'class': 'v', 'id': 'np-hs-sites' }, ['--'])])
 			])
 		]);
 
@@ -442,6 +457,11 @@ return view.extend({
 			te.className = 'v ' + (tv >= 80 ? 'np-bad' : tv >= 65 ? 'np-warn' : 'np-ok');
 			document.getElementById('np-st-uptime').textContent = npUptime(d2.uptime);
 			document.getElementById('np-st-clients').textContent = (d2.devices || d2.clients || 0) + ' 台';
+			/* hero 统计格 */
+			var hsToday = document.getElementById('np-hs-today');
+			var hsMonth = document.getElementById('np-hs-month');
+			if (hsToday) hsToday.textContent = npFmt(((tr.today || {}).total) || 0);
+			if (hsMonth) hsMonth.textContent = npFmt(((tr.month || {}).total) || 0);
 
 			/* 活跃应用 TOP5 */
 			var devs = (af2 && af2.devices) || [];
@@ -451,6 +471,10 @@ return view.extend({
 				.sort(function(a, b) { return b.b - a.b; }).slice(0, 5);
 			var siteN = Object.keys(sites).length;
 			document.getElementById('np-st-sites').textContent = siteN;
+			var hsCli = document.getElementById('np-hs-clients');
+			if (hsCli) hsCli.textContent = (d2.devices || d2.clients || 0) + ' 台';
+			var hsSites = document.getElementById('np-hs-sites');
+			if (hsSites) hsSites.textContent = siteN + ' 个';
 			document.getElementById('np-apps-total').textContent = siteN + ' 个';
 			var box = document.getElementById('np-apps');
 			if (box) {
@@ -488,9 +512,10 @@ return view.extend({
 				down = Math.max(0, (d2.wan_rx - prev.rx) * 8 / dt / 1e6);
 				up = Math.max(0, (d2.wan_tx - prev.tx) * 8 / dt / 1e6);
 			}
+			var hadPrev = !!prev;
 			prev = { ts: d2.ts, rx: d2.wan_rx, tx: d2.wan_tx };
-			document.getElementById('np-down').textContent = down.toFixed(2);
-			document.getElementById('np-up').textContent = up.toFixed(2);
+			document.getElementById('np-down').textContent = hadPrev ? down.toFixed(2) : '—';
+			document.getElementById('np-up').textContent = hadPrev ? up.toFixed(2) : '—';
 			samples.push({ down: down, up: up });
 			if (samples.length > 60) samples.shift();
 			drawSpark();
@@ -521,6 +546,13 @@ return view.extend({
 		}
 
 		setTimeout(function() { paint(d, af); }, 100);
+		/* 2.5 秒后再取一次状态，尽快算出实时速率（不需要等 10 秒轮询） */
+		setTimeout(function() {
+			fetch('/cgi-bin/rstatus?t=' + Date.now(), { cache: 'no-store' })
+				.then(function(r) { return r.json(); })
+				.then(function(d2) { if (d2) paint(d2, af); })
+				.catch(function() {});
+		}, 2500);
 
 		poll.add(function() {
 			return Promise.all([
