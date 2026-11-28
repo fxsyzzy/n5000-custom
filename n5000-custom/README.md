@@ -799,3 +799,13 @@ N5000              order 0   分组（展开）
 - 开启 802.11k + MBO，客户端可自动选择 5G 或漫游（该 hostapd 不支持 bss_transition 关键字，已去掉）
 - 实现：`files/etc/uci-defaults/88-wifi-merge`（首次启动应用）
 - 注意：合并后设备会看到一个 SSID，但实际仍由 2.4G/5G 两个射频承载；老设备可能仍偏好 2.4G
+
+
+## 面板增强 + 12 个月流量历史（v5.2）
+
+- N5000 面板新增：
+  - 迷你流量日历（当月，颜色深浅=流量，点击日期查看当日合计/下载/上传）
+  - 「更多信息」区块：系统版本、内核、运行模式、默认网关、无线网络、访客网络、健康检查、最近备份
+  - 服务状态改为：加密DNS / DNS防护 / 流量统计 / TF 状态
+- `rstatus` 新增字段：dist / kernel / mode / gw / guest / health / backup / dns / hij / trafficd
+- 流量历史保留由 4 个月延长到 **12 个月**（trafficd 保留 12 个月度文件，traffic CGI 读取最近 12 个月）
