@@ -1,5 +1,5 @@
 #!/bin/sh
-# 双频合一：2.4G/5G 使用同一 SSID，并开启 802.11k/v + MBO 辅助选频
+# 双频合一：2.4G/5G 使用同一 SSID，并开启 802.11k + MBO 辅助选频
 for sec in $(uci -q show wireless 2>/dev/null | sed -n 's/^wireless\.\([^.]*\)=wifi-iface$/\1/p'); do
 	dev=$(uci -q get "wireless.$sec.device")
 	case "$dev" in
@@ -12,7 +12,6 @@ for sec in $(uci -q show wireless 2>/dev/null | sed -n 's/^wireless\.\([^.]*\)=w
 		*) uci -q set "wireless.$sec.ssid=DeepWrt" ;;
 	esac
 	uci -q set "wireless.$sec.ieee80211k=1"
-	uci -q set "wireless.$sec.bss_transition=1"
 	uci -q set "wireless.$sec.mbo=1"
 done
 uci -q commit wireless
