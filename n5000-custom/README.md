@@ -791,3 +791,11 @@ N5000              order 0   分组（展开）
 - 默认管理密码：YUDI（HTTP 访问）
 - 构建方式：GitHub Actions workflow_dispatch，产物为 sysupgrade 镜像 + 构建日志
 - 刷机后建议：改强密码、保存备份密钥、导入 CA（可选，已撤回）不再适用
+
+
+## 双频合一 WiFi（v6.1）
+
+- 2.4G/5G 合并为同一 SSID：`DeepWrt`（访客为 `DeepWrt-Guest`）
+- 开启 802.11k / 802.11v（bss_transition）/ MBO，客户端可自动选择 5G 或漫游
+- 实现：`files/etc/uci-defaults/88-wifi-merge`（首次启动应用）
+- 注意：合并后设备会看到一个 SSID，但实际仍由 2.4G/5G 两个射频承载；老设备可能仍偏好 2.4G
