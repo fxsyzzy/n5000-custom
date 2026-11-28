@@ -1,9 +1,5 @@
 #!/bin/sh
 # 首次启动：安全加固 + 访客网络 + 防暴破
-# HTTPS 强制
-uci -q set uhttpd.main.redirect_https='1'
-uci -q commit uhttpd
-
 # 防火墙加固
 uci -q set firewall.@defaults[0].syn_flood='1'
 uci -q set firewall.@defaults[0].drop_invalid='1'
