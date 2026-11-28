@@ -764,3 +764,12 @@ N5000              order 0   分组（展开）
 - 后台异步执行，页面 2 秒轮询进度；测速约产生 30~60MB 流量
 - 实现：`usr/sbin/n5000-speedtest`、`www/cgi-bin/speedtest`、`view/n5000/speedtest.js`
 - 上行显示「不可测」表示到测试服务器上传不通，不代表宽带无上行
+
+
+## HTTPS 受信任证书（v5.1）
+
+- 原证书是 OpenWrt 自签、且 SAN 只有 DNS:OpenWrt，浏览器必然提示「连接不安全」
+- 现改为：本地 CA（`DeepWrt Local CA`）+ 服务器证书（SAN: IP 192.168.88.1、DeepWrt.lan、DeepWrt）
+- CA 证书下载：`https://192.168.88.1/ca.crt`（或 `/luci-static/n5000/deepwrt-ca.crt`）
+- 导入 CA 到系统/浏览器信任列表后，HTTPS 不再报警
+- 首次启动自动生成：`files/etc/uci-defaults/83-tls`（密钥不进入仓库）
